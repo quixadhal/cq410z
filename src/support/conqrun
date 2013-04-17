@@ -1,0 +1,7 @@
+#!/bin/csh
+onintr leaving
+/home/stpa91/99meshki/bin/getconq conqrun /tmp/cqr-$$
+/tmp/cqr-$$ $*
+leaving:
+/home/stpa91/99meshki/bin/cqrm r-$$
+echo Be seeing you.

@@ -1,0 +1,9 @@
+#!/bin/csh
+cd ~cclub/games/conquer
+echo Creating archive...
+/home/cclub/cclub/bin/tar -zcvf arc/cqbkp$$-`date | awk '{ print $6 $2 $3".tar.gz" }'` lib
+echo Performing update...
+bin/conqrun -x
+echo 'Current backup list (keep at least two of them):'
+/bin/ls -l arc/cqbkp*
+echo Be seeing you.

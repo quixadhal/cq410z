@@ -1,0 +1,86 @@
+##
+#  Update script for Conquer v4.10
+#
+#  Hacked together by Dread Quixadhal on 91.04.18 after losing two campaigns
+#  to diskpack crashes.
+#
+set TIME='0020 tomorrow'
+
+set LS='/bin/ls -l'
+set RM='/bin/rm -f'
+set AWK=/bin/awk
+set AT='/bin/at -c'
+set RCP='/usr/ucb/rcp -p'
+set CHMOD='/bin/chmod'
+set LHARC='/home/cclub/cclub/bin4/lharc'
+set BINDIR=/home/stpa91/99meshki/bin/ # but this must be absolute for at
+set UPDATE="$BINDIR/conqrun -x"
+set SCRIPT="$BINDIR/conqupd"
+
+set DIR=/home/stpa91/99meshki/lib	# change this to whereever!
+set DATA="$DIR/data.Z"
+set TMP="/tmp/cq4-tmp$$.lzh"
+set ARC='quixadhal@sol.cs.wmich.edu:cq4grog/cq4-bkp.lzh'
+set BKP="$DIR/*"
+
+if (-e $DATA) then
+  set oldsize=`$LS $DATA | $AWK '{ print $4 }'`
+  echo "CONQUPD -> data file before update is $oldsize bytes."
+  echo "CONQUPD -> backing up current status to temp file."
+#
+  $LHARC a $TMP $BKP
+#
+  if (-e $TMP) then
+    if (-z $TMP) then
+      echo "CONQUPD -> OOPS\! The new archive is bad... Keeping old one."
+    else
+      echo "CONQUPD -> Archive seems OK..."
+      echo "           Shipping off to remote storage site."
+#
+      $CHMOD 0600 $TMP
+      $RCP $TMP $ARC
+#
+    endif
+  else
+    echo "CONQUPD -> OOPS\! I seem to have lost the new archive somehow???"
+    echo "           I will just keep the old one for you."
+  endif
+  echo "CONQUPD -> Whew\!  OK, I am now starting the update\!"
+  echo -n "CONQUPD -> ****** Update being performed on "
+  echo -n `date`
+  echo " ******"
+#
+  $UPDATE
+#
+  echo -n "CONQUPD -> ****** Update was performed on "
+  echo -n `date`
+  echo " ******"
+  if( -e $DATA ) then
+    if( -z $DATA ) then
+      echo "CONQUPD -> YOW\!\!\!  The data file just got ZAPPED\!\!"
+      echo "           I'd suggest a quick restore of the backup\!"
+      exit
+    else
+      set newsize=`$LS $DATA | $AWK '{ print $4 }'`
+      echo "CONQUPD -> IT WORKED\!"
+      echo "           I DO NOT BELIEVE IT\!"
+      echo ""
+      echo "           I will queue up the next update then\!"
+      echo "           OOPS\! I forgot our system administrator is"
+      echo "           paranoid and has disabled both at and cron..."
+      echo ""
+      echo "           You will have to handle this in some other way."
+#
+#      $AT $TIME < $SCRIPT
+#
+    endif
+  else
+    echo "CONQUPD -> Ummmmmmm.... Gee\!  The data file kindof...."
+    echo "           DISAPPEARED\!\!"
+    echo "           You better go restore the old set\!"
+  endif
+else
+  echo "CONQUPD -> OOPS\! No data file found\!\!"
+  echo "           You better go deal with this, QUICK\!"
+  exit
+endif
