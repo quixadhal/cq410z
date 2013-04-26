@@ -75,6 +75,7 @@ char *tradefail[NUMPRODUCTS] = { "lack of gold", "lack of food",
 
 #endif /* ADMIN */
 
+
 #ifdef CONQUER
 /* Use this when you wish to bid something */
 char *buylist[NUMPRODUCTS] = { "Bid how much gold? ", "Bid how much food? ",
@@ -82,7 +83,13 @@ char *buylist[NUMPRODUCTS] = { "Bid how much gold? ", "Bid how much food? ",
                                "What X location? ", "Bid what army? ",
                                "Bid what navy? " };
 
-void trade() {
+void trade(void);
+void tradeerr(char *mesg);
+int checkland(int tradestat, int xspot, int yspot);
+int getland(int *count);
+int gettrade(char *saletype, int *count);
+
+void trade(void) {
   FILE *tfile;
   int count, done = FALSE, notopen = FALSE;
   int buysell, holdint, holdint2, extint, inloop;
@@ -540,7 +547,7 @@ void trade() {
   }
 }
 
-void tradeerr(mesg) char *mesg;
+void tradeerr(char *mesg)
 {
   clear_bottom(0);
   standout();
@@ -551,7 +558,7 @@ void tradeerr(mesg) char *mesg;
   getch();
 }
 
-int checkland(tradestat, xspot, yspot) int tradestat, xspot, yspot;
+int checkland(int tradestat, int xspot, int yspot)
 {
   int newstat = tradestat;
 
@@ -575,7 +582,7 @@ int checkland(tradestat, xspot, yspot) int tradestat, xspot, yspot;
 }
 
 /* get minimum foodvalue for land */
-int getland(count) int *count;
+int getland(int *count)
 {
   int temp;
   int i, j;
@@ -609,8 +616,7 @@ int getland(count) int *count;
   return (temp);
 }
 
-int gettrade(saletype, count) char *saletype;
-int *count;
+int gettrade(char *saletype, int *count)
 {
   int hold = (-1);
 
@@ -655,9 +661,11 @@ int *count;
 
 #endif /* CONQUER */
 
+void setaside(int cntry, int item, int isup, int extint, long longval);
+void takeback(int cntry, int item, int isup, int extint, long longval);
+
 /* set aside things that are up for bid */
-void setaside(cntry, item, longval, extint, isup) int cntry, item, isup, extint;
-long longval;
+void setaside(int cntry, int item, int isup, int extint, long longval)
 {
   switch (item) {
     case TDGOLD:
@@ -690,8 +698,7 @@ long longval;
 }
 
 /* regain things that are up for bid */
-void takeback(cntry, item, longval, extint, isup) int cntry, item, isup, extint;
-long longval;
+void takeback(int cntry, int item, int isup, int extint, long longval)
 {
   if (cntry == -1)
     return;
@@ -723,11 +730,14 @@ long longval;
   }
 }
 
+
 #ifdef ADMIN
+long tradeit(int cntry1, int cntry2, int item, int extra, long longval);
+long gettval(int cntry1, int cntry2, int type, int extint, long longval);
+void trademail(int cntry1, int cntry2, int item1, int item2, long lvar1, long lvar2, long lvar3, long lvar4);
+
 /* give things that were purchased from cntry1 to cntry2 */
-long tradeit(cntry1, cntry2, item, longval, extra) int cntry1, cntry2, item,
-    extra;
-long longval;
+long tradeit(int cntry1, int cntry2, int item, int extra, long longval)
 {
   int unitnum = (-1), unitcount = 0;
 
@@ -817,8 +827,7 @@ long longval;
   return (returnval);
 }
 
-long gettval(cntry1, cntry2, type, longval, extint) int cntry1, cntry2, extint;
-long longval;
+long gettval(int cntry1, int cntry2, int type, int extint, long longval)
 {
   int returnval = (-1);
   long armyvalue();
@@ -850,10 +859,7 @@ long longval;
 
 /* this function sends detailed message to players */
 /* upon completion of a trade */
-void trademail(cntry1, cntry2, item1, item2, lvar1, lvar2, lvar3,
-               lvar4) int cntry1,
-    cntry2, item1, item2;
-long lvar1, lvar2, lvar3, lvar4;
+void trademail(int cntry1, int cntry2, int item1, int item2, long lvar1, long lvar2, long lvar3, long lvar4)
 {
   FILE *fp[2];
   int count;
@@ -913,8 +919,10 @@ long lvar1, lvar2, lvar3, lvar4;
 #endif /* ADMIN */
 
 #ifdef CONQUER
+int tradable(int cntry, int armynum);
+
 /* routine to determine whether or not an army type is tradable */
-int tradable(cntry, armynum) int cntry, armynum;
+int tradable(int cntry, int armynum)
 {
   int oldcntry = country, returnval = FALSE;
 
@@ -929,8 +937,11 @@ int tradable(cntry, armynum) int cntry, armynum;
 
 #endif /* CONQUER */
 
+long armyvalue(int cntry, int unit);
+void checktrade(void);
+
 /* routine to determine commercial value of army */
-long armyvalue(cntry, unit) int cntry, unit;
+long armyvalue(int cntry, int unit)
 {
   long returnval;
 
@@ -943,7 +954,7 @@ long armyvalue(cntry, unit) int cntry, unit;
   return (returnval);
 }
 
-void checktrade() {
+void checktrade(void) {
   FILE *tfile;
   int count, itemnum = 0, natn[MAXITM];
   int type1[MAXITM], type2[MAXITM], deal[MAXITM], extra[MAXITM];
@@ -988,7 +999,10 @@ void checktrade() {
 }
 
 #ifdef ADMIN
-void uptrade() {
+void uptrade(void);
+void fixtrade(int cntry);
+
+void uptrade(void) {
   FILE *tfile;
   int count, itemnum = 0, natn[MAXITM];
   int type1[MAXITM], type2[MAXITM], deal[MAXITM], extra[MAXITM];
@@ -1115,7 +1129,7 @@ void uptrade() {
 }
 
 /* remove a nations items from the trading board */
-void fixtrade(cntry) int cntry;
+void fixtrade(int cntry)
 {
   FILE *tfile;
   int holdint, notopen = FALSE;
