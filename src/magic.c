@@ -30,39 +30,36 @@
 #include "data.h"
 #include <ctype.h>
 
-extern short    country;
-extern short    redraw;
-extern FILE    *fexe;
-extern FILE    *fnews;
+extern short country;
+extern short redraw;
+extern FILE *fexe;
+extern FILE *fnews;
 
 /*give player one new magic power in current magic (powers)*/
 /*do nothing if that player has that power or it is not permitted*/
 /*getmagic() returns the value of the power gained, and stores it in power*/
 
-long
-getmagic(type)
-  int             type;
+long getmagic(type) int type;
 {
-  long            newpower;
-  int             start,
-                  end;
+  long newpower;
+  int start, end;
 
   switch (type) {
-   case M_MGK:
-    start = S_MGK;
-    end = E_MGK;
-    break;
-   case M_CIV:
-    start = S_CIV;
-    end = E_CIV;
-    break;
-   case M_MIL:
-    start = S_MIL;
-    end = E_MIL;
-    break;
-   default:
-    printf("fatal error in num_powers");
-    abrt();
+    case M_MGK:
+      start = S_MGK;
+      end = E_MGK;
+      break;
+    case M_CIV:
+      start = S_CIV;
+      end = E_CIV;
+      break;
+    case M_MIL:
+      start = S_MIL;
+      end = E_MIL;
+      break;
+    default:
+      printf("fatal error in num_powers");
+      abrt();
   }
   newpower = powers[start + (rand() % end)];
   if (newpower == 0) {
@@ -81,7 +78,8 @@ getmagic(type)
       return (WARLORD);
     } else
       return (0L);
-  } else if ((newpower == MI_MONST) || (newpower == AV_MONST) || (newpower == MA_MONST)) {
+  } else if ((newpower == MI_MONST) || (newpower == AV_MONST) ||
+             (newpower == MA_MONST)) {
     if (curntn->race != ORC)
       return (0L);
     if (magic(country, MI_MONST) != TRUE) {
@@ -99,7 +97,7 @@ getmagic(type)
     if (curntn->race == ORC)
       return (0L);
     if (isnotpc(curntn->active))
-      return (0L);		/* npc nation */
+      return (0L); /* npc nation */
     if (magic(country, newpower) == TRUE)
       return (0L);
     curntn->powers |= newpower;
@@ -134,20 +132,17 @@ getmagic(type)
       return (0L);
     curntn->powers |= KNOWALL;
     return (KNOWALL);
-  } else if ((newpower == SLAVER)
-	     || (newpower == DERVISH)
-	     || (newpower == ARCHITECT)
-	     || (newpower == THE_VOID)
-	     || (newpower == ARCHER)) {
-    if ((magic(country, newpower) == TRUE)
-	|| ((newpower == DERVISH) && (magic(country, DESTROYER) == TRUE)))
+  } else if ((newpower == SLAVER) || (newpower == DERVISH) ||
+             (newpower == ARCHITECT) || (newpower == THE_VOID) ||
+             (newpower == ARCHER)) {
+    if ((magic(country, newpower) == TRUE) ||
+        ((newpower == DERVISH) && (magic(country, DESTROYER) == TRUE)))
       return (0L);
     curntn->powers |= newpower;
     return (newpower);
   } else if (newpower == DESTROYER) {
-    if ((curntn->race != ELF)
-	&& (magic(country, DESTROYER) != TRUE)
-	&& (magic(country, DERVISH) != TRUE)) {
+    if ((curntn->race != ELF) && (magic(country, DESTROYER) != TRUE) &&
+        (magic(country, DERVISH) != TRUE)) {
       curntn->powers |= DESTROYER;
       return (DESTROYER);
     }
@@ -159,7 +154,8 @@ getmagic(type)
     }
     return (0L);
   } else if (newpower == MINER) {
-    if ((curntn->race != ELF) && (curntn->race != DWARF) && (magic(country, MINER) != TRUE)) {
+    if ((curntn->race != ELF) && (curntn->race != DWARF) &&
+        (magic(country, MINER) != TRUE)) {
       curntn->powers |= MINER;
       return (MINER);
     }
@@ -181,20 +177,17 @@ getmagic(type)
     curntn->powers |= BREEDER;
     return (BREEDER);
   } else if (isnotpc(curntn->active)) {
-    return (0L);		/* remaining powers only for pc's */
-  } else if ((newpower == NINJA)
-	     || (newpower == SLAVER)
-	     || (newpower == SAILOR)
-	     || (newpower == DEMOCRACY)
-	     || (newpower == ROADS)
-	     || (newpower == SAPPER)
-	     || (newpower == ARMOR)
-	     || (newpower == AVIAN)) {
+    return (0L); /* remaining powers only for pc's */
+  } else if ((newpower == NINJA) || (newpower == SLAVER) ||
+             (newpower == SAILOR) || (newpower == DEMOCRACY) ||
+             (newpower == ROADS) || (newpower == SAPPER) ||
+             (newpower == ARMOR) || (newpower == AVIAN)) {
     if (magic(country, newpower) == TRUE)
       return (0L);
     curntn->powers |= newpower;
     return (newpower);
-  } else if ((newpower == SUMMON) || (newpower == WYZARD) || (newpower == SORCERER)) {
+  } else if ((newpower == SUMMON) || (newpower == WYZARD) ||
+             (newpower == SORCERER)) {
     /* dwarves may not cast spells */
     if (curntn->race == DWARF)
       return (0L);
@@ -215,24 +208,16 @@ getmagic(type)
 
 #ifdef CONQUER
 /*form to interactively get a magic power*/
-void
-domagic()
-{
-  int             county,
-                  countx,
-                  done = FALSE,
-                  loop = 0,
-                  i,
-                  type;
-  long            price,
-                  x;
+void domagic() {
+  int county, countx, done = FALSE, loop = 0, i, type;
+  long price, x;
 
 #ifdef OGOD
-  void            god_magk();
+  void god_magk();
 
-#endif				/* OGOD */
+#endif /* OGOD */
 
-  short           isgod = 0;
+  short isgod = 0;
 
   if (country == 0) {
     isgod = TRUE;
@@ -250,11 +235,11 @@ domagic()
     standout();
     mvprintw(0, (COLS / 2) - 15, "MAGIC POWERS FOR %s", curntn->name);
     mvprintw(county++, 30, "1) %d military powers: %ld jewels",
-	     num_powers(country, M_MIL), getmgkcost(M_MIL, country));
+             num_powers(country, M_MIL), getmgkcost(M_MIL, country));
     mvprintw(county++, 30, "2) %d civilian powers: %ld jewels",
-	     num_powers(country, M_CIV), getmgkcost(M_CIV, country));
+             num_powers(country, M_CIV), getmgkcost(M_CIV, country));
     mvprintw(county++, 30, "3) %d magic powers:    %ld jewels",
-	     num_powers(country, M_MGK), getmgkcost(M_MGK, country));
+             num_powers(country, M_MGK), getmgkcost(M_MGK, country));
 
     price = getmgkcost(M_MIL, country);
     if (price > getmgkcost(M_CIV, country))
@@ -268,11 +253,11 @@ domagic()
     i = 0;
     while (powers[i] != 0) {
       if (magic(country, powers[i]) == TRUE)
-	mvprintw(county++, countx, "you have power %s", *(pwrname + i));
+        mvprintw(county++, countx, "you have power %s", *(pwrname + i));
       i++;
       if (county > 18) {
-	county = 7;
-	countx = 40;
+        county = 7;
+        countx = 40;
       }
     }
 
@@ -283,7 +268,8 @@ domagic()
     else
       county++;
     standout();
-    mvprintw(county++, 0, "YOU HAVE %ld JEWELS IN YOUR TREASURY", curntn->jewels);
+    mvprintw(county++, 0, "YOU HAVE %ld JEWELS IN YOUR TREASURY",
+             curntn->jewels);
 
 #ifdef OGOD
     if (isgod == TRUE) {
@@ -291,40 +277,39 @@ domagic()
       standend();
       refresh();
       if (getch() == 'y')
-	god_magk();
+        god_magk();
     } else
-#endif	/* OGOD */
-
-    if (price <= curntn->jewels) {
+#endif /* OGOD */
+        if (price <= curntn->jewels) {
 
       mvaddstr(county++, 0, "DO YOU WISH TO BUY A RANDOM NEW POWER? [yn]");
       standend();
       refresh();
       if (getch() == 'y') {
-	done = FALSE;
-	mvaddstr(county++, 0, "ENTER SELECTION (1,2,3):");
-	refresh();
-	type = getch() - '0';
-	if (type == M_MIL || type == M_CIV || type == M_MGK) {
-	  price = getmgkcost(type, country);
-	  if (curntn->jewels >= price) {
-	    loop = 0;
-	    while (loop++ < 500)
-	      if ((x = getmagic(type)) != 0) {
-		curntn->jewels -= price;
-		CHGMGK;
-		exenewmgk(x);
-		refresh();
-		if (isgod == TRUE)
-		  reset_god();
-		break;
-	      }
-	    if (loop >= 500)
-	      errormsg("You have too many powers!");
-	  } else
-	    errormsg("CAN'T AFFORD A NEW POWER");
-	} else
-	  errormsg("BAD SELECTION");
+        done = FALSE;
+        mvaddstr(county++, 0, "ENTER SELECTION (1,2,3):");
+        refresh();
+        type = getch() - '0';
+        if (type == M_MIL || type == M_CIV || type == M_MGK) {
+          price = getmgkcost(type, country);
+          if (curntn->jewels >= price) {
+            loop = 0;
+            while (loop++ < 500)
+              if ((x = getmagic(type)) != 0) {
+                curntn->jewels -= price;
+                CHGMGK;
+                exenewmgk(x);
+                refresh();
+                if (isgod == TRUE)
+                  reset_god();
+                break;
+              }
+            if (loop >= 500)
+              errormsg("You have too many powers!");
+          } else
+            errormsg("CAN'T AFFORD A NEW POWER");
+        } else
+          errormsg("BAD SELECTION");
       }
     } else {
       mvaddstr(LINES - 1, 0, "CAN'T AFFORD A NEW POWER");
@@ -337,32 +322,26 @@ domagic()
 
 #ifdef ORCTAKE
     if (((curntn->race == ORC) && (curntn->jewels >= ORCTAKE) &&
-    (curntn->spellpts >= TAKEPOINTS))
-    || ((curntn->class == C_PRIEST) && (curntn->jewels >= 2 * ORCTAKE) &&
-    (curntn->spellpts >= TAKEPOINTS))
-    || ((curntn->class == C_TRADER) && (curntn->jewels >= 10 * ORCTAKE) &&
-    (curntn->spellpts >= TAKEPOINTS)))
+         (curntn->spellpts >= TAKEPOINTS)) ||
+        ((curntn->class == C_PRIEST) && (curntn->jewels >= 2 * ORCTAKE) &&
+         (curntn->spellpts >= TAKEPOINTS)) ||
+        ((curntn->class == C_TRADER) && (curntn->jewels >= 10 * ORCTAKE) &&
+         (curntn->spellpts >= TAKEPOINTS)))
       done |= orctake(&county);
-#endif	/* ORCTAKE */
+#endif /* ORCTAKE */
   }
   if (isgod == TRUE)
     reset_god();
 }
 
-#endif	/* CONQUER */
+#endif /* CONQUER */
 
 #ifdef ORCTAKE
 /*do magic for both npcs and pcs in update*/
 /*if target is 0 then it is update and target will be picked randomly*/
-int
-takeover(percent, target)
-  int             percent,
-                  target;
+int takeover(percent, target) int percent, target;
 {
-  int             loop = 1,
-                  y,
-                  save,
-                  isupdate = 0;
+  int loop = 1, y, save, isupdate = 0;
 
   save = country;
   if (target == country)
@@ -375,28 +354,29 @@ takeover(percent, target)
     y = 0;
     if (target == 0)
       while (loop == FALSE) {
-	y++;
-	country = rand() % NTOTAL;
-	if ((ntn[country].race == ntn[save].race)
-	    && (isnpc(ntn[country].active))
-	    && (curntn->dstatus[country] < HOSTILE)
-	    && (curntn->dstatus[country] != UNMET)
-	    && (country != save))
-	  loop = TRUE;
-	else if (y >= 500) {
-	  country = save;
-	  return (0);
-	}
+        y++;
+        country = rand() % NTOTAL;
+        if ((ntn[country].race == ntn[save].race) &&
+            (isnpc(ntn[country].active)) &&
+            (curntn->dstatus[country] < HOSTILE) &&
+            (curntn->dstatus[country] != UNMET) && (country != save))
+          loop = TRUE;
+        else if (y >= 500) {
+          country = save;
+          return (0);
+        }
       }
     sct[ntn[country].capx][ntn[country].capy].owner = save;
     if (isupdate == 1) {
-      printf("nation %s magically taken over by %s\n", ntn[country].name, ntn[save].name);
-      fprintf(fnews, "1.\tnation %s magically taken over by %s\n", ntn[country].name, ntn[save].name);
+      printf("nation %s magically taken over by %s\n", ntn[country].name,
+             ntn[save].name);
+      fprintf(fnews, "1.\tnation %s magically taken over by %s\n",
+              ntn[country].name, ntn[save].name);
     } else {
       DESTROY;
       if ((fnews = fopen("/dev/null", "w")) == NULL) {
-	printf("error opening null file\n");
-	exit(FAIL);
+        printf("error opening null file\n");
+        exit(FAIL);
       }
     }
     destroy(country);
@@ -411,18 +391,15 @@ takeover(percent, target)
   return (0);
 }
 
-#endif	/* ORCTAKE */
+#endif /* ORCTAKE */
 
 /*execute new magic*/
-void
-exenewmgk(newpower)
-  long            newpower;
+void exenewmgk(newpower) long newpower;
 {
-  short           x,
-                  armynum;
+  short x, armynum;
 
 #ifdef ADMIN
-  short           y;
+  short y;
 
 #endif
 
@@ -461,24 +438,22 @@ exenewmgk(newpower)
 #ifdef ADMIN
     for (x = (int) curntn->capx - 3; x <= (int) curntn->capx + 3; x++) {
       for (y = (int) curntn->capy - 3; y <= (int) curntn->capy + 3; y++) {
-	if ((ONMAP(x, y))
-	    && (sct[x][y].altitude != WATER)
+        if ((ONMAP(x, y)) && (sct[x][y].altitude != WATER)
 
 #ifdef DERVDESG
-	    && ((rand() % 2) == 0)
+            && ((rand() % 2) == 0)
 #else
-	    && (tofood(&sct[x][y], 0) < 6)
-#endif	/* DERVDESG */
-
-	    && ((x != curntn->capx)
-		|| (y != curntn->capy))) {
-	  sct[x][y].vegetation = DESERT;
-	  sct[x][y].designation = DNODESIG;
-	}
+            && (tofood(&sct[x][y], 0) < 6)
+#endif /* DERVDESG */
+            && ((x != curntn->capx) || (y != curntn->capy))) {
+          sct[x][y].vegetation = DESERT;
+          sct[x][y].designation = DNODESIG;
+        }
       }
     }
-    fprintf(fnews, "1.\tnation %s gets destroyer power: land turns to desert\n", curntn->name);
-#endif	/* ADMIN */
+    fprintf(fnews, "1.\tnation %s gets destroyer power: land turns to desert\n",
+            curntn->name);
+#endif /* ADMIN */
 
     updmove(curntn->race, country);
     return;
@@ -487,12 +462,9 @@ exenewmgk(newpower)
     updmove(curntn->race, country);
     return;
   }
-  if ((newpower == MI_MONST)
-      || (newpower == AV_MONST)
-      || (newpower == MA_MONST)
-      || (newpower == KNOWALL)
-      || (newpower == THE_VOID)
-      || (newpower == ARCHITECT))
+  if ((newpower == MI_MONST) || (newpower == AV_MONST) ||
+      (newpower == MA_MONST) || (newpower == KNOWALL) ||
+      (newpower == THE_VOID) || (newpower == ARCHITECT))
     return;
   if (newpower == MINER) {
     curntn->mine_ability += 25;
@@ -503,11 +475,11 @@ exenewmgk(newpower)
     curntn->dplus -= 35;
     for (armynum = 0; armynum < MAXARM; armynum++) {
       if ((P_ATYPE == A_INFANTRY) || (P_ATYPE == A_MILITIA))
-	P_ATYPE = A_ZOMBIE;
+        P_ATYPE = A_ZOMBIE;
     }
-    for(x = 1; x < NTOTAL; x++) {
-      if(isactive(ntn[x].active)) {
-        if(ntn[x].dstatus[country] != UNMET)
+    for (x = 1; x < NTOTAL; x++) {
+      if (isactive(ntn[x].active)) {
+        if (ntn[x].dstatus[country] != UNMET)
           ntn[x].dstatus[country] = JIHAD;
       }
     }
@@ -517,12 +489,12 @@ exenewmgk(newpower)
     if (curntn->race == ORC) {
       x = curntn->repro;
       if (curntn->repro >= 14) {
-	curntn->maxmove += 3;
+        curntn->maxmove += 3;
       } else if (curntn->repro > 11) {
-	curntn->maxmove += x - 11;
-	curntn->repro = 14;
+        curntn->maxmove += x - 11;
+        curntn->repro = 14;
       } else
-	curntn->repro += 3;
+        curntn->repro += 3;
     } else if (curntn->repro <= 9) {
       curntn->repro += 3;
     } else {
@@ -561,41 +533,28 @@ exenewmgk(newpower)
       curntn->maxmove = 4;
     curntn->dplus += 20;
   }
-  if ((newpower == NINJA)
-      || (newpower == STEEL)
-      || (newpower == ARCHER)
-      || (newpower == CAVALRY)
-      || (newpower == SAILOR)
-      || (newpower == SUMMON)
-      || (newpower == WYZARD)
-      || (newpower == SORCERER)
-      || (newpower == SAPPER)
-      || (newpower == AVIAN)) {	/* these powers are only for pc's */
+  if ((newpower == NINJA) || (newpower == STEEL) || (newpower == ARCHER) ||
+      (newpower == CAVALRY) || (newpower == SAILOR) || (newpower == SUMMON) ||
+      (newpower == WYZARD) || (newpower == SORCERER) || (newpower == SAPPER) ||
+      (newpower == AVIAN)) { /* these powers are only for pc's */
     return;
   }
 }
 
 #ifdef CONQUER
 /* returns 0 if summon occurred, 1 else */
-void
-dosummon()
-{
-  int             x,
-                  count,
-                  i,
-                  armynum;
-  long            e_cost;
-  int             newtype,
-                  s_cost;
-  char            line[LINELTH + 1],
-                  ch;
+void dosummon() {
+  int x, count, i, armynum;
+  long e_cost;
+  int newtype, s_cost;
+  char line[LINELTH + 1], ch;
 
   x = 0;
   count = LINES - 4;
   clear_bottom(0);
-  if((curntn->class != C_WIZARD)&&(curntn->class != C_PRIEST)&&
-     (curntn->class != C_DEMON) &&(curntn->class != C_DRAGON)&&
-     (curntn->class != C_SHADOW)) {
+  if ((curntn->class != C_WIZARD) && (curntn->class != C_PRIEST) &&
+      (curntn->class != C_DEMON) && (curntn->class != C_DRAGON) &&
+      (curntn->class != C_SHADOW)) {
     clear_bottom(0);
     errormsg("You have not the skill to summon beings...");
     clear_bottom(0);
@@ -609,8 +568,8 @@ dosummon()
       mvprintw(count, x, "(%c)", *(shunittype + (i % UTYPE))[0]);
       x += 7;
       if (x > COLS - 20) {
-	x = 0;
-	count++;
+        x = 0;
+        count++;
       }
     }
   }
@@ -640,7 +599,8 @@ dosummon()
     errormsg(line);
     return;
   }
-  e_cost = (long) *(u_encost + (newtype % UTYPE)) * *(unitminsth + (newtype % UTYPE));
+  e_cost = (long) * (u_encost + (newtype % UTYPE)) *
+           *(unitminsth + (newtype % UTYPE));
   if (e_cost > curntn->tgold) {
     sprintf(line, "you dont have %ld gold talons in your treasury", e_cost);
     clear_bottom(0);
@@ -652,7 +612,7 @@ dosummon()
     if (P_ASOLD <= 0) {
       P_ASOLD = *(unitminsth + (newtype % UTYPE));
       P_ATYPE = newtype;
-      P_ASTAT = DEFEND;		/* set new armies to DEFEND */
+      P_ASTAT = DEFEND; /* set new armies to DEFEND */
       P_AXLOC = curntn->capx;
       P_AYLOC = curntn->capy;
       P_AMOVE = 0;
@@ -675,32 +635,38 @@ dosummon()
 
 #ifdef ORCTAKE
 /* orc takeover routine... returns 0 if run, 1 if not */
-int
-orctake(count)
-  int            *count;
+int orctake(count) int *count;
 {
-  int             chance = 0,
-                  done = TRUE,
-                  i,
-                  s_cost;
+  int chance = 0, done = TRUE, i, s_cost;
 
   if ((*count) > 20) {
     (*count) = 2;
     clear();
   }
   if (curntn->race == ORC) {
-  if (magic(country, MA_MONST) == TRUE) {
-    mvprintw((*count)++, 0, "You have a 10 percent chance for %ld Jewels take over other orcs", ORCTAKE);
-    chance = 10;
-  } else if (magic(country, AV_MONST) == TRUE) {
-    mvprintw((*count)++, 0, "You have a 6 percent chance for %ld Jewels take over other orcs", ORCTAKE);
-    chance = 6;
-  } else if (magic(country, MI_MONST) == TRUE) {
-    mvprintw((*count)++, 0, "You have a 3 percent chance for %ld Jewels to take over other orcs", ORCTAKE);
-    chance = 3;
-  }
+    if (magic(country, MA_MONST) == TRUE) {
+      mvprintw(
+          (*count)++, 0,
+          "You have a 10 percent chance for %ld Jewels take over other orcs",
+          ORCTAKE);
+      chance = 10;
+    } else if (magic(country, AV_MONST) == TRUE) {
+      mvprintw(
+          (*count)++, 0,
+          "You have a 6 percent chance for %ld Jewels take over other orcs",
+          ORCTAKE);
+      chance = 6;
+    } else if (magic(country, MI_MONST) == TRUE) {
+      mvprintw(
+          (*count)++, 0,
+          "You have a 3 percent chance for %ld Jewels to take over other orcs",
+          ORCTAKE);
+      chance = 3;
+    }
   } else {
-    mvprintw((*count)++, 0, "You have a 5 percent chance for %ld Jewels take over a nation", ORCTAKE);
+    mvprintw((*count)++, 0,
+             "You have a 5 percent chance for %ld Jewels take over a nation",
+             ORCTAKE);
     chance = 5;
   }
   if (chance == 0)
@@ -716,33 +682,33 @@ orctake(count)
     i = get_country();
     if (i <= 0 || i >= NTOTAL || !isntn(ntn[i].active))
       mvaddstr((*count)++, 0, "  Invalid Nation");
-    else if ((curntn->dstatus[i] < HOSTILE)
-	     && (curntn->dstatus[i] != UNMET)
-	     && (ntn[i].race == curntn->race)) {
-      if(curntn->race != ORC) {
-      if(curntn->class == C_TRADER )
-        curntn->jewels -= 10 * ORCTAKE;
-      else curntn->jewels -= 2 * ORCTAKE;
-      s_cost = TAKEPOINTS;
-      curntn->spellpts -= s_cost;
+    else if ((curntn->dstatus[i] < HOSTILE) && (curntn->dstatus[i] != UNMET) &&
+             (ntn[i].race == curntn->race)) {
+      if (curntn->race != ORC) {
+        if (curntn->class == C_TRADER)
+          curntn->jewels -= 10 * ORCTAKE;
+        else
+          curntn->jewels -= 2 * ORCTAKE;
+        s_cost = TAKEPOINTS;
+        curntn->spellpts -= s_cost;
       } else {
-      curntn->jewels -= ORCTAKE;
-      s_cost = TAKEPOINTS;
-      curntn->spellpts -= s_cost;
+        curntn->jewels -= ORCTAKE;
+        s_cost = TAKEPOINTS;
+        curntn->spellpts -= s_cost;
       }
       EDECSPL;
       if ((takeover(chance, i)) != 0)
-	mvprintw((*count)++, 0, "  Successful: %d", i);
+        mvprintw((*count)++, 0, "  Successful: %d", i);
       else {
-	mvaddstr((*count)++, 0, "  Failed: Nation becomes more hostile");
-	curntn->dstatus[i]++;
-	EADJDIP(country, i);
+        mvaddstr((*count)++, 0, "  Failed: Nation becomes more hostile");
+        curntn->dstatus[i]++;
+        EADJDIP(country, i);
       }
     } else {
       if (ntn[i].race == ORC)
-	mvaddstr((*count)++, 0, "  That Nation is Outside Your Influence");
+        mvaddstr((*count)++, 0, "  That Nation is Outside Your Influence");
       else
-	mvaddstr((*count)++, 0, "  Wrong Race");
+        mvaddstr((*count)++, 0, "  Wrong Race");
     }
     refresh();
     sleep(2);
@@ -750,149 +716,139 @@ orctake(count)
   return (done);
 }
 
-#endif	/* ORCTAKE */
+#endif /* ORCTAKE */
 
-#endif	/* CONQUER */
+#endif /* CONQUER */
 
 #ifdef CONQUER
 /**********************************************************************/
 /* unitvalid() returns TRUE if nation has powers needed to draft unit */
 /**********************************************************************/
-int
-unitvalid(type)
-  int             type;
+int unitvalid(type) int type;
 {
-  int             valid = FALSE;
+  int valid = FALSE;
 
   switch (type) {
-   case A_INFANTRY:		/* not everyone gets infantry now */
-    if (defaultunit(country) == A_INFANTRY)
-      valid = TRUE;
-    break;
-   case GARGOYLE:
-   case A_GOBLIN:
-   case A_ORC:
-    if (magic(country, MI_MONST) == TRUE)
-      valid = TRUE;
-    break;
-   case A_MARINES:
-    if (magic(country, SAILOR) == TRUE)
-      valid = TRUE;
-    break;
-   case A_ARCHER:
-    if (magic(country, ARCHER) == TRUE)
-      valid = TRUE;
-    break;
-   case A_URUK:
-    if (magic(country, AV_MONST) == TRUE)
-      valid = TRUE;
-    break;
-   case A_NINJA:
-    if (magic(country, NINJA) == TRUE)
-      valid = TRUE;
-    break;
-   case A_PHALANX:
-    if (magic(country, CAPTAIN) == TRUE)
-      valid = TRUE;
-    break;
-   case A_OLOG:
-    if ((magic(country, BREEDER) == TRUE)
-	&& (magic(country, AV_MONST) == TRUE))
-      valid = TRUE;
-    break;
-   case A_ELEPHANT:
-    if (magic(country, DERVISH) == TRUE)
-      valid = TRUE;
-    break;
-   case SUPERHERO:
-   case A_LEGION:
-    if (magic(country, WARLORD) == TRUE)
-      valid = TRUE;
-    break;
-   case A_TROLL:
-    if (magic(country, MA_MONST) == TRUE)
-      valid = TRUE;
-    break;
-   case A_ELITE:
-    if (magic(country, ARMOR) == TRUE)
-      valid = TRUE;
-    break;
-   case CENTAUR:
-   case A_LT_CAV:
-   case A_CAVALRY:
-    if (magic(country, CAVALRY) == TRUE)
-      valid = TRUE;
-    break;
-   case A_KNIGHT:
-    if ((magic(country, ARMOR) == TRUE)
-	&& (magic(country, CAVALRY) == TRUE))
-      valid = TRUE;
-    break;
-   case A_ROC:
-   case A_GRIFFON:
-    if (magic(country, AVIAN) == TRUE)
-      valid = TRUE;
-    break;
-   case ASSASSIN:
-    if (magic(country, NINJA) == TRUE)
-      valid = TRUE;
-    break;
-   case DJINNI:
-    if (magic(country, DERVISH) == TRUE)
-      valid = TRUE;
-    break;
-   case HERO:
-    if (magic(country, WARRIOR) == TRUE)
-      valid = TRUE;
-    break;
-   case ELEMENTAL:
-    if (magic(country, SORCERER) == TRUE)
-      valid = TRUE;
-    break;
-   case A_ZOMBIE:
-   case WRAITH:
-   case MUMMY:
-    if (magic(country, VAMPIRE) == TRUE)
-      valid = TRUE;
-    break;
-   case MINOTAUR:
-   case DEMON:
-    if (magic(country, DESTROYER) == TRUE)
-      valid = TRUE;
-    break;
-   case BALROG:
-    if ((magic(country, WYZARD) == TRUE)
-	&& (magic(country, VAMPIRE) == TRUE))
-      valid = TRUE;
-    break;
-   case DRAGON:
-    if ((magic(country, MA_MONST) == TRUE)
-	&& (magic(country, WYZARD) == TRUE))
-      valid = TRUE;
-    break;
-   case A_SPY:
-   case A_SCOUT:
-    break;			/* handled elsewhere */
-   default:
-    valid = TRUE;		/* for all unrestricted types */
+    case A_INFANTRY: /* not everyone gets infantry now */
+      if (defaultunit(country) == A_INFANTRY)
+        valid = TRUE;
+      break;
+    case GARGOYLE:
+    case A_GOBLIN:
+    case A_ORC:
+      if (magic(country, MI_MONST) == TRUE)
+        valid = TRUE;
+      break;
+    case A_MARINES:
+      if (magic(country, SAILOR) == TRUE)
+        valid = TRUE;
+      break;
+    case A_ARCHER:
+      if (magic(country, ARCHER) == TRUE)
+        valid = TRUE;
+      break;
+    case A_URUK:
+      if (magic(country, AV_MONST) == TRUE)
+        valid = TRUE;
+      break;
+    case A_NINJA:
+      if (magic(country, NINJA) == TRUE)
+        valid = TRUE;
+      break;
+    case A_PHALANX:
+      if (magic(country, CAPTAIN) == TRUE)
+        valid = TRUE;
+      break;
+    case A_OLOG:
+      if ((magic(country, BREEDER) == TRUE) &&
+          (magic(country, AV_MONST) == TRUE))
+        valid = TRUE;
+      break;
+    case A_ELEPHANT:
+      if (magic(country, DERVISH) == TRUE)
+        valid = TRUE;
+      break;
+    case SUPERHERO:
+    case A_LEGION:
+      if (magic(country, WARLORD) == TRUE)
+        valid = TRUE;
+      break;
+    case A_TROLL:
+      if (magic(country, MA_MONST) == TRUE)
+        valid = TRUE;
+      break;
+    case A_ELITE:
+      if (magic(country, ARMOR) == TRUE)
+        valid = TRUE;
+      break;
+    case CENTAUR:
+    case A_LT_CAV:
+    case A_CAVALRY:
+      if (magic(country, CAVALRY) == TRUE)
+        valid = TRUE;
+      break;
+    case A_KNIGHT:
+      if ((magic(country, ARMOR) == TRUE) && (magic(country, CAVALRY) == TRUE))
+        valid = TRUE;
+      break;
+    case A_ROC:
+    case A_GRIFFON:
+      if (magic(country, AVIAN) == TRUE)
+        valid = TRUE;
+      break;
+    case ASSASSIN:
+      if (magic(country, NINJA) == TRUE)
+        valid = TRUE;
+      break;
+    case DJINNI:
+      if (magic(country, DERVISH) == TRUE)
+        valid = TRUE;
+      break;
+    case HERO:
+      if (magic(country, WARRIOR) == TRUE)
+        valid = TRUE;
+      break;
+    case ELEMENTAL:
+      if (magic(country, SORCERER) == TRUE)
+        valid = TRUE;
+      break;
+    case A_ZOMBIE:
+    case WRAITH:
+    case MUMMY:
+      if (magic(country, VAMPIRE) == TRUE)
+        valid = TRUE;
+      break;
+    case MINOTAUR:
+    case DEMON:
+      if (magic(country, DESTROYER) == TRUE)
+        valid = TRUE;
+      break;
+    case BALROG:
+      if ((magic(country, WYZARD) == TRUE) && (magic(country, VAMPIRE) == TRUE))
+        valid = TRUE;
+      break;
+    case DRAGON:
+      if ((magic(country, MA_MONST) == TRUE) &&
+          (magic(country, WYZARD) == TRUE))
+        valid = TRUE;
+      break;
+    case A_SPY:
+    case A_SCOUT:
+      break; /* handled elsewhere */
+    default:
+      valid = TRUE; /* for all unrestricted types */
   }
   return (valid);
 }
 
-#endif	/* CONQUER */
+#endif /* CONQUER */
 
 /*remove properties of magic power; must first remove power */
-void
-removemgk(oldpower)
-  long            oldpower;
+void removemgk(oldpower) long oldpower;
 {
-  short           x,
-                  y,
-                  armynum;
+  short x, y, armynum;
 
-  if ((oldpower == WARRIOR)
-      || (oldpower == CAPTAIN)
-      || (oldpower == WARLORD)) {
+  if ((oldpower == WARRIOR) || (oldpower == CAPTAIN) || (oldpower == WARLORD)) {
     curntn->aplus -= 10;
     curntn->dplus -= 10;
     return;
@@ -908,16 +864,14 @@ removemgk(oldpower)
   if (oldpower == DESTROYER) {
     for (x = (int) curntn->capx - 3; x <= (int) curntn->capx + 3; x++) {
       for (y = (int) curntn->capy - 3; y <= (int) curntn->capy + 3; y++) {
-	if ((ONMAP(x, y))
-	    && (sct[x][y].altitude != WATER)
-	    && ((x != curntn->capx)
-		|| (y != curntn->capy))) {
-	  if (sct[x][y].vegetation == DESERT) {
-	    /* LT_VEG has medium value */
-	    sct[x][y].vegetation = LT_VEG;
-	    sct[x][y].designation = DNODESIG;
-	  }
-	}
+        if ((ONMAP(x, y)) && (sct[x][y].altitude != WATER) &&
+            ((x != curntn->capx) || (y != curntn->capy))) {
+          if (sct[x][y].vegetation == DESERT) {
+            /* LT_VEG has medium value */
+            sct[x][y].vegetation = LT_VEG;
+            sct[x][y].designation = DNODESIG;
+          }
+        }
       }
     }
     updmove(curntn->race, country);
@@ -932,7 +886,7 @@ removemgk(oldpower)
     curntn->dplus += 35;
     for (armynum = 0; armynum < MAXARM; armynum++) {
       if (P_ATYPE == A_ZOMBIE)
-	P_ATYPE = defaultunit(country);
+        P_ATYPE = defaultunit(country);
     }
     return;
   }
@@ -946,7 +900,7 @@ removemgk(oldpower)
     curntn->aplus += 10;
     for (armynum = 0; armynum < MAXARM; armynum++) {
       if (P_ATYPE == A_OLOG)
-	P_ATYPE = A_URUK;
+        P_ATYPE = A_URUK;
     }
     return;
   }
@@ -969,21 +923,21 @@ removemgk(oldpower)
   if (oldpower == MI_MONST) {
     for (armynum = 0; armynum < MAXARM; armynum++) {
       if (P_ATYPE == A_ORC)
-	P_ATYPE = defaultunit(country);
+        P_ATYPE = defaultunit(country);
     }
     return;
   }
   if (oldpower == AV_MONST) {
     for (armynum = 0; armynum < MAXARM; armynum++) {
       if (P_ATYPE == A_URUK || P_ATYPE == A_OLOG)
-	P_ATYPE = defaultunit(country);
+        P_ATYPE = defaultunit(country);
     }
     return;
   }
   if (oldpower == ARCHER) {
     for (armynum = 0; armynum < MAXARM; armynum++) {
       if (P_ATYPE == A_ARCHER)
-	P_ATYPE = defaultunit(country);
+        P_ATYPE = defaultunit(country);
     }
     return;
   }
@@ -994,15 +948,9 @@ removemgk(oldpower)
 
 #ifdef OGOD
 /* godmagk() -- routine to allow god to selectively add or remove magic */
-void
-god_magk()
-{
-  int             county,
-                  countx,
-                  choice;
-  int             remove,
-                  i,
-                  done = FALSE;
+void god_magk() {
+  int county, countx, choice;
+  int remove, i, done = FALSE;
 
   clear();
   while (done == FALSE) {
@@ -1015,17 +963,17 @@ god_magk()
     while (done == FALSE) {
       done = TRUE;
       switch (getch()) {
-       case 'A':
-       case 'a':
-	remove = FALSE;
-	break;
-       case 'R':
-       case 'r':
-	remove = TRUE;
-	break;
-       default:
-	done = FALSE;
-	break;
+        case 'A':
+        case 'a':
+          remove = FALSE;
+          break;
+        case 'R':
+        case 'r':
+          remove = TRUE;
+          break;
+        default:
+          done = FALSE;
+          break;
       }
     }
     move(0, 0);
@@ -1038,13 +986,13 @@ god_magk()
     i = 0;
     while (powers[i] != 0) {
       if (magic(country, powers[i]) == remove) {
-	mvprintw(county, countx, "%2d: %s Power", i + 1, *(pwrname + i));
-	county++;
+        mvprintw(county, countx, "%2d: %s Power", i + 1, *(pwrname + i));
+        county++;
       }
       i++;
       if (county > LINES - 6) {
-	county = 3;
-	countx = COLS / 2;
+        county = 3;
+        countx = COLS / 2;
       }
     }
     if (countx == COLS / 2) {
@@ -1062,23 +1010,23 @@ god_magk()
     choice = get_number();
     if (choice > 0 && choice <= MAXPOWER) {
       if (magic(country, powers[choice - 1]) == remove) {
-	if (remove)
-	  mvprintw(county++, 0, "Remove magic #%d? (y or [n])", choice);
-	else
-	  mvprintw(county++, 0, "Add magic #%d? (y or [n])", choice);
-	refresh();
-	if (getch() == 'y') {
-	  curntn->powers ^= powers[choice - 1];
-	  if (remove)
-	    removemgk(powers[choice - 1]);
-	  else
-	    exenewmgk(powers[choice - 1]);
-	}
+        if (remove)
+          mvprintw(county++, 0, "Remove magic #%d? (y or [n])", choice);
+        else
+          mvprintw(county++, 0, "Add magic #%d? (y or [n])", choice);
+        refresh();
+        if (getch() == 'y') {
+          curntn->powers ^= powers[choice - 1];
+          if (remove)
+            removemgk(powers[choice - 1]);
+          else
+            exenewmgk(powers[choice - 1]);
+        }
       } else {
-	if (remove)
-	  mvaddstr(county++, 0, "The nation doesn't have that power.");
-	else
-	  mvaddstr(county++, 0, "The nation already has that power.");
+        if (remove)
+          mvaddstr(county++, 0, "The nation doesn't have that power.");
+        else
+          mvaddstr(county++, 0, "The nation already has that power.");
       }
     }
     mvaddstr(county++, 0, "Do you wish to add or remove another power?");
@@ -1089,30 +1037,23 @@ god_magk()
   }
 }
 
-#endif	/* OGOD */
+#endif /* OGOD */
 
 #define NUMSPELLS 4
-char           *spellstr[NUMSPELLS] = {"(S)ummon", "(F)light", "(A)ttack Enhancement",
-"(D)efense Enhancement"};
+char *spellstr[NUMSPELLS] = { "(S)ummon", "(F)light", "(A)ttack Enhancement",
+                              "(D)efense Enhancement" };
 
 /* quick adjustment to allow magical status change */
-int             magicstat[NUMSPELLS] = {DEFEND, FLIGHT, MAGATT, MAGDEF};
+int magicstat[NUMSPELLS] = { DEFEND, FLIGHT, MAGATT, MAGDEF };
 
 /* number of soldiers per point of spell cost */
-int             magiccost[NUMSPELLS] = {0, 100, 300, 300};
+int magiccost[NUMSPELLS] = { 0, 100, 300, 300 };
 
 /* routine to perform spells */
-void
-wizardry()
-{
-  int             i,
-                  xspt,
-                  yspt,
-                  choice,
-                  armynum,
-                  s_cost;
-  char            line[LINELTH + 1];
-  void            dosummon();
+void wizardry() {
+  int i, xspt, yspt, choice, armynum, s_cost;
+  char line[LINELTH + 1];
+  void dosummon();
 
   clear_bottom(0);
   if (curntn->spellpts > 0) {
@@ -1128,75 +1069,73 @@ wizardry()
       mvaddstr(yspt, xspt, line);
       xspt += strlen(line);
       if (xspt > COLS - 20) {
-	xspt = 0;
-	yspt++;
+        xspt = 0;
+        yspt++;
       }
     }
     mvaddstr(LINES - 4, 0, "Which spell to cast:");
     refresh();
     choice = NUMSPELLS;
     switch (getch()) {
-     case 's':
-     case 'S':
-      if (magic(country, SUMMON) == TRUE)
-	dosummon();
-      else {
-	clear_bottom(0);
-	errormsg("you do not have SUMMON power");
-      }
-      break;
-     case 'f':
-     case 'F':
-      if ((magic(country, AVIAN) == TRUE)||
-        class_(country, C_WIZARD)||class_(country, C_PRIEST)||
-        class_(country, C_DEMON)||class_(country, C_DRAGON)||
-        class_(country, C_SHADOW))
+      case 's':
+      case 'S':
+        if (magic(country, SUMMON) == TRUE)
+          dosummon();
+        else {
+          clear_bottom(0);
+          errormsg("you do not have SUMMON power");
+        }
+        break;
+      case 'f':
+      case 'F':
+        if ((magic(country, AVIAN) == TRUE) || class_(country, C_WIZARD) ||
+            class_(country, C_PRIEST) || class_(country, C_DEMON) ||
+            class_(country, C_DRAGON) || class_(country, C_SHADOW))
+          choice--;
+        else {
+          clear_bottom(0);
+          errormsg("Your men fear the heights without AVIAN power!");
+          clear_bottom(0);
+          return;
+        }
+      case 'a':
+      case 'A':
         choice--;
-      else {
+      case 'd':
+      case 'D':
+        choice--;
+        /* change status of currently selected army */
+        armynum = getselunit();
         clear_bottom(0);
-        errormsg("Your men fear the heights without AVIAN power!");
-        clear_bottom(0);
-        return;
-      }
-     case 'a':
-     case 'A':
-      choice--;
-     case 'd':
-     case 'D':
-      choice--;
-      /* change status of currently selected army */
-      armynum = getselunit();
-      clear_bottom(0);
-      if (armynum < 0 || armynum >= MAXARM ||
-	  P_ASTAT == SCOUT || P_ASTAT == TRADED ||
-	  P_ASTAT == GENERAL || P_ASTAT > NUMSTATUS ||
-	  P_ASOLD <= 0) {
-	errormsg("Invalid Unit for Magicking");
-      } else if (P_ASTAT == ONBOARD) {
-	errormsg("Carried armies must be unloaded");
-      } else if (P_ASTAT == magicstat[choice]) {
-	errormsg("Unit has already been magicked");
-      } else if (P_ASTAT == MARCH) {
-	errormsg("That unit is too busy marching");
-      } else {
-	/* cost of 1 spell point for magiccost men */
-	s_cost = (P_ASOLD - 1) / magiccost[choice] + 1;
-	if (s_cost > curntn->spellpts) {
-	  sprintf(line, "You don't have %d spell points", s_cost);
-	  errormsg(line);
-	} else {
-	  change_status(armynum, magicstat[choice]);
-	  curntn->spellpts -= s_cost;
-	  EDECSPL;
-	}
-      }
-      break;
-     default:
-      break;
+        if (armynum < 0 || armynum >= MAXARM || P_ASTAT == SCOUT ||
+            P_ASTAT == TRADED || P_ASTAT == GENERAL || P_ASTAT > NUMSTATUS ||
+            P_ASOLD <= 0) {
+          errormsg("Invalid Unit for Magicking");
+        } else if (P_ASTAT == ONBOARD) {
+          errormsg("Carried armies must be unloaded");
+        } else if (P_ASTAT == magicstat[choice]) {
+          errormsg("Unit has already been magicked");
+        } else if (P_ASTAT == MARCH) {
+          errormsg("That unit is too busy marching");
+        } else {
+          /* cost of 1 spell point for magiccost men */
+          s_cost = (P_ASOLD - 1) / magiccost[choice] + 1;
+          if (s_cost > curntn->spellpts) {
+            sprintf(line, "You don't have %d spell points", s_cost);
+            errormsg(line);
+          } else {
+            change_status(armynum, magicstat[choice]);
+            curntn->spellpts -= s_cost;
+            EDECSPL;
+          }
+        }
+        break;
+      default:
+        break;
     }
   } else
     errormsg("You have no spell points for spell casting");
   makebottom();
 }
 
-#endif	/* CONQUER */
+#endif /* CONQUER */
