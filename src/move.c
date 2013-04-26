@@ -28,6 +28,7 @@
 #include "header.h"
 #include "data.h"
 #include <ctype.h>
+#include <unistd.h> /* sleep() */
 
 extern FILE *fexe;
 extern short redraw;
@@ -67,7 +68,7 @@ void mymove() {
     mvprintw(LINES - 4, 0, "NAVY %d: move %d", nvynum, P_NMOVE);
     standend();
     clrtoeol();
-    if ((P_NMOVE == 0)) {
+    if (P_NMOVE == 0) {
       errormsg("That Fleet is Not Able Move Any Farther");
       redraw = DONE;
       armornvy = AORN;
@@ -232,7 +233,7 @@ void mymove() {
       ycurs = oldycurs;
     }
     /* if valid move check if have enough movement points */
-    if (valid == TRUE)
+    if (valid == TRUE) {
       if (armornvy == ARMY) {
         if (P_ASTAT == FLIGHT) {
           fmove = flightcost(XREAL, YREAL);
@@ -373,6 +374,7 @@ void mymove() {
         errormsg("ERROR - NOT ARMY OR NAVY");
         return;
       }
+    }
     /* if moved and not done */
     if ((valid == TRUE) && (done == FALSE)) {
       /* check if offmap and correct */
@@ -565,12 +567,13 @@ void mymove() {
                  (P_ASTAT >= DEFEND)) { /* atk, def, and group */
                                         /* people flee if not of same race */
         if ((sct[XREAL][YREAL].people > 0) &&
-            (ntn[sct[XREAL][YREAL].owner].race != curntn->race))
+            (ntn[sct[XREAL][YREAL].owner].race != curntn->race)) {
           if (magic(country, SLAVER) == TRUE) {
             flee(XREAL, YREAL, 0, TRUE);
           } else {
             flee(XREAL, YREAL, 0, FALSE);
           }
+        }
         mvaddstr(LINES - 2, 0, "TAKING SECTOR");
         clrtoeol();
         refresh();
