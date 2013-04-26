@@ -40,6 +40,7 @@
 #include "data.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h> /* unlink */
 
 #ifdef TRADE
 /* possible commodities */
@@ -214,7 +215,7 @@ void trade() {
                     abrt();
                   }
                   chmod(tradefile, (mode_t) FCMASK);
-                  fprintf(tfile, "%d %d %d %d %ld %ld %d\n", BUY, country,
+                  fprintf(tfile, "%d %d %d %d %ld %d %d\n", BUY, country,
                           GETFOOD, 0, curntn->tfood, 0, 0);
                   fclose(tfile);
                   break;
