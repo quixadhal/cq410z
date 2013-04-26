@@ -79,10 +79,7 @@ int calleruid;
 FILE           *fexe,
                *fopen();
 
-void
-main(argc, argv)
-  int             argc;
-  char          **argv;
+int main(int argc, char **argv)
 {
   int             geteuid(),
                   getuid(),
