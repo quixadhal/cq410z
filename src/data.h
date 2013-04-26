@@ -32,6 +32,7 @@
 extern char    *strcpy(), *strncpy(), *strcat(), *strncat();
 
 #include <stdio.h>
+#include <stdlib.h> /* abrt() */
 #include <curses.h>
 
 /* sometimes curses.h defines TRUE	*/
