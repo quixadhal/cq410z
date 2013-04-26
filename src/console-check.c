@@ -62,14 +62,15 @@ static char *rcsid =
 #include <stdio.h>
 #include <string.h>
 #include <pwd.h>
+#include <unistd.h>
 
-int console_check();
-int console_checking_active();
+int console_check(int id);
+int console_checking_active(char *dirarea);
 
 char console_check_name[21];
 
 #ifdef TEST_MAIN
-main()
+int main(void)
 {
   if (!console_check(getuid()))
     printf("You are at console %s.\n", console_check_name);
@@ -78,7 +79,7 @@ main()
 }
 #endif
 
-int console_check(id) int id;
+int console_check(int id)
 {
   struct passwd *pw;
   char buffer[81];
@@ -93,7 +94,7 @@ int console_check(id) int id;
 #ifdef DEBUG
   fprintf(stderr, "Opening pipe to spy program...\n");
 #endif
-  if (fp = popen(buffer, "r"))
+  if ((fp = popen(buffer, "r")))
     if (!feof(fp)) {
       ok = 1;
       while (!feof(fp))
@@ -113,7 +114,7 @@ int console_check(id) int id;
   return ok;
 }
 
-int console_checking_active(dirarea) char *dirarea;
+int console_checking_active(char *dirarea)
 {
   char buffer[256];
   FILE *fp;
