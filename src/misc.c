@@ -24,6 +24,9 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h> /* unlink(), sleep() */
+#include <time.h> /* time() */
+#include <string.h> /* strlen() */
 
 #ifdef CONQUER
 #include <sys/types.h>
