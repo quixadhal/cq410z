@@ -25,7 +25,7 @@
 extern struct s_nation *curntn;
 extern int country;
 
-int rel_x(absx) int absx;
+int rel_x(int absx)
 {
   int relx;
 
@@ -40,7 +40,7 @@ int rel_x(absx) int absx;
 #ifdef DEBUG
   printf("line 43:relx = %d\n", relx);
   printf("line 44:country = %d\n", country);
-  printf("line 45:curntn = %x\n", curntn);
+  printf("line 45:curntn = %s\n", curntn->name);
   printf("line 46:ntn[country].rlx = %d\n", ntn[country].rlx);
 #endif
   if ((country != 0) && (curntn != NULL)) {
@@ -72,7 +72,7 @@ int rel_x(absx) int absx;
   return (relx);
 }
 
-int rel_y(absy) int absy;
+int rel_y(int absy)
 {
   int rely;
 
@@ -96,7 +96,7 @@ int rel_y(absy) int absy;
   return (rely);
 }
 
-int abs_x(relx) int relx;
+int abs_x(int relx)
 {
   int absx;
 
@@ -115,7 +115,7 @@ int abs_x(relx) int relx;
   return (absx);
 }
 
-int abs_y(rely) int rely;
+int abs_y(int rely)
 {
   int absy;
 
