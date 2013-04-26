@@ -31,11 +31,8 @@
 #include "data.h"
 #include "patchlevel.h"
 
-int main(void)
-{
-  FILE           *fp,
-                 *fp2,
-                 *fopen();
+int main(void) {
+  FILE *fp, *fp2, *fopen();
 
   if ((fp = fopen("sed.1", "w")) == NULL) {
     printf("cant open sed.1 file\n");
@@ -64,7 +61,7 @@ int main(void)
   fprintf(fp, "s/XNCITYCOST/%d/g\n", N_CITYCOST);
   fprintf(fp, "s/XREBUILDCOST/%ld/g\n", REBUILDCOST);
 
-  /* check all the defined options */
+/* check all the defined options */
 
 #ifdef OGOD
   fprintf(fp, "s/XOGOD/(True )/g\n");
@@ -196,7 +193,7 @@ int main(void)
   fprintf(fp, "s/ZSTOCKADE/STOCKADE  (%c)/g\n", DSTOCKADE);
   fprintf(fp, "s/ZSTOCKCOST/%ld/g\n", STOCKCOST);
 
-  /* other defines */
+/* other defines */
 
 #ifdef RANEVENT
   fprintf(fp, "s/XNORANDEVENTS/%d/g\n", RANEVENT);
@@ -238,7 +235,7 @@ int main(void)
 
 #ifdef ORCTAKE
   fprintf(fp, "s/XTAKEPRICE/%ld/g\n", ORCTAKE);
-#endif	/* ORCTAKE */
+#endif /* ORCTAKE */
 
   fprintf(fp, "s/XTGATTR/%d/g\n", TGATTR);
   fprintf(fp, "s/XOTHRATTR/%d/g\n", OTHRATTR);
@@ -289,7 +286,7 @@ int main(void)
   fprintf(fp2, "s/XHFOREATTR/%3d/g\n", HFOREATTR);
   fprintf(fp2, "s/XHWOODATTR/%3d/g\n", HWOODATTR);
 
-  /* magical power costs for races */
+/* magical power costs for races */
 
 #ifdef ELFMAGIC
   fprintf(fp2, "s/XEMMAG/%3ldK/g\n", ELFMAGIC / 1000L);
@@ -315,7 +312,7 @@ int main(void)
   fprintf(fp2, "s/XOMMAG/%3ldK/g\n", BASEMAGIC / 1000L);
 #endif
 
-  /* civilian power costs for races */
+/* civilian power costs for races */
 
 #ifdef ELFCIVIL
   fprintf(fp2, "s/XECMAG/%3ldK/g\n", ELFCIVIL / 1000L);
@@ -341,7 +338,7 @@ int main(void)
   fprintf(fp2, "s/XOCMAG/%3ldK/g\n", BASEMAGIC / 1000L);
 #endif
 
-  /* military power costs for races */
+/* military power costs for races */
 
 #ifdef ELFMILIT
   fprintf(fp2, "s/XEWMAG/%3ldK/g\n", ELFMILIT / 1000L);
