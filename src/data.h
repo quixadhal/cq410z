@@ -664,6 +664,7 @@ extern long     lrand48();
 #define	SALT "aa"		/* seed for crypt() encryption	 */
 
 /* extern all subroutine calls	*/
+extern void peasant_revolt(int *newnation);
 extern long     getmagic(), getmagic(), getmgkcost(), score_one();
 extern long     get_number(), solds_in_sector(), defaultunit();
 
@@ -673,7 +674,7 @@ extern int      units_in_sector(), num_powers(), tofood(), mailopen();
 extern int      get_god(), flightcost(), todigit(), getclass(), startcost();
 extern int      water_2reachp(), tg_ok(), readmap(), avian();
 extern int      cbonus(), armymove(), takeover(), getnewname();
-extern int      getleader(), execute(), peasant_revolt(), other_revolt();
+extern int      getleader(), execute(), other_revolt();
 extern int      aretheyon(), armygoto(), navygoto(), getselunit();
 extern int      unitvalid(), access(), orctake(), fort_val();
 extern int      addgships(), addmships(), addwships(), fltships();

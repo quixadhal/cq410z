@@ -45,30 +45,47 @@ int xpos, ypos; /* saved x and y position */
 int relx, rely;
 
 char *randevents[] = {
-  /* 0 */ "a military rebellion", /* 1 */ "a cult breaks with you",
-  /* 2 */ "a province rebels", /* 3 */ "an evil wizard sets up",
-  /* 4 */ "a tax revolt occurs", /* 5 */ "open rebellion flares",
-  /* 6 */ "an army revolts", /* 7 */ "religions schism",
-  /* 8 */ "peasants revolt", /* 9 */ "dragons raid", /* 10 */ "a famine rages",
-  /* 11 */ "a hurricane blows over", /* 12 */ "a tornado hits",
-  /* 13 */ "a volcano erupts", /* 14 */ "a royal wedding occurs",
+  /* 0 */ "a military rebellion",
+  /* 1 */ "a cult breaks with you",
+  /* 2 */ "a province rebels",
+  /* 3 */ "an evil wizard sets up",
+  /* 4 */ "a tax revolt occurs",
+  /* 5 */ "open rebellion flares",
+  /* 6 */ "an army revolts",
+  /* 7 */ "religions schism",
+  /* 8 */ "peasants revolt",
+  /* 9 */ "dragons raid",
+  /* 10 */ "a famine rages",
+  /* 11 */ "a hurricane blows over",
+  /* 12 */ "a tornado hits",
+  /* 13 */ "a volcano erupts",
+  /* 14 */ "a royal wedding occurs",
   /* 15 */ "new alloy discovered",
   /* 16 */ "royal advisor discovered to be spy",
-  /* 17 */ "gold strike in one sector", /* 18 */ "gold strike in one sector",
+  /* 17 */ "gold strike in one sector",
+  /* 18 */ "gold strike in one sector",
   /* 19 */ "gold vein runs out in one goldmine sector",
   /* 20 */ "gold vein runs out in one goldmine sector",
-  /* 21 */ "a flood ravishes", /* 22 */ "an earthquake quakes",
-  /* 23 */ "severe frost destroys crops", /* 24 */ "feared dragon killed",
-  /* 25 */ "several nomad armies raid", /* 26 */ "fire ravishes town",
-  /* 27 */ "black plague rages", /* 28 */ "pirates raid",
-  /* 29 */ "savages raid", /* 30 */ "wizard grants power",
-  /* 31 */ "magic item grants magic power", /* 32 */ "ores in one mine run out",
+  /* 21 */ "a flood ravishes",
+  /* 22 */ "an earthquake quakes",
+  /* 23 */ "severe frost destroys crops",
+  /* 24 */ "feared dragon killed",
+  /* 25 */ "several nomad armies raid",
+  /* 26 */ "fire ravishes town",
+  /* 27 */ "black plague rages",
+  /* 28 */ "pirates raid",
+  /* 29 */ "savages raid",
+  /* 30 */ "wizard grants power",
+  /* 31 */ "magic item grants magic power",
+  /* 32 */ "ores in one mine run out",
   /* 33 */ "new architect strengthens castle walls",
   /* 34 */ "new ores discovered + 4-10 metal one sector",
   /* 35 */ "skilled diplomacy obtains peace",
-  /* 36 */ "powerful magi curses nation", /* 37 */ "severe winter hits",
+  /* 36 */ "powerful magi curses nation",
+  /* 37 */ "severe winter hits",
   /* 38 */ "tidal wave -- abandon all coastlands ",
-  /* 39 */ "ninja destroy general staff", /* 40 */ "general found to be spy",
+  /* 39 */ "ninja destroy general staff",
+  /* 40 */ "general found to be spy",
   /* 41 */ "general prosperity +20% gold",
   /* 42 */ "disease kills 20% of soldiers",
   /* 43 */ "poor conditions kill 20% of soldiers"
@@ -76,8 +93,22 @@ char *randevents[] = {
 
 #define MAXRANEVENT 43
 
-/*finds unused nation and sets it up partially*/
-int findnew() {
+int findnew(void);
+char getnewmark(void);
+int disolve(int target, int percent, int ispsnt);
+int getnewname(int new);
+void randomevent(void);
+void wdisaster(int cntry, int xloc, int yloc, int prcnt, char *event);
+int other_revolt(int *new);
+#ifdef VULCANIZE
+void erupt(void);
+#endif
+void blowup(register int i, register int j);
+void reduce(int x, int y, int percent);
+struct s_sector *rand_sector(void);
+
+/* finds unused nation and sets it up partially */
+int findnew(void) {
   int newntn = 0, nationis;
 
   for (nationis = NTOTAL - 1; nationis >= 1; nationis--)
@@ -94,7 +125,7 @@ int findnew() {
 }
 
 /* returns unused character for nation mark */
-char getnewmark() {
+char getnewmark(void) {
   char tmpchr = 'A' - 1; /* cap letters first */
 
   while (TRUE) {
@@ -110,9 +141,7 @@ char getnewmark() {
 }
 
 /* disolve 'percent' of nation 'target; returns index of new nation */
-int disolve(percent, target, ispsnt) int target;
-int percent;
-int ispsnt; /* true/false */
+int disolve(int target, int percent, int ispsnt /* true/false */)
 {
   int new;   /* new nation number */
   int split; /* number of sectors split */
@@ -297,7 +326,7 @@ int ispsnt; /* true/false */
 }
 
 /* get new npc nation name from list at start of this file */
-int getnewname(new) int new;
+int getnewname(int new)
 {
   int count, i = 0;
 
@@ -313,7 +342,7 @@ int getnewname(new) int new;
   return (0);
 }
 
-void randomevent() {
+void randomevent(void) {
   int percent, count, event, newnation, i, j, armynum, x, y;
   int done, holdval; /* if 1 then event happened */
   long longval;
@@ -973,8 +1002,7 @@ void randomevent() {
 }
 
 /* print a report to the appropriate places */
-void wdisaster(cntry, xloc, yloc, prcnt, event) int cntry, xloc, yloc, prcnt;
-char *event;
+void wdisaster(int cntry, int xloc, int yloc, int prcnt, char *event)
 {
   fprintf(fnews, "1. \t%s in %s\n", event, ntn[cntry].name);
   printf("\t%s in %s\n", event, ntn[cntry].name);
@@ -1031,8 +1059,8 @@ char *event;
     mailclose(cntry);
 }
 
-int peasant_revolt(newnation) /* peasant revolt */
-    int *newnation;           /* return nation id */
+/* peasant revolt */
+void peasant_revolt(int *newnation /* return nation id */)
 {
   register int i, j;
   int armynum;
@@ -1071,8 +1099,8 @@ int peasant_revolt(newnation) /* peasant revolt */
   curntn = &ntn[country];  /* fix above beware comment */
   return;
 }
-int other_revolt(new) /* return reason and new nation number */
-    int *new;
+
+int other_revolt(int *new /* return reason and new nation number */)
 {
   short reason = rand() % 8;
 
@@ -1114,8 +1142,9 @@ int other_revolt(new) /* return reason and new nation number */
 }
 
 #ifdef VULCANIZE
-/*volcano erupts --- causes devastation in surrounding sectors */
-void erupt() {
+
+/* volcano erupts --- causes devastation in surrounding sectors */
+void erupt(void) {
   int i, j, nvolcanos = 0, volhold;
 
   printf("checking for volcanic eruptions\n");
@@ -1143,7 +1172,7 @@ void erupt() {
 #endif /* VULCANIZE */
 
 /* blowup a volcano in sector i,j */
-void blowup(i, j) register int i, j;
+void blowup(register int i, register int j)
 {
   register int x, y;
 
@@ -1184,7 +1213,7 @@ void blowup(i, j) register int i, j;
 }
 
 /** reduce will drop armies & and civilians in sector by percent **/
-void reduce(x, y, percent) int x, y, percent;
+void reduce(int x, int y, int percent)
 {
   long temp; /* used to avoid overflow problems */
   int armynum, ctry;
@@ -1212,7 +1241,7 @@ void reduce(x, y, percent) int x, y, percent;
 }
 
 /* returns pointer to random sector in country */
-struct s_sector *rand_sector() {
+struct s_sector *rand_sector(void) {
   int count = 0;
 
   for (xpos = 0; xpos < MAPX; xpos++)
