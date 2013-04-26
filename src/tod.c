@@ -26,19 +26,20 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <time.h>
 #include <string.h>
 #include <pwd.h>
+#include <unistd.h>
 
-int time_check();
+int time_check(char *dirarea, int owneruid);
 
 char time_check_value[27];
 
-int time_check(dirarea, owneruid) char *dirarea;
-int owneruid;
+int time_check(char *dirarea, int owneruid)
 {
   register int i;
   char buffer[256];
@@ -84,7 +85,7 @@ int owneruid;
     sprintf(buffer, "members");
   else
     sprintf(buffer, "%s/members", dirarea);
-  if (mfp = fopen(buffer, "r")) {
+  if ((mfp = fopen(buffer, "r"))) {
     char nameline[256];
 #ifdef DEBUG
     fprintf(stderr, "opened member file...\n");
@@ -94,12 +95,12 @@ int owneruid;
         bzero(nameline, 256);
         fscanf(mfp, "%s", nameline);
         if (strcmp(nameline, "")) {
-          struct passwd *theiruid;
+          struct passwd *theiruid = getpwnam(nameline);
 #ifdef DEBUG
           fprintf(stderr, "We found a name... is it yours?\n");
 #endif
-          if (theiruid = getpwnam(nameline)) {
-            if ((owneruid == (getpwnam(nameline))->pw_uid)) {
+          if (theiruid) {
+            if (owneruid == theiruid->pw_uid) {
               fclose(mfp);
               return 1;
             }
