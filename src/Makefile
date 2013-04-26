@@ -296,10 +296,10 @@ $(HELPOUT)5:	$(HELP)5 $(HELPSCR).1 $(HELPSCR).2
 	cat $(HELP)5 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)5
 
 $(HELPSCR).1:	newhelp
-	newhelp
+	./newhelp
 
 $(HELPSCR).2:	newhelp
-	newhelp
+	./newhelp
 
 newhelp:	dataG.o	newhelp.o
 	$(CC) $(OPTFLG) dataG.o newhelp.o -o newhelp
