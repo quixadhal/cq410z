@@ -32,6 +32,7 @@
 
 /*include files*/
 #include <ctype.h>
+#include <string.h> /* strlen() */
 #include "header.h"
 #include "data.h"
 #include <sys/types.h>
