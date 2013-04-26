@@ -29,6 +29,8 @@
 #include "header.h"
 #include "data.h"
 #include <ctype.h>
+#include <string.h> /* strlen() */
+#include <unistd.h> /* sleep() */
 
 extern short country;
 extern short redraw;
