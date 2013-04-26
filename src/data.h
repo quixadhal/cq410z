@@ -687,7 +687,7 @@ extern struct s_sector *rand_sector();
 extern void     subgships(), submships(), subwships(), getspace(), sackem();
 /* extern void     sleep(); */
 extern void	whatcansee(), reset_god(), get_nname(), camp_info();
-extern void     main(), makebottom(), makeside(), check_mail(), centermap();
+extern void     makebottom(), makeside(), check_mail(), centermap();
 extern void     checkout(), copyscreen(), bye(), credits(), init_hasseen();
 extern void     combinearmies(), change_status(), reducearmy(), splitarmy();
 extern void     errormsg(), clear_bottom(), addgroup(), ext_cmd();

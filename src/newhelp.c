@@ -31,8 +31,7 @@
 #include "data.h"
 #include "patchlevel.h"
 
-void
-main()
+int main(void)
 {
   FILE           *fp,
                  *fp2,
@@ -63,7 +62,7 @@ main()
   fprintf(fp, "s/XBREAKJIHAD/%ld/g\n", MINJIHADCOST);
   fprintf(fp, "s/XCONQENV/%s/g\n", ENVIRON_OPTS);
   fprintf(fp, "s/XNCITYCOST/%d/g\n", N_CITYCOST);
-  fprintf(fp, "s/XREBUILDCOST/%d/g\n", REBUILDCOST);
+  fprintf(fp, "s/XREBUILDCOST/%ld/g\n", REBUILDCOST);
 
   /* check all the defined options */
 
@@ -195,7 +194,7 @@ main()
   fprintf(fp, "s/ZGRANARY/GRANARY   (%c)/g\n", DGRANARY);
   fprintf(fp, "s/ZCHURCH/CHURCH    (%c)/g\n", DCHURCH);
   fprintf(fp, "s/ZSTOCKADE/STOCKADE  (%c)/g\n", DSTOCKADE);
-  fprintf(fp, "s/ZSTOCKCOST/%d/g\n", STOCKCOST);
+  fprintf(fp, "s/ZSTOCKCOST/%ld/g\n", STOCKCOST);
 
   /* other defines */
 
@@ -220,25 +219,25 @@ main()
   fprintf(fp, "s/XWARSHPCOST/%ld/g\n", WARSHPCOST);
   fprintf(fp, "s/XMERSHPCOST/%ld/g\n", MERSHPCOST);
   fprintf(fp, "s/XGALSHPCOST/%ld/g\n", GALSHPCOST);
-  fprintf(fp, "s/XSHIPCREW/%ld/g\n", SHIPCREW);
-  fprintf(fp, "s/XSHIPHOLD/%d/g\n", SHIPHOLD);
+  fprintf(fp, "s/XSHIPCREW/%d/g\n", SHIPCREW);
+  fprintf(fp, "s/XSHIPHOLD/%ld/g\n", SHIPHOLD);
   fprintf(fp, "s/XWARSPD/%d/g\n", N_WSPD);
   fprintf(fp, "s/XGALSPD/%d/g\n", N_GSPD);
   fprintf(fp, "s/XMERSPD/%d/g\n", N_MSPD);
   fprintf(fp, "s/XSIZESPD/%d/g\n", N_SIZESPD);
   fprintf(fp, "s/XNMASK/%d/g\n", (int) N_MASK);
-  fprintf(fp, "s/XCITYLIMIT/%d/g\n", CITYLIMIT);
-  fprintf(fp, "s/XMILRATIO/%d/g\n", MILRATIO);
-  fprintf(fp, "s/XMILINCAP/%d/g\n", MILINCAP);
+  fprintf(fp, "s/XCITYLIMIT/%ld/g\n", CITYLIMIT);
+  fprintf(fp, "s/XMILRATIO/%ld/g\n", MILRATIO);
+  fprintf(fp, "s/XMILINCAP/%ld/g\n", MILINCAP);
   fprintf(fp, "s/XBRIBE/%ld/g\n", BRIBE);
   fprintf(fp, "s/XDESFOOD/%d/g\n", DESFOOD);
-  fprintf(fp, "s/XTOMUCHMINED/%d/g\n", TOMUCHMINED);
-  fprintf(fp, "s/XTOMANYPEOPLE/%d/g\n", TOMANYPEOPLE);
-  fprintf(fp, "s/XABSMAXPEOPLE/%d/g\n", ABSMAXPEOPLE);
+  fprintf(fp, "s/XTOMUCHMINED/%ld/g\n", TOMUCHMINED);
+  fprintf(fp, "s/XTOMANYPEOPLE/%ld/g\n", TOMANYPEOPLE);
+  fprintf(fp, "s/XABSMAXPEOPLE/%ld/g\n", ABSMAXPEOPLE);
   fprintf(fp, "s/XFINDPERCENT/%d/g\n", FINDPERCENT);
 
 #ifdef ORCTAKE
-  fprintf(fp, "s/XTAKEPRICE/%d/g\n", ORCTAKE);
+  fprintf(fp, "s/XTAKEPRICE/%ld/g\n", ORCTAKE);
 #endif	/* ORCTAKE */
 
   fprintf(fp, "s/XTGATTR/%d/g\n", TGATTR);
