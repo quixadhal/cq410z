@@ -559,7 +559,7 @@ struct s_nation {		/* player nation stats	 */
 #define	AADJMERC fprintf(fexe,"A_MERC\t%d\t%d\t%ld\t0\t0\t%s\n",MSETA,country,men,"null")
 #define	AADJDISB fprintf(fexe,"A_MERC\t%d\t%d\t%ld\t%d\t%d\t%s\n",MSETB,country,bemerc,attset,defset,"null")
 #define	AADJSTAT fprintf(fexe,"A_STAT\t%d\t%hd\t%d\t%d\t0\t%s\n",XASTAT,country,armynum,ntn[country].arm[armynum].stat,"null")
-#define	AADJMEN	fprintf(fexe,"L_ADJMEN\t%d\t%hd\t%hd\t%ld\t%d\t%s\n",XAMEN,country,armynum,P_ASOLD,P_ATYPE,"null")
+#define	AADJMEN	fprintf(fexe,"L_ADJMEN\t%d\t%hd\t%d\t%ld\t%d\t%s\n",XAMEN,country,armynum,P_ASOLD,P_ATYPE,"null")
 #define	NADJCRW	fprintf(fexe,"N_ASHP\t%d\t%hd\t%hd\t%d\t%d\t%s\n",XNACREW,country,nvynum,NCREW,ntn[country].nvy[nvynum].armynum,"null")
 #define	NADJMER	fprintf(fexe,"N_ASHP\t%d\t%hd\t%d\t%hd\t%d\t%s\n",XNAMER,country,nvynum,ntn[country].nvy[nvynum].merchant,0,"null")
 #define	NADJWAR	fprintf(fexe,"N_ASHP\t%d\t%hd\t%d\t%hd\t%d\t%s\n",XNAWAR,country,nvynum,ntn[country].nvy[nvynum].warships,0,"null")
