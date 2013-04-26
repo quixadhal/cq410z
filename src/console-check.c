@@ -30,7 +30,9 @@
  */
 
 #ifdef TEST_MAIN
-static char *rcsid = "$Id: console-check.c,v 2.2 1991/09/26 06:30:23 cclub Exp cclub $";	/* RCS auto ident string. */
+static char *rcsid =
+    "$Id: console-check.c,v 2.2 1991/09/26 06:30:23 cclub Exp cclub $";
+    /* RCS auto ident string. */
 #endif
 
 /*
@@ -69,62 +71,64 @@ char console_check_name[21];
 #ifdef TEST_MAIN
 main()
 {
-  if(!console_check(getuid())) printf("You are at console %s.\n",
-    console_check_name);
-  else puts("You are not logged into a workstation console.");
+  if (!console_check(getuid()))
+    printf("You are at console %s.\n", console_check_name);
+  else
+    puts("You are not logged into a workstation console.");
 }
 #endif
 
-int
-console_check(id)
-int id;
+int console_check(id) int id;
 {
   struct passwd *pw;
   char buffer[81];
   FILE *fp;
   int ok;
 
-  ok= 0;
-  if(!(pw= getpwuid(id))) return 0;
+  ok = 0;
+  if (!(pw = getpwuid(id)))
+    return 0;
   setuid(geteuid());
   sprintf(buffer, "/usr/local/bin/spy -u %s publab", pw->pw_name);
 #ifdef DEBUG
-fprintf(stderr, "Opening pipe to spy program...\n");
+  fprintf(stderr, "Opening pipe to spy program...\n");
 #endif
-  if(fp= popen(buffer, "r"))
-    if(!feof(fp)) {
-      ok= 1;
-      while(!feof(fp))
-        if(fgets(buffer, 80, fp))
-          if((buffer[44]== 'c') && (buffer[45]== 'o')) {
-	    ok= 0;
-	    strtok(buffer, " ");
-	    strcpy(console_check_name, strtok(NULL, " "));
+  if (fp = popen(buffer, "r"))
+    if (!feof(fp)) {
+      ok = 1;
+      while (!feof(fp))
+        if (fgets(buffer, 80, fp))
+          if ((buffer[44] == 'c') && (buffer[45] == 'o')) {
+            ok = 0;
+            strtok(buffer, " ");
+            strcpy(console_check_name, strtok(NULL, " "));
           }
     }
-  if(fp) pclose(fp);
+  if (fp)
+    pclose(fp);
 #ifdef DEBUG
-fprintf(stderr, "Closed pipe to spy program\n");
+  fprintf(stderr, "Closed pipe to spy program\n");
 #endif
   setuid(getuid());
   return ok;
 }
 
-int
-console_checking_active(dirarea)
-char *dirarea;
+int console_checking_active(dirarea) char *dirarea;
 {
   char buffer[256];
   FILE *fp;
 
-  if(dirarea) {
+  if (dirarea) {
     sprintf(buffer, "%s/tracking", dirarea);
-    if(!(fp= fopen(buffer, "r"))) return 0;
-    if(fgetc(fp)== '1') {
-      if(fp) fclose(fp);
+    if (!(fp = fopen(buffer, "r")))
+      return 0;
+    if (fgetc(fp) == '1') {
+      if (fp)
+        fclose(fp);
       return 1;
     }
-    if(fp) fclose(fp);
+    if (fp)
+      fclose(fp);
   }
   return 0;
 }
