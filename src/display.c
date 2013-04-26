@@ -60,6 +60,7 @@ void init_hasseen() {
   hasseen = (char *)malloc(((COLS - 10) / 2) * (LINES - 5));
 
 #ifdef BSD
+#include <strings.h>
   bzero(hasseen, ((COLS - 10) / 2) * (LINES - 5));
 #else
   memset(hasseen, 0, ((COLS - 10) / 2) * (LINES - 5));
