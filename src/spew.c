@@ -113,9 +113,24 @@ int CompMain;       /* class # of MAIN class when compressed */
 
 char InLine[MAXLINE];
 
-makemess(n, fp)
-int n;
-FILE *fp;
+void makemess(int n, FILE *fp);
+void init(void);
+void readtext(void);
+void display(char *s, int deftag, FILE *fp);
+classrec *lookup(char *str);
+int namecomp(register char *a, register char *b);
+void readline(void);
+int clcomp(register classrec *a, register classrec *b);
+char *save(char *str);
+void setup(register classrec *cp);
+defn *process(void);
+char *my_alloc(unsigned n);
+void compdef(register defn *dp);
+void readcclass(register classrec *cp);
+void instring(register char *where, register int how_many);
+void badfile(void);
+
+void makemess(int n, FILE *fp)
 {
   char fname[BIGLTH];
   char main_class[20];
@@ -139,10 +154,11 @@ FILE *fp;
     display(main_class, ' ', fp);
 }
 
-init()
-{ readtext(); }
+void init(void) {
+  readtext();
+}
 
-readtext()
+void readtext(void)
 {
   register classrec *cp;
   register defn *dp;
@@ -193,10 +209,7 @@ readtext()
  * variants. If that variant tag is '&', the tag 'deftag' is used, which
  * is the active variant of the containing activation.
  */
-display(s, deftag, fp)
-char *s;
-int deftag;
-FILE *fp;
+void display(char *s, int deftag, FILE *fp)
 {
   register classrec *cp;
   register defn *dp;
@@ -286,8 +299,8 @@ FILE *fp;
           putc(c, fp);
     }
 }
-classrec *lookup(str) /* delimited by SLASH, not '\0' */
-    char *str;
+
+classrec *lookup(char *str) /* delimited by SLASH, not '\0' */
 {
   int first, last, try, comp;
   int namecomp();
@@ -306,8 +319,8 @@ classrec *lookup(str) /* delimited by SLASH, not '\0' */
   }
   return NULL;
 }
-int namecomp(a, b) /* 'a' is delim. by SLASH, 'b' by NULL */
-    register char *a, *b;
+
+int namecomp(register char *a, register char *b) /* 'a' is delim. by SLASH, 'b' by NULL */
 {
   register int ac;
 
@@ -324,7 +337,7 @@ int namecomp(a, b) /* 'a' is delim. by SLASH, 'b' by NULL */
   }
 }
 
-readline()
+void readline(void)
 {
   register char *p;
 
@@ -345,13 +358,14 @@ readline()
   } while (InLine[0] == '\0');
 }
 
-int clcomp(a, b) register classrec *a, *b;
+int clcomp(register classrec *a, register classrec *b)
 {
   if (a == b)
     return 0;
   return strcmp(a->name, b->name);
 }
-char *save(str) char *str;
+
+char *save(char *str)
 {
   register char *p;
 
@@ -362,8 +376,7 @@ char *save(str) char *str;
 /*
  * setup a class record. The 'class' line is in InLine.
  */
-setup(cp)
-register classrec *cp;
+void setup(register classrec *cp)
 {
   char temp[100];
   register char *p, *p2;
@@ -415,7 +428,7 @@ baddec:
  * the definition. The 'cumul' field is temporarily used to hold the
  * assigned weight of the line.
  */
-defn *process() {
+defn *process(void) {
   static char stuff[MAXDEF];
   register char *p, *pout;
   register defn *dp;
@@ -483,7 +496,7 @@ badweight:
   /* NOTREACHED */
 }
 
-char *my_alloc(n) unsigned n;
+char *my_alloc(unsigned n)
 {
   register char *p;
 
@@ -495,8 +508,7 @@ char *my_alloc(n) unsigned n;
   return p;
 }
 
-compdef(dp)
-register defn *dp;
+void compdef(register defn *dp)
 {
   register char *p;
   register int c;
@@ -531,8 +543,7 @@ register defn *dp;
   putchar(0);
 }
 
-readcclass(cp)
-register classrec *cp;
+void readcclass(register classrec *cp)
 {
   register int n;
   register defn *dp;
@@ -558,9 +569,7 @@ register classrec *cp;
   *dput = NULL; /* last one */
 }
 
-instring(where, how_many)
-register char *where;
-register int how_many;
+void instring(register char *where, register int how_many)
 {
   register int c;
 
@@ -575,7 +584,7 @@ register int how_many;
   badfile();
 }
 
-badfile()
+void badfile(void)
 {
   fprintf(stderr, "Bad file format\n");
   exit(1);
