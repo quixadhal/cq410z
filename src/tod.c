@@ -92,7 +92,7 @@ int time_check(char *dirarea, int owneruid)
 #endif
     while (!feof(mfp)) {
       if (!feof(mfp)) {
-        bzero(nameline, 256);
+        memset(nameline, 0, sizeof nameline);
         fscanf(mfp, "%s", nameline);
         if (strcmp(nameline, "")) {
           struct passwd *theiruid = getpwnam(nameline);

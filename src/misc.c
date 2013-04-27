@@ -323,11 +323,7 @@ int movee;
 
   history_reachp = (unsigned char **)m2alloc(MAPX, MAPY, sizeof(char));
 
-#ifdef BSD
-  bzero((char *)*history_reachp, MAPX * MAPY);
-#else
   memset((char *)*history_reachp, 0, MAPX * MAPY);
-#endif
 
   history_reachp[ax][ay] = move_points;
 
