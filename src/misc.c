@@ -1358,7 +1358,12 @@ void prep(int nation, int leader)
   }
 
   /* set occ to country of occupant army */
-  for (nation = start; nation < end; nation++)
+  for (nation = start; nation < end; nation++) {
+    /* warn if nation id is more than a single occ[][] cell can store */
+    if (nation > (unsigned char) -1) {
+      fprintf(stderr, "prep(): nation = %d\n", nation);
+      continue;
+    }
     if (ntn[nation].active != INACTIVE) {
       curntn = &ntn[nation];
       for (armynum = 0; armynum < MAXARM; armynum++) {
@@ -1377,9 +1382,9 @@ void prep(int nation, int leader)
           i = P_AXLOC;
           j = P_AYLOC;
           if ((occ[i][j] == 0) || (occ[i][j] == nation))
-            occ[i][j] = nation;
+            occ[i][j] = (unsigned char) nation;
           else
-            occ[i][j] = NTOTAL;
+            occ[i][j] = (unsigned char) NTOTAL;
         }
       }
       if (leader == FALSE)
@@ -1388,12 +1393,13 @@ void prep(int nation, int leader)
             i = P_NXLOC;
             j = P_NYLOC;
             if ((occ[i][j] == 0) || (occ[i][j] == nation))
-              occ[i][j] = nation;
+              occ[i][j] = (unsigned char) nation;
             else
-              occ[i][j] = NTOTAL;
+              occ[i][j] = (unsigned char) NTOTAL;
           }
         }
     }
+  }
   nation = save;
   curntn = &ntn[nation];
 }
