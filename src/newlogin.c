@@ -29,6 +29,8 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h> /* chmod() */
+#include <string.h> /* strdup(), strlen(), strcmp() */
 #include "patchlevel.h"
 #include "header.h"
 #include "data.h"
@@ -410,7 +412,7 @@ void newlogin() {
   char tempc[LINELTH];
   char passwd[PASSLTH + 1];
   char pwd2[PASSLTH + 1];
-  register i;
+  register int i;
   uid_t suid;
   struct passwd *spasswd;
 
