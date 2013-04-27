@@ -40,22 +40,11 @@ static char *cpr[] = {
 #include <string.h> /* strlen(), strcmp() */
 #include <ctype.h>
 
-extern char *malloc();
-extern int atoi();
 char *my_alloc();
 char *save();
 
-#ifdef BSD
-extern char *index();  /* This may be strchr	 */
-extern char *rindex(); /* This may be strrchr	 */
-
-#else
-#define index(s, c) strchr(s, c)
-#define rindex(s, c) strrchr(s, c)
-extern char *strchr();  /* This may be index	 */
-extern char *strrchr(); /* This may be rindex	 */
-
-#endif
+#define index(s, c) strchr((s),(c))
+#define rindex(s, c) strrchr((s),(c))
 
 /*--------------- system configuration ------------------*/
 
