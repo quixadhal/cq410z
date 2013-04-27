@@ -132,8 +132,8 @@ struct passwd *getpwinfo(uid_t uid)
     MYOOPS;
   pwd->pw_uid = tpwd->pw_uid;
   pwd->pw_gid = tpwd->pw_gid;
-  //  if(!(pwd->pw_age= (char *) strdup(tpwd->pw_age))) MYOOPS;
-  //  if(!(pwd->pw_comment= (char *) strdup(tpwd->pw_comment))) MYOOPS;
+  /*  if(!(pwd->pw_age= (char *) strdup(tpwd->pw_age))) MYOOPS; */
+  /*  if(!(pwd->pw_comment= (char *) strdup(tpwd->pw_comment))) MYOOPS; */
   if (!(pwd->pw_gecos = (char *)strdup(tpwd->pw_gecos)))
     MYOOPS;
   if (!(pwd->pw_dir = (char *)strdup(tpwd->pw_dir)))
