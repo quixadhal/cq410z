@@ -1355,21 +1355,26 @@ populate()
 
   for (i = 0; i < MAXHELP; i++) {
 #ifdef USE_COMPRESS
-    sprintf(fname, "%s < %s/%s%d.%s", ZCAT, RONLY_DIR, helpfile, i,
-    ZEXT);
 #ifdef DEBUG
 fprintf(stderr, "Opening pipe to read helpfile %d\n", i);
 #endif
+    sprintf(fname, "%s < %s/%s%d.%s", ZCAT, RONLY_DIR, helpfile, i, ZEXT);
     if (((fp = popen(fname, "r")) == NULL) || feof(fp)) {
-#else
-    sprintf(fname, "%s/%s%d", RONLY_DIR, helpfile, i);
-    if ((fp = fopen(fname, "r")) == NULL) {
-#endif
       char            tempc[BIGLTH];
 
       sprintf(tempc, "cannot find helpfile <%s/%s>.", RONLY_DIR, fname);
       newerror(tempc);
     }
+#else
+    sprintf(fname, "%s/%s%d", RONLY_DIR, helpfile, i);
+    if ((fp = fopen(fname, "r")) == NULL) {
+      char            tempc[BIGLTH];
+
+      sprintf(tempc, "cannot find helpfile <%s/%s>.", RONLY_DIR, fname);
+      newerror(tempc);
+    }
+#endif
+
 #ifdef USE_COMPRESS
 #ifdef DEBUG
 fprintf(stderr, "Closing read pipe to helpfile %d\n", i);
