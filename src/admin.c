@@ -31,6 +31,8 @@
 #include "header.h"
 #include "data.h"
 #include <ctype.h>
+#include <string.h> /* strlen(), strncmp() */
+#include <unistd.h> /* sleep(), unlink(), chdir() */
 
 #include <signal.h>
 
@@ -77,14 +79,15 @@ int calleruid;
 FILE *fexe, *fopen();
 
 int main(int argc, char **argv) {
-  int geteuid(), getuid(), setuid(), realuser, l;
+  int realuser, l;
   register int i, j;
   char *name;
 
 #ifndef __STDC__
   void srand();
-
+  int geteuid(), getuid(), setuid();
 #endif
+
   int getopt();
   long time();
 
