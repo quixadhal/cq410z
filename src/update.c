@@ -575,9 +575,9 @@ void score() {
     /* But go ahead and admonish all the players if an NPC is doing
      * better than they are by telling them!
      */
-    if (isntn(ntn[x].active))
-      if (ntn[x].score > s3)
-        if (ntn[x].score > s2)
+    if (isntn(ntn[x].active)) {
+      if (ntn[x].score > s3) {
+        if (ntn[x].score > s2) {
           if (ntn[x].score > s1) {
             n3 = n2;
             n2 = n1;
@@ -591,10 +591,13 @@ void score() {
             s3 = s2;
             s2 = ntn[x].score;
           }
+	}
         else {
           n3 = x;
           s3 = ntn[x].score;
         }
+      }
+    }
   }
   if ((n4 == n1) || (n4 == n2) || (n4 == n3))
     n4 = 0;
@@ -1105,12 +1108,13 @@ fprintf(stderr, "Sector owned by %s\n", ntn[sptr->owner].name);
                   curntn->popularity++;
               } else if ((sptr->owner != country) &&
                          (curntn->dstatus[sptr->owner] >= WAR)) {
-                if (ntn[sptr->owner].race != curntn->race)
+                if (ntn[sptr->owner].race != curntn->race) {
                   if (magic(country, SLAVER) == TRUE) {
                     flee(P_AXLOC, P_AYLOC, 1, TRUE);
                   } else {
                     flee(P_AXLOC, P_AYLOC, 1, FALSE);
                   }
+		}
 
                 if ((isntn(curntn->active)) &&
                     (isntn(ntn[sptr->owner].active))) {
@@ -1243,11 +1247,12 @@ void updsectors() {
 
       /* add to contents of sector */
       if (rand() % 100 < FINDPERCENT) {
-        if (sct[x][y].tradegood == TG_none)
+        if (sct[x][y].tradegood == TG_none) {
           if (rand() % 2 == 0)
             getmetal(&sct[x][y]);
           else
             getjewel(&sct[x][y]);
+	}
       }
       /* calculate reproduction per season */
       rephold = nptr->repro / 4;
