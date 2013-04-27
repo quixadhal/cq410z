@@ -109,7 +109,7 @@ long dtol(double d)
   char tempstr[BIGLTH];
   long l;
 
-  sprintf(tempstr, "%-60.0lf", d);
+  sprintf(tempstr, "%-60.0f", d);
   sscanf(tempstr, "%ld", &l);
   return (l);
 }
