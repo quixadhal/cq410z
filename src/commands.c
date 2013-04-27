@@ -31,6 +31,9 @@
 #include "header.h"
 #include "data.h"
 #include <ctype.h>
+#include <unistd.h> /* sleep() */
+#include <time.h> /* time() */
+#include <string.h> /* memchr(), strncmp(), strlen() */
 
 #ifdef CONQUER
 #include <sys/types.h>
