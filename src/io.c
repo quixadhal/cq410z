@@ -52,10 +52,18 @@ extern short redraw;           /* redraw map in this turn if redraw is a 1 */
 extern short hilmode, dismode; /* display state */
 extern short country;          /* nation id of owner */
 
+void getspace(void);
+void writedata(void);
+void readdata(void);
+void flee(int x, int y, int isupd, int slaver);
+char **m2alloc(int nrows, int ncols, int entrysize);
+int get_pass(char *str);
+
+
 /************************************************************************/
 /*	GETSPACE() - malloc all space needed	 			*/
 /************************************************************************/
-void getspace() {
+void getspace(void) {
   if (sct != NULL)
     free(sct);
   sct = (struct s_sector **)m2alloc(MAPX, MAPY, sizeof(struct s_sector));
@@ -70,10 +78,16 @@ void getspace() {
 #ifdef CONQUER
 char **mapseen;
 
+void mapprep(void);
+void printele(void);
+void pr_ntns(void);
+void pr_desg(void);
+void printveg(void);
+
 /************************************************************************/
 /*	MAPPREP() - initialize map with what can be seen by nation.	*/
 /************************************************************************/
-void mapprep() {
+void mapprep(void) {
   int armynum, nvynum;
   int x, y, i, j;
 
@@ -128,7 +142,7 @@ void mapprep() {
 /************************************************************************/
 /*	PRINTELE() - print a sector.altitude map 			*/
 /************************************************************************/
-void printele() {
+void printele(void) {
   register int X, Y;
 
   fprintf(stderr, "doing print of altitude\n");
@@ -153,7 +167,7 @@ void printele() {
 /************************************************************************/
 /*	PR_NTNS() - print nation marks					*/
 /************************************************************************/
-void pr_ntns() {
+void pr_ntns(void) {
   register int X, Y;
 
   fprintf(stderr, "doing print of nations\n");
@@ -181,7 +195,7 @@ void pr_ntns() {
 /************************************************************************/
 /*	PR_DESG() - print designations					*/
 /************************************************************************/
-void pr_desg() {
+void pr_desg(void) {
   register int X, Y;
 
   fprintf(stderr, "doing print of designations\n");
@@ -214,7 +228,7 @@ void pr_desg() {
 /************************************************************************/
 /*	PRINTVEG() -	print a vegetation map subroutine		*/
 /************************************************************************/
-void printveg() {
+void printveg(void) {
   register int X, Y;
 
   fprintf(stderr, "doing print of vegetation\n");
@@ -242,7 +256,7 @@ void printveg() {
 /*	WRITEDATA() - write data to datafile 				*/
 /*	trashes/creates datafile in the process				*/
 /************************************************************************/
-void writedata() {
+void writedata(void) {
   FILE *fp;
   int n_write, fh, count;
   char line[256], hack[256];
@@ -351,7 +365,7 @@ void writedata() {
 /************************************************************************/
 /*	READDATA()	-	read data & malloc space		*/
 /************************************************************************/
-void readdata() {
+void readdata(void) {
   FILE *fp;
   int n_read;
   char line[256];
@@ -431,10 +445,13 @@ void readdata() {
 #ifdef CONQUER
 
 #ifdef XYZZY
+
+void offmap(void);
+
 /************************************************************************/
 /*	OFFMAP()	deal if cursor is off the map			*/
 /************************************************************************/
-void offmap() {
+void offmap(void) {
   /* set offset offsets can not be < 0 */
   if (xcurs < 1) {
     if (XREAL <= 0) {
@@ -501,10 +518,14 @@ void offmap() {
 
 #endif /* XYZZY */
 
+void centermap(void);
+void jump_to(int home);
+void printscore(void);
+
 /************************************************************************/
 /*	CENTERMAP()	- redraws screen so that cursor is centered	*/
 /************************************************************************/
-void centermap() {
+void centermap(void) {
   int xx, yy;
 
   xx = XREAL;
@@ -524,7 +545,7 @@ void centermap() {
 /*   JUMP_TO()      - move screen position to a specific location       */
 /*                    home indicates just go to capitol sector.         */
 /************************************************************************/
-void jump_to(home) int home;
+void jump_to(int home)
 {
   int i, j, done;
   static int next_ntn;
@@ -600,7 +621,7 @@ void jump_to(home) int home;
 /************************************************************************/
 /*	PRINTSCORE()	- like it says					*/
 /************************************************************************/
-void printscore() {
+void printscore(void) {
   int i;
   int nationid; /* current nation id */
 
@@ -662,7 +683,7 @@ void printscore() {
 /*	slaver means 25% of populace stays				*/
 /* 	isupd is TRUE if it is update					*/
 /************************************************************************/
-void flee(x, y, isupd, slaver) int x, y, isupd, slaver;
+void flee(int x, int y, int isupd, int slaver)
 {
   int count = 0; /* count is number of acceptable sectors to
 				 * go to */
@@ -753,11 +774,13 @@ void flee(x, y, isupd, slaver) int x, y, isupd, slaver;
 }
 
 #ifdef ADMIN
+int readmap(void);
+
 /************************************************************************/
 /*	READMAP()	- read a map in from map files 			*/
 /*	returns TRUE for success, FALSE for fail			*/
 /************************************************************************/
-int readmap() {
+int readmap(void) {
   FILE *mapfile;
   char line[BIGLTH + 1];
   register int x, y;
@@ -811,9 +834,8 @@ int readmap() {
 /*********************************************************************/
 /* M2ALLOC() - two dimensional array allocator (because C is stupid) */
 /*********************************************************************/
-char **m2alloc(nrows, ncols, entrysize) int nrows; /* row dimension */
-int ncols;                                         /* column dimension */
-int entrysize; /* # bytes in items to be stored */
+/* row dimension, column dimension, # bytes in items to be stored */
+char **m2alloc(int nrows, int ncols, int entrysize)
 {
   char **baseaddr;
   int j;
@@ -836,7 +858,7 @@ int entrysize; /* # bytes in items to be stored */
 
 /* If the string entered is too long, then a truncated */
 /* string is returned.  Length entered is returned.    */
-int get_pass(str) char *str;
+int get_pass(char *str)
 {
   char ch;
   int done = FALSE, count = 0;
