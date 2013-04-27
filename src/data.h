@@ -673,6 +673,10 @@ extern int abs_y(int rely);
 extern void makemess(int n, FILE *fp);
 extern void fixtrade(int cntry);
 extern int doclass(short tmp, int isupd);
+extern void updmove(int race, char cntry);
+extern void highlight(int x, int y, short hmode);
+extern int oldmarkok(char mark, int prtflag, int dupflag);
+extern int avian(unsigned char typ);
 
 extern long     getmagic(), getmagic(), getmgkcost(), score_one();
 extern long     get_number(), solds_in_sector(), defaultunit();

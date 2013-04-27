@@ -61,7 +61,6 @@ void get_display_mode(short *dmode, short *hmode, short *odmode, short *ohmode);
 void newdisplay(void);
 char get_display_for(int x, int y, short dmode);
 void see(int x, int y);
-void highlight(int x, int y, short hmode);
 void coffmap(void);
 int canbeseen(int x, int y);
 void whatcansee(void);
