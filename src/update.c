@@ -71,10 +71,10 @@
 #ifndef XENIX
 #include <sys/types.h>
 #include <sys/file.h>
-#else
-#include <unistd.h>
 #endif
 
+#include <unistd.h> /* unlink() */
+#include <sys/stat.h> /* chmod() */
 #include <limits.h> /* needed for LONG_MAX */
 #include "header.h"
 #include "data.h"
