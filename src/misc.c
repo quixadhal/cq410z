@@ -1520,41 +1520,60 @@ void updmove(int race, char cntry)
     return;
   }
   for (j = 0; veg[j] != '0'; j++) {
+    register unsigned char index;
+    if (veg[j] < 0) {
+      fprintf(stderr, "veg[%d] is negative (%c)", j, veg[j]);
+      continue;
+    } else {
+      index = veg[j];
+    }
     switch (race) {
       case ELF:
-        veg_cost[veg[j]] = EVegcost[j] - '0';
+        veg_cost[index] = EVegcost[j] - '0';
         break;
       case DWARF:
-        veg_cost[veg[j]] = DVegcost[j] - '0';
+        veg_cost[index] = DVegcost[j] - '0';
         break;
       case ORC:
-        veg_cost[veg[j]] = OVegcost[j] - '0';
+        veg_cost[index] = OVegcost[j] - '0';
         break;
       case HUMAN:
       default:
-        veg_cost[veg[j]] = HVegcost[j] - '0';
+        veg_cost[index] = HVegcost[j] - '0';
         break;
     } /* switch */
   }   /* for */
 
-  if (magic(cntry, DERVISH) || magic(cntry, DESTROYER)) {
-    veg_cost[ICE] = 0;
-    veg_cost[DESERT] = 0;
+  if (cntry < 0) {
+    fprintf(stderr, "cntry is negative (%c)", cntry);
+  } else {
+    register unsigned char index = cntry;
+    if (magic(index, DERVISH) || magic(index, DESTROYER)) {
+      veg_cost[(unsigned char) ICE] = 0;
+      veg_cost[(unsigned char) DESERT] = 0;
+    }
   }
   for (j = 0; ele[j] != '0'; j++) {
+    register unsigned char index;
+    if (ele[j] < 0) {
+      fprintf(stderr, "ele[%d] is negative (%c)", j, ele[j]);
+      continue;
+    } else {
+      index = ele[j];
+    }
     switch (race) {
       case ELF:
-        ele_cost[ele[j]] = EElecost[j] - '0';
+        ele_cost[index] = EElecost[j] - '0';
         break;
       case DWARF:
-        ele_cost[ele[j]] = DElecost[j] - '0';
+        ele_cost[index] = DElecost[j] - '0';
         break;
       case ORC:
-        ele_cost[ele[j]] = OElecost[j] - '0';
+        ele_cost[index] = OElecost[j] - '0';
         break;
       case HUMAN:
       default:
-        ele_cost[ele[j]] = HElecost[j] - '0';
+        ele_cost[index] = HElecost[j] - '0';
         break;
     } /* switch */
   }   /* for */
