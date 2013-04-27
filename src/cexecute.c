@@ -35,6 +35,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <sys/stat.h> /* chmod() */
+
 extern long startgold;
 extern short country;
 extern FILE *fexe, *fnews;
