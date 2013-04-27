@@ -20,7 +20,7 @@
 #
 MAKE	= /bin/make
 STANDARD = -std=c89 -D_XOPEN_SOURCE=500 -pedantic
-CC	= gcc $(STANDARD)
+CC	= gcc -Wall -Wno-comment $(STANDARD)
 #CC	= /bin/cc
 RM      = /bin/rm -f
 
