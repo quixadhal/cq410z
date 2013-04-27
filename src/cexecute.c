@@ -373,10 +373,12 @@ curntn->name);
 void hangup() {
   char line[LINELTH];
 
+/* I think I can just remove these calls to sigblock(), since the signal will
+ * be ignored, delivered or not.
   sigblock(sigmask(SIGTSTP));
   sigblock(sigmask(SIGTERM));
   sigblock(sigmask(SIGHUP));
-  sigblock(sigmask(SIGINT));
+  sigblock(sigmask(SIGINT));*/
   signal(SIGTSTP, SIG_IGN);
   signal(SIGHUP, SIG_IGN);
   signal(SIGTERM, SIG_IGN);
