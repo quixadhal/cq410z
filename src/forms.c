@@ -59,7 +59,6 @@ extern long startgold;
 extern short Gaudy;
 extern int killself;
 extern int owneruid;
-int deathok();
 struct passwd *hackpwd;
 
 static char helplist[MAXHELP][20] = { "Commands", "General Info", "Military",
@@ -71,7 +70,16 @@ static char helplist[MAXHELP][20] = { "Commands", "General Info", "Military",
 #define BUF_COLS 15
 #define MAXINROW ((COLS - BUF_COLS) / RPT_COLS)
 #define MAXINSCR (((LINES - BUF_LINES) / RPT_LINES) * MAXINROW)
-void showscore() {
+
+void showscore(void);
+void diploscrn(void);
+void change(void);
+void help(void);
+void mvaddstrnahil(int li, int col, char *p, int hi);
+void newspaper(void);
+int deathok(void);
+
+void showscore(void) {
   int i;
   int done = FALSE;
   int xpos, ypos;
@@ -197,7 +205,7 @@ void showscore() {
 
 #define MAXINCOL (LINES - 10)
 #define MAXONSCR (MAXINCOL * (COLS / 40))
-void diploscrn() {
+void diploscrn(void) {
   int i, j;
   char k, name[LINELTH];
   short nation, offset, count, count2, temp;
@@ -515,7 +523,7 @@ void diploscrn() {
 }
 
 int terror_adj = 0;
-void change() {
+void change(void) {
   float temp;
   char string[LINELTH], command[BIGLTH];
   int i, intval;
@@ -1116,7 +1124,7 @@ country");
   } /* end of continuous loop */
 }
 
-void help() {
+void help(void) {
   int lineno;
   FILE *fp, *fopen();
   int i, xcnt, ycnt, done = FALSE;
@@ -1216,11 +1224,7 @@ void help() {
 
 /* routine to highlight a line for news display */
 /* if country name is mentioned.  By T. Kivinen */
-mvaddstrnahil(li, col, p, hi)
-int li;
-int col;
-char *p;
-int hi;
+void mvaddstrnahil(int li, int col, char *p, int hi)
 {
   int i, j;
 
@@ -1241,7 +1245,7 @@ int hi;
   }
 }
 
-void newspaper() {
+void newspaper(void) {
   int lineno;
   FILE *fp, *fopen();
   int newpage, choice, done;
@@ -1431,7 +1435,7 @@ forpage : /* label for reading forward pages. pagenum
   fclose(fp);
 }
 
-int deathok() {
+int deathok(void) {
   char uid_path[256];
   char time_check_value[27];
   time_t mytime;
