@@ -670,6 +670,8 @@ extern int rel_x(int absx);
 extern int rel_y(int absy);
 extern int abs_x(int relx);
 extern int abs_y(int rely);
+extern void makemess(int n, FILE *fp);
+extern void fixtrade(int cntry);
 
 extern long     getmagic(), getmagic(), getmgkcost(), score_one();
 extern long     get_number(), solds_in_sector(), defaultunit();

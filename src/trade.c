@@ -1000,7 +1000,6 @@ void checktrade(void) {
 
 #ifdef ADMIN
 void uptrade(void);
-void fixtrade(int cntry);
 
 void uptrade(void) {
   FILE *tfile;

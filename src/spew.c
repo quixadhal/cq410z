@@ -113,7 +113,6 @@ int CompMain;       /* class # of MAIN class when compressed */
 
 char InLine[MAXLINE];
 
-void makemess(int n, FILE *fp);
 void init(void);
 void readtext(void);
 void display(char *s, int deftag, FILE *fp);
