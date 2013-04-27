@@ -1217,7 +1217,7 @@ fprintf(stderr, "Sector owned by %s\n", ntn[sptr->owner].name);
       /* check for capitols being sacked */
       if (sct[ntn[country].capx][ntn[country].capy].owner != country) {
 #ifdef DEBUG
-        fprintf(stderr, "Sacking %n!\n", ntn[country].name);
+        fprintf(stderr, "Sacking %s!\n", ntn[country].name);
 #endif
         sackem(country);
       }
@@ -1838,7 +1838,7 @@ void updcomodities() {
                   fprintf(fm, "During the %s of Year %d,\n", PSEASON(TURN),
                           YEAR(TURN));
                   fprintf(fm, "a famine hit your town at %d,%d.\n", relx, rely);
-                  fprintf(fm, "%d out of %d people died.\n", dead,
+                  fprintf(fm, "%ld out of %ld people died.\n", dead,
                           sptr->people);
                   mailclose(country);
                 }
