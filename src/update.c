@@ -90,7 +90,21 @@ long **newpop; /* storage for old population */
 
 int relx, rely;
 
-long dtol(d) double d;
+long dtol(double d);
+void update(void);
+int attract(int x, int y, int race);
+int armymove(int armynum);
+void score(void);
+void updexecs(void);
+void do_lizard(void);
+void updcapture(void);
+void updsectors(void);
+void updmil(void);
+void updcomodities(void);
+void updleader(void);
+void move_people(void);
+
+long dtol(double d)
 {
   char tempstr[BIGLTH];
   long l;
@@ -103,7 +117,7 @@ long dtol(d) double d;
 /****************************************************************/
 /*	UPDATE() - updates the whole world			*/
 /****************************************************************/
-void update() {
+void update(void) {
   char command[BIGLTH], filename[FILELTH];
 
   sprintf(filename, "%s%d", newsfile, TURN);
@@ -199,7 +213,7 @@ void update() {
 /*	ATTRACT() - how attractive is sector to civilians	*/
 /* returns attractiveness 					*/
 /****************************************************************/
-int attract(x, y, race) {
+int attract(int x, int y, int race) {
   register struct s_sector *sptr = &sct[x][y];
   int designation;
   int Attr = 0;
@@ -353,7 +367,7 @@ int attract(x, y, race) {
 /*	ARMYMOVE() 						*/
 /* armymove moves an army... and returns the # of sectors taken	*/
 /****************************************************************/
-int armymove(armynum) int armynum;
+int armymove(int armynum)
 {
   long sum, where;
 
@@ -551,7 +565,7 @@ int armymove(armynum) int armynum;
 /*	SCORE() 						*/
 /* score updates the scores of all nations			*/
 /****************************************************************/
-void score() {
+void score(void) {
   int x;
   int n1, n2, n3, n4;
   long s1, s2, s3, s4;
@@ -659,6 +673,8 @@ isn\'t important\n");
 }
 
 #ifdef CHEAT
+void cheat(void);
+
 /****************************************************************/
 /*	CHEAT() 						*/
 /* this routine cheats in favor of npc nations 			*/
@@ -667,7 +683,7 @@ isn\'t important\n");
 /* good	game.  This routine is the only cheating that it will	*/
 /* do, and it is fairly minor.					*/
 /****************************************************************/
-void cheat() {
+void cheat(void) {
   int x, y;
   int bonus = 0, count = 0, npcavg, pcavg, avgscore = 0;
   char realnpc[NTOTAL], tempc[LINELTH];
@@ -746,7 +762,7 @@ void cheat() {
 /* update all nations in a random order				*/
 /* move civilians of that nation 				*/
 /****************************************************************/
-void updexecs() {
+void updexecs(void) {
   register struct s_sector *sptr;
   register int x, y;
 
@@ -956,7 +972,7 @@ void updexecs() {
 /*	DO_LIZARD() 						*/
 /* update lizards	 					*/
 /****************************************************************/
-void do_lizard() {
+void do_lizard(void) {
 
 #ifdef XENIX
   register int x;
@@ -1031,7 +1047,7 @@ void do_lizard() {
 /*	UPDCAPTURE() 						*/
 /* capture unoccupied sectors					*/
 /****************************************************************/
-void updcapture() {
+void updcapture(void) {
   register struct s_sector *sptr;
   int armynum, occval;
 
@@ -1228,7 +1244,7 @@ fprintf(stderr, "Sector owned by %s\n", ntn[sptr->owner].name);
 /*	UPDSECTORS() 						*/
 /* update sectors one at a time				*/
 /**************************************************************/
-void updsectors() {
+void updsectors(void) {
   register struct s_sector *sptr;
   register struct s_nation *nptr;
   long charity; /* talons to the poor */
@@ -1425,7 +1441,7 @@ void updsectors() {
   /* reset military stuff 					*/
 /****************************************************************/
 #define MAXSIEGE (NTOTAL)
-void updmil() {
+void updmil(void) {
   struct army *A;
   int AX, AY, AT; /* armies x,y locations, type : for speed */
   int armynum, nvynum, flag, dfltunit;
@@ -1773,7 +1789,7 @@ void updmil() {
 /*	UPDCOMODITIES()						*/
 /* update commodities						*/
 /****************************************************************/
-void updcomodities() {
+void updcomodities(void) {
   register struct s_sector *sptr;
   register int x, y;
   long xx;
@@ -1895,7 +1911,7 @@ void updcomodities() {
 /* Conquer: Copyright (c) 1988 by Edward M Barlow
 /*	UPDLEADER()						*/
 /****************************************************************/
-void updleader() {
+void updleader(void) {
   int nation, armynum, born, type;
 
   printf("working on national leaders\n");
@@ -2019,7 +2035,7 @@ void updleader() {
  * DELTA(2) = (EQUILIBRIUM(2) - P2) / 5 =(A2P1 - P2A1) / 5(A1 + A2) = -DELTA(1)
  * (i, j) is refered to as 1, (x, y) as 2
  */
-void move_people() {
+void move_people(void) {
   register int x, y, i, j;
   register struct s_sector *sptr;
   int t_attr;

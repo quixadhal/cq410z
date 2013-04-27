@@ -72,11 +72,20 @@ int count = 0;       /* number of armies or navies in sector */
 #define FOUGHT_A 4
 #define FOUGHT_N 8
 
+void combat(void);
+void fight(void);
+int cbonus(int num);
+void fdxyretreat(void);
+void retreat(int unitnum);
+void navalcbt(void);
+void capture(int type, int to, int shipsize, int holdcount);
+void show_ships(char *who, char *what, int war, int gal, int mer);
+
 /************************************************************************/
 /*	COMBAT()	run all combat on the map			*/
 /*  	for each sector, determine if armies in with attack mode	*/
 /************************************************************************/
-void combat() {
+void combat(void) {
   register int i, j;
   char **fought; /* SET: if already fought in sctr */
   int temp, ctry;
@@ -223,7 +232,7 @@ void combat() {
 /*	FIGHT()	-	fight an individual battle given the three	*/
 /*	matricies global to this module					*/
 /************************************************************************/
-void fight() {
+void fight(void) {
   int roll, strength, fortdam = FALSE;
   int odds; /* odds (asold/dsold) times 100 */
   int done;
@@ -807,7 +816,7 @@ void fight() {
 /************************************************************************/
 /*	CBONUS() - return combat bonuses for unit i			*/
 /************************************************************************/
-int cbonus(num) {
+int cbonus(int num) {
   short armynum;
   int armbonus;
 
@@ -918,7 +927,7 @@ int cbonus(num) {
   return (armbonus);
 }
 
-void fdxyretreat() { /* finds retreat location */
+void fdxyretreat(void) { /* finds retreat location */
   int x, y, nation = (-1);
   int xsctr = xspot;
   int ysctr = yspot;
@@ -957,9 +966,7 @@ void fdxyretreat() { /* finds retreat location */
       }
 }
 
-void retreat(unitnum) int unitnum;
-    /* if -1 then normal, else retreat only unit
-				 * ismerc */
+void retreat(int unitnum /* if -1 then normal, else retreat only unit ismerc */)
 {
   int cnum;
 
@@ -992,7 +999,7 @@ void retreat(unitnum) int unitnum;
 #define QMER 3
 /* just like fight, this takes array of owner,side,unit and calculates */
 /* a random battle based on the strengths of the combatants.           */
-void navalcbt() {
+void navalcbt(void) {
   int acrew = 0, dcrew = 0;   /* a's and d's crew and soldier strength */
   int ahold = 0, dhold = 0;   /* a's and d's warship strength */
   int awsunk = 0, dwsunk = 0; /* a's and d's warship losses for the round */
@@ -1555,7 +1562,7 @@ void navalcbt() {
 }
 
 /* routine to distribute a captured ship */
-void capture(type, to, shipsize, holdcount) int type, to, shipsize, holdcount;
+void capture(int type, int to, int shipsize, int holdcount)
 {
   int i, nvynum;
   struct s_nation *saventn = curntn;
@@ -1608,8 +1615,7 @@ void capture(type, to, shipsize, holdcount) int type, to, shipsize, holdcount;
 }
 
 /* routine to display combat results */
-void show_ships(who, what, war, gal, mer) char *who, *what;
-int war, gal, mer;
+void show_ships(char *who, char *what, int war, int gal, int mer)
 {
   if (war + gal + mer > 0) {
     fprintf(fm, "%s ships %s: ", who, what);

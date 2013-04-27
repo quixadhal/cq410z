@@ -79,7 +79,11 @@ static int Avg_tradegood;
   10 /* If there is an under-defended City the
 				 * value is 500 */
 
-void prtattr() {
+void prtattr(void);
+void newdip(int ntn1, int ntn2);
+
+
+void prtattr(void) {
 
 #ifdef DEBUG
   int x, y;
@@ -110,7 +114,7 @@ void prtattr() {
 }
 
 /*newdip() diplomacy if unmet - ntn 1 is nation you are updating*/
-void newdip(ntn1, ntn2) int ntn1, ntn2;
+void newdip(int ntn1, int ntn2)
 {
   if (ispc(ntn[ntn1].active)) {
     if (ntn[ntn2].race == ORC)
@@ -142,7 +146,12 @@ void newdip(ntn1, ntn2) int ntn1, ntn2;
 }
 
 #ifdef MONSTER
-void monster() {
+void monster(void);
+void do_nomad(void);
+void do_savage(void);
+void do_pirate(void);
+
+void monster(void) {
   for (country = 1; country < NTOTAL; country++) {
     curntn = &ntn[country];
     if (curntn->active == NPC_NOMAD)
@@ -270,7 +279,7 @@ void monster() {
 
 }
 
-void do_nomad() {
+void do_nomad(void) {
   int count;
   short armynum;
   int x, y;
@@ -320,7 +329,7 @@ void do_nomad() {
     }
 }
 
-void do_savage() {
+void do_savage(void) {
   short armynum;
   int x, y;
 
@@ -357,7 +366,7 @@ void do_savage() {
     }
 }
 
-void do_pirate() {
+void do_pirate(void) {
   short nvynum, shipsize;
   int x, y, campx, campy;
 
@@ -417,9 +426,25 @@ void do_pirate() {
 #endif /* MONSTER */
 
 #ifdef NPC
-void n_redes(x, y, goldthresh, metalthresh, citythresh, hunger) int x, y,
-    goldthresh, metalthresh, citythresh;
-float hunger;
+void n_redes(int x, int y, int goldthresh, int metalthresh, int citythresh, float hunger);
+void redomil(void);
+void getdstatus(void);
+static void find_avg_sector(void);
+void nationrun(void);
+void n_trespass(void);
+void n_toofar(void);
+void n_unowned(void);
+void n_defend(register short natn);
+void n_attack(register short nation);
+void n_undefended(int nation);
+void n_people(int doadd);
+void n_between(int nation);
+void n_survive(void);
+void defattr(void);
+void atkattr(void);
+void pceattr(void);
+
+void n_redes(int x, int y, int goldthresh, int metalthresh, int citythresh, float hunger)
 {
   register struct s_sector *sptr = &sct[x][y];
 
@@ -485,7 +510,7 @@ float hunger;
   }
 }
 
-void redomil() {
+void redomil(void) {
   short x, y, armynum, nvynum;
   int i, free, done;
   long ideal;
@@ -900,7 +925,7 @@ void redomil() {
 }
 
 /* getdstatus() - do diplomacy for current nation */
-void getdstatus() {
+void getdstatus(void) {
   int x, oldstat[NTOTAL];
   int X, Y;
   int svhostile, hostile; /* chance nation will react hostile */
@@ -1049,7 +1074,7 @@ void getdstatus() {
  * This is used for unseen sectors and unseen
  * armies.
  */
-static void find_avg_sector() {
+static void find_avg_sector(void) {
   int armynum, i, nation, repeat, total_sectors, total_food = 0;
   struct s_sector *sptr; /* used to speed up this function */
   register int x, y;
@@ -1108,7 +1133,7 @@ static void find_avg_sector() {
   }
 }
 
-void nationrun() {
+void nationrun(void) {
   int goldthresh, metalthresh, citythresh, useful;
   int armynum, loop;
   int x, y, i, p;
@@ -1461,7 +1486,7 @@ void nationrun() {
 }
 
 /* dont allow npcs to trespass onto other nations land */
-void n_trespass() {
+void n_trespass(void) {
   register int x, y;
 
   for (x = stx; x < endx; x++)
@@ -1477,7 +1502,7 @@ void n_trespass() {
 }
 
 /* you are too far from capitol */
-void n_toofar() {
+void n_toofar(void) {
   register int x, y;
 
   for (x = 0; x < MAPX; x++)
@@ -1488,7 +1513,7 @@ void n_toofar() {
 }
 
 /* take undefended land */
-void n_unowned() {
+void n_unowned(void) {
 
 #ifdef XENIX
   register int z;
@@ -1548,7 +1573,7 @@ void n_unowned() {
   }
 }
 
-void n_defend(natn) register short natn;
+void n_defend(register short natn)
 {
   register int i, j;
   int repeat;
@@ -1612,7 +1637,7 @@ void n_defend(natn) register short natn;
     }
 }
 
-void n_attack(nation) register short nation;
+void n_attack(register short nation)
 {
   register int x, y;
   int armynum;
@@ -1648,7 +1673,7 @@ void n_attack(nation) register short nation;
 }
 
 /* +100 if undefended sectors of nation, +60 if not */
-void n_undefended(nation) {
+void n_undefended(int nation) {
   register int x, y;
 
   for (x = stx; x < endx; x++)
@@ -1665,7 +1690,7 @@ void n_undefended(nation) {
 }
 
 /* add 1/2 of people in owned sectors for small armies */
-void n_people(doadd) int doadd; /* TRUE if adding, FALSE if subtracting */
+void n_people(int doadd /* TRUE if adding, FALSE if subtracting */)
 {
   register int x, y;
 
@@ -1682,7 +1707,7 @@ void n_people(doadd) int doadd; /* TRUE if adding, FALSE if subtracting */
 }
 
 /* +60 if between two capitols */
-void n_between(nation) int nation;
+void n_between(int nation)
 {
   int x1, x2, y1, y2, x, y;
 
@@ -1718,7 +1743,7 @@ void n_between(nation) int nation;
  *	if within two of cap add 1/5th of men
  *	if on cap and war and 2x your garrison go jihad and + 1/2 men
  */
-void n_survive() {
+void n_survive(void) {
   int i;
   int nation, armynum;
   int capx, capy;
@@ -1786,7 +1811,7 @@ void n_survive() {
     }
 }
 
-void defattr() {
+void defattr(void) {
   int nation;
 
 #ifdef DEBUG
@@ -1807,7 +1832,7 @@ void defattr() {
 }
 
 /*calculate attractiveness of attacking sectors*/
-void atkattr() {
+void atkattr(void) {
   int nation;
 
 #ifdef DEBUG
@@ -1840,7 +1865,7 @@ void atkattr() {
 }
 
 /*calculate attractiveness when at peace*/
-void pceattr() {
+void pceattr(void) {
 
 #ifdef DEBUG
   printf("pceattr()\n");

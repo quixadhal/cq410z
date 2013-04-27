@@ -66,7 +66,14 @@ char **type;
     nmountains--;                                                              \
   }
 
-void zeroworld() {
+void zeroworld(void);
+void makeworld(int rflag);
+void createworld(void);
+void rawmaterials(void);
+void fill_edge(int AX, int AY);
+void populate(void);
+
+void zeroworld(void) {
   int i, armynum, nvynum;
 
   /* initialize all countries */
@@ -94,9 +101,7 @@ void zeroworld() {
   }
 }
 
-void makeworld(rflag) int rflag;
-    /* TRUE if you wish to read in a map from
-				 * mapfiles */
+void makeworld(int rflag /* TRUE if you wish to read in a map from mapfiles */)
 {
   char passwd[PASSLTH + 1], pwd2[PASSLTH + 1], *getpass();
   char newstring[BIGLTH], tempc[BIGLTH];
@@ -329,7 +334,7 @@ void makeworld(rflag) int rflag;
   newreset();
 }
 
-void createworld() { /* create world */
+void createworld(void) { /* create world */
   int i, j;
   register int x, y;
   int n;                    /* count used in string searches */
@@ -820,7 +825,7 @@ void createworld() { /* create world */
   free(area_map);
 }
 
-void rawmaterials() { /* PLACE EACH SECTOR'S RAW MATERIALS */
+void rawmaterials(void) { /* PLACE EACH SECTOR'S RAW MATERIALS */
   int i, j;
   register int x, y;
   int X1, Y1;
@@ -940,7 +945,7 @@ void rawmaterials() { /* PLACE EACH SECTOR'S RAW MATERIALS */
 }
 
 /*fill: subroutine to fill in a square edges with land or sea*/
-void fill_edge(AX, AY) {
+void fill_edge(int AX, int AY) {
   /*      1)   water
    *      2)   water with major islands (25% land)
    *      3)   50/50 water/land
@@ -1032,7 +1037,7 @@ void fill_edge(AX, AY) {
 }
 
 /* ALLOCATE POPULATIONS OF THE WORLD*/
-void populate() {
+void populate(void) {
   int i = 0, x = 0, y = 0, j = 0, xloc, yloc, xpos, ypos;
   int nvynum = 0, armynum = 0, points, shipsize, temp, cnum;
   short short1, short2; /* temporary short variables */

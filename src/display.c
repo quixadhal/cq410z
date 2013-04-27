@@ -55,8 +55,19 @@ extern short country;
 
 static char *hasseen;
 
+void init_hasseen(void);
+void makemap(void);
+void get_display_mode(short *dmode, short *hmode, short *odmode, short *ohmode);
+void newdisplay(void);
+char get_display_for(int x, int y, short dmode);
+void see(int x, int y);
+void highlight(int x, int y, short hmode);
+void coffmap(void);
+int canbeseen(int x, int y);
+void whatcansee(void);
+
 /* allocate space for the hasseen array based on the actual screen size */
-void init_hasseen() {
+void init_hasseen(void) {
   hasseen = (char *)malloc(((COLS - 10) / 2) * (LINES - 5));
 
 #ifdef BSD
@@ -73,7 +84,7 @@ void init_hasseen() {
 }
 
 /*make a map*/
-void makemap() {
+void makemap(void) {
   register int x, y;
 
   for (x = 0; x < SCREEN_X_SIZE; x++)
@@ -85,8 +96,7 @@ void makemap() {
   move(ycurs, 2 * xcurs);
 }
 
-void get_display_mode(dmode, hmode, odmode, ohmode) short *dmode, *hmode,
-    *odmode, *ohmode;
+void get_display_mode(short *dmode, short *hmode, short *odmode, short *ohmode)
 {
   short temp;
 
@@ -204,14 +214,13 @@ void get_display_mode(dmode, hmode, odmode, ohmode) short *dmode, *hmode,
   }
 }
 
-void newdisplay() {
+void newdisplay(void) {
   get_display_mode(&dismode, &hilmode, &otherdismode, &otherhilmode);
   makebottom();
 }
 
 /*see what is in xy as per display modes*/
-char get_display_for(x, y, dmode) int x, y;
-short dmode;
+char get_display_for(int x, int y, short dmode)
 {
   int armbonus;
 
@@ -364,7 +373,7 @@ short dmode;
   return ch;
 }
 
-void see(x, y) {
+void see(int x, int y) {
   char ch;
 
   if ((x < 0) || (y < 0) || (x >= SCREEN_X_SIZE) || (y >= SCREEN_Y_SIZE) ||
@@ -385,7 +394,7 @@ void see(x, y) {
 }
 
 /*highlight what is in xy as per highlight mode*/
-void highlight(x, y, hmode) short hmode;
+void highlight(int x, int y, short hmode)
 {
   int armynum;
 
@@ -436,7 +445,7 @@ void highlight(x, y, hmode) short hmode;
 }
 
 /* check if cursor is out of bounds*/
-void coffmap() {
+void coffmap(void) {
   /* can we put a kludge here to keep people from seeing the edges of the
    * map until they get to them?
    */
@@ -463,7 +472,7 @@ void coffmap() {
   refresh();
 }
 
-int canbeseen(x, y) int x, y;
+int canbeseen(int x, int y)
 {
   if (!ONMAP(x, y))
     return (FALSE);
@@ -471,7 +480,7 @@ int canbeseen(x, y) int x, y;
 }
 
 /** CANSEE() fills seen[SCREEN_X_SIZE][SCREEN_Y_SIZE] */
-void whatcansee() {
+void whatcansee(void) {
   register int x, y;
   int i, j;
   short armynum, nvynum;

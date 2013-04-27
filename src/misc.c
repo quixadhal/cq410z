@@ -43,12 +43,57 @@ extern char *HElecost, *OElecost, *EElecost, *DElecost, *FElecost;
 
 #ifdef SYSV
 char *memset();
-
 #endif
 
+long get_number(void);
+int land_2reachp(int ax, int ay, int move_points);
+long solds_in_sector(int x, int y, int nation);
+int is_habitable(int x, int y);
+int num_powers(int nation, int type);
+int tofood(struct s_sector *sptr, int cntry);
+long getmgkcost(int type, int nation);
+int todigit(register int character);
+void prep(int nation, int leader);
+void destroy(int cntry);
+void updmove(int race, char cntry);
+void spreadsheet(int nation);
+void get_nname(char str[]);
+int mailopen(int to);
+void mailclose(int to);
+int oldmarkok(char mark, int prtflag, int dupflag);
+long defaultunit(int nation);
+int tg_ok(int nation, struct s_sector *sptr);
+int fort_val(struct s_sector *sptr);
+int compass(int x0, int y0, int x1, int y1);
+
 #ifdef CONQUER
-int move_file(from, to) register char *from;
-register char *to;
+int units_in_sector(int x, int y, int nation);
+int move_file(register char *from, register char *to);
+int flightcost(int i, int j);
+int get_country(void);
+int get_god(void);
+void reset_god(void);
+void check_mail(void);
+
+int units_in_sector(int x, int y, int nation)
+{
+  int count = 0, armynum, nvynum;
+  struct s_nation *nptr = curntn;
+
+  curntn = &ntn[nation];
+  for (armynum = 0; armynum < MAXARM; armynum++)
+    if ((P_ASOLD > 0) && (P_AXLOC == x) && (P_AYLOC == y))
+      count++;
+  for (nvynum = 0; nvynum < MAXNAVY; nvynum++)
+    if (((P_NWSHP + P_NMSHP + P_NGSHP) != 0) && (P_NXLOC == x) &&
+        (P_NYLOC == y))
+      count++;
+
+  curntn = nptr;
+  return (count);
+}
+
+int move_file(register char *from, register char *to)
 {
   char copyline[256];
   if (unlink(to) < 0) {
@@ -71,11 +116,181 @@ register char *to;
   return (0);
 } /* move_file() */
 
+/* calculations for cost of movement during flight */
+int flightcost(int i, int j)
+{
+  int cnt, hold = (-1), hold2 = (-1);
+
+  for (cnt = 0; ele[cnt] != '0'; cnt++) {
+    if (sct[i][j].altitude == ele[cnt])
+      hold = (FElecost[cnt] - '0');
+  }
+  for (cnt = 0; veg[cnt] != '0'; cnt++) {
+    if (sct[i][j].vegetation == veg[cnt])
+      hold2 = (FVegcost[cnt] - '0');
+  }
+  if (hold == (-1) || hold2 == (-1)) {
+    hold = (-1);
+  } else
+    hold += hold2;
+
+  return (hold);
+}
+
+/* routine to find a nation number using name or number  */
+/* returns NTOTAL+1 if input is invalid; -1 for no input */
+int get_country(void) {
+  char name[NAMELTH + 1], ch;
+  int i, l, hold;
+
+  /* get name and check through list */
+  get_nname(name);
+
+  /* return on no entry */
+  if ((l = strlen(name)) == 0) {
+    return (-1);
+  }
+  for (hold = 0; hold < NTOTAL; hold++)
+    if (strcmp(ntn[hold].name, name) == 0)
+      break;
+
+  /* check for 'god' */
+  if (strcmp("god", name) == 0)
+    hold = 0;
+  if (strcmp("news", name) == 0)
+    hold = NEWSMAIL;
+
+  /* check for numbers if name too long */
+  if (hold == NTOTAL) {
+    hold = 0;
+    for (i = 0; i < l; i++) {
+      ch = name[i];
+      if (ch < '0' || ch > '9') {
+        errormsg("There is no nation by that name.");
+        return (NTOTAL);
+      } else {
+        hold *= 10;
+        hold += (ch - '0');
+      }
+    }
+    if (hold > NTOTAL)
+      hold = NTOTAL;
+  }
+  /* send back result */
+  return (hold);
+}
+
+/* finds a nation for god to be, returns 1 on failure */
+int get_god(void) {
+  clear_bottom(0);
+  mvaddstr(LINES - 4, 0, "Super User; For what nation? ");
+  refresh();
+
+  /* return on no entry or bad entry */
+  if ((country = get_country()) == (-1) || country == NTOTAL) {
+    country = 0;
+    redraw = DONE;
+    makebottom();
+    return (1);
+  }
+  curntn = &ntn[country];
+  return (0);
+}
+
+/* quick routine to reassign god and gods nations */
+void reset_god(void) {
+  /* simple routine; but improves readibility */
+  country = 0;
+  curntn = &ntn[country];
+}
+
+extern short xcurs;
+extern short ycurs;
+off_t conq_mail_size = 0;
+
+#ifdef SYSMAIL
+static off_t sys_mail_size = 0;
+
+#endif /* SYSMAIL */
+void check_mail(void) {
+  struct stat info;
+
+#ifdef SYSMAIL
+  int osys_mail = sys_mail_status;
+
+#endif
+  int oconq_mail = conq_mail_status;
+
+  /* check conquer mail box */
+  if (stat(conqmail, &info) == (-1)) {
+    conq_mail_status = NO_MAIL;
+    conq_mail_size = 0;
+  } else {
+    if (info.st_size > conq_mail_size) {
+      conq_mail_status = NEW_MAIL;
+      conq_mail_size = info.st_size;
+    } else if (info.st_size < conq_mail_size) {
+      conq_mail_status = NO_MAIL;
+      conq_mail_size = info.st_size;
+    }
+  }
+
+#ifdef SYSMAIL
+  /* check system mail box */
+  if (stat(sysmail, &info) == (-1)) {
+    sys_mail_status = NO_MAIL;
+    sys_mail_size = 0;
+  } else {
+    if (info.st_atime > info.st_mtime) {
+      sys_mail_status = NO_MAIL;
+      sys_mail_size = info.st_size;
+    } else if (info.st_size > sys_mail_size) {
+      sys_mail_status = NEW_MAIL;
+      sys_mail_size = info.st_size;
+    } else if (info.st_size < sys_mail_size) {
+      sys_mail_status = NO_MAIL;
+      sys_mail_size = info.st_size;
+    }
+  }
+
+  /* display mail information */
+  if (sys_mail_status != osys_mail) {
+    if (sys_mail_status == NEW_MAIL) {
+      mvaddstr(LINES - 3, COLS / 2 - 6, "You have System Mail");
+    } else {
+      mvaddstr(LINES - 3, COLS / 2 - 6, "                    ");
+    }
+    move(ycurs, 2 * xcurs);
+    refresh();
+  }
+  if (conq_mail_status != oconq_mail) {
+    if (conq_mail_status == NEW_MAIL) {
+      mvaddstr(LINES - 2, COLS / 2 - 6, "You have Conquer Mail");
+    } else {
+      mvaddstr(LINES - 2, COLS / 2 - 6, "                     ");
+    }
+    move(ycurs, 2 * xcurs);
+    refresh();
+  }
+#else
+  /* display mail information */
+  if (conq_mail_status != oconq_mail) {
+    if (conq_mail_status == NEW_MAIL) {
+      mvaddstr(LINES - 3, COLS / 2 - 6, "You have Conquer Mail");
+    } else {
+      mvaddstr(LINES - 3, COLS / 2 - 6, "                     ");
+    }
+    move(ycurs, 2 * xcurs);
+    refresh();
+  }
+#endif /* SYSMAIL */
+}
+
 #endif /* CONQUER */
 
 /* returns integer input greater than zero or */
 /* -1 for no input.                           */
-long get_number() {
+long get_number(void) {
   long sum = 0;
   char ch;
   int done = FALSE, count = 0, neg = 0, xpos, ypos;
@@ -140,9 +355,7 @@ int level;
  *	land_2reachp()
  */
 
-int land_2reachp(ax, ay, move_points) int ax;
-int ay;
-int move_points;
+int land_2reachp(int ax, int ay, int move_points)
 {
   register int i = 0;
   int delta_x, delta_y;
@@ -301,12 +514,17 @@ int move_points;
  */
 
 #ifdef ADMIN
-int land_reachp(ax, ay, gx, gy, move_points, movee) int ax;
-int ay;
-int gx;
-int gy;
-int move_points;
-int movee;
+int land_reachp(int ax, int ay, int gx, int gy, int move_points, int movee);
+int water_2reachp(int ax, int ay, int move_points);
+long score_one(int nation);
+void deplete(int nation);
+void sackem(int cntry);
+int avian(unsigned char typ);
+int getleader(int class);
+void getmetal(struct s_sector *sptr);
+void getjewel(struct s_sector *sptr);
+
+int land_reachp(int ax, int ay, int gx, int gy, int move_points, int movee)
 {
   int result;
 
@@ -337,16 +555,11 @@ int movee;
   return (result);
 } /* land_reachp() */
 
-#endif /* ADMIN */
-
-#ifdef ADMIN
 /*
  *	water_2reachp()
  */
 
-int water_2reachp(ax, ay, move_points) int ax;
-int ay;
-int move_points;
+int water_2reachp(int ax, int ay, int move_points)
 {
   register int i = 0;
   int delta_x;
@@ -456,73 +669,6 @@ int move_points;
   return (0);
 } /* water_2reachp() */
 
-#endif /* ADMIN */
-
-#ifdef XYZ /* XYZ never is defined */
-           /*
- *	water_reachp()
- */
-
-int water_reachp(ax, ay, gx, gy, move_points, movee) int ax;
-int ay;
-int gx;
-int gy;
-int move_points;
-int movee;
-{
-  if (move_points >= MAX_MOVE_UNITS) {
-    fprintf(stderr, "water_reachp(): move_points = %d\n", move_points);
-
-    abrt();
-  }
-
-#ifdef SYSV
-  memset(history_reachp, MAX_MOVE_UNITS, MAPX * MAPY * sizeof(history_reachp));
-#else
-  {
-    register int i, j;
-
-    for (i = 0; i < MAPX; i++)
-      for (j = 0; j < MAPY; j++)
-        history_reachp[i][j] = MAX_MOVE_UNITS;
-  } /* eof memset replacement block */
-#endif
-
-  history_reachp[ax][ay] = 0;
-
-  bx = gx;
-  by = gy;
-  moving_country = movee;
-
-  return (water_2reachp(ax, ay, move_points));
-} /* water_reachp() */
-
-#endif /* 0 */
-
-/*
- *	solds_in_sector()
- */
-
-long solds_in_sector(x, y, nation) int x;
-int y;
-int nation;
-{
-  register struct s_nation *nptr = &ntn[nation];
-  register int j;
-  long total = 0;
-
-  for (j = 0; j < MAXARM; j++) {
-    if (nptr->arm[j].sold == 0)
-      continue;
-
-    if (nptr->arm[j].xloc == x && nptr->arm[j].yloc == y)
-      total += nptr->arm[j].sold;
-  }
-
-  return (total);
-} /* solds_in_sector() */
-
-#ifdef ADMIN
 /* score_one()	*/
 struct wght {
   int sectors;
@@ -550,7 +696,7 @@ struct wght {
   /* miner */ { 0, 0, 5, 0, 10, 10, 1, 5 },
 };
 
-long score_one(nation) int nation;
+long score_one(int nation)
 {
   struct s_nation *nptr = &ntn[nation];
   long total = 0;
@@ -606,256 +752,8 @@ long score_one(nation) int nation;
   return (total);
 } /* score_one() */
 
-#endif /* ADMIN */
-
-  /*
-   *	print_accum()
-   */
-
-/* max number of print_accum() calls in one printf() */
-#define MAX_BUFFER 4
-#define BUFFER_SIZE 20
-
-/* is_habitable() - returns TRUE/FALSE if habitable */
-int is_habitable(x, y) int x;
-int y;
-{
-  char temp;
-
-  if (((temp = sct[x][y].altitude) == WATER) || (temp == PEAK))
-    return (FALSE);
-
-  if (((temp = sct[x][y].vegetation) == BARREN) || (temp == LT_VEG) ||
-      (temp == GOOD) || (temp == WOOD) || (temp == FOREST))
-    return (TRUE);
-
-  return (FALSE);
-}
-
-#ifdef CONQUER
-int units_in_sector(x, y, nation) int x;
-int y;
-{
-  int count = 0, armynum, nvynum;
-  struct s_nation *nptr = curntn;
-
-  curntn = &ntn[nation];
-  for (armynum = 0; armynum < MAXARM; armynum++)
-    if ((P_ASOLD > 0) && (P_AXLOC == x) && (P_AYLOC == y))
-      count++;
-  for (nvynum = 0; nvynum < MAXNAVY; nvynum++)
-    if (((P_NWSHP + P_NMSHP + P_NGSHP) != 0) && (P_NXLOC == x) &&
-        (P_NYLOC == y))
-      count++;
-
-  curntn = nptr;
-  return (count);
-}
-
-#endif /* CONQUER */
-
-int num_powers(nation, type) int nation, type;
-{
-  int count_magic = 0;
-  int try;
-  long start, end;
-
-  switch (type) {
-    case M_MGK:
-      start = S_MGK;
-      end = E_MGK;
-      break;
-    case M_CIV:
-      start = S_CIV;
-      end = E_CIV;
-      break;
-    case M_MIL:
-      start = S_MIL;
-      end = E_MIL;
-      break;
-    case M_ALL:
-      start = S_MIL;
-      end = E_MGK;
-      break;
-    default:
-      fprintf(stderr, "fatal error in num_powers");
-      abrt();
-  }
-  for (try = start; try < start + end; try ++)
-    if (magic(nation, powers[try]) == 1)
-      count_magic++;
-  return (count_magic);
-}
-
-/* returns food value of sector */
-/* 4 is limit of livable land */
-int tofood(sptr, cntry) struct s_sector *sptr;
-int cntry;
-{
-  register int i = 0;
-  register int foodvalue;
-
-  while (sptr->vegetation != *(veg + i))
-    i++;
-  foodvalue = *(vegfood + i) - '0';
-  if (cntry != 0) {
-    if (foodvalue == 0) {
-
-#ifdef DERVDESG
-      if ((magic(cntry, DERVISH) || magic(cntry, DESTROYER)) &&
-          (sptr->vegetation == DESERT || sptr->vegetation == ICE))
-        return (6);
-#endif /* DERVDESG */
-
-      return (0);
-    }
-    if (ntn[cntry].race == ELF) {
-      if (sptr->vegetation == FOREST)
-        foodvalue += 3;
-      else if (sptr->vegetation == BARREN)
-        foodvalue--;
-    }
-  }
-  if ((sptr->tradegood <= END_EATRATE) && (sptr->tradegood > END_COMMUNICATION))
-    foodvalue += *(tg_value + sptr->tradegood) - '0';
-  return (foodvalue);
-}
-
-/*jewel cost for civilian power = Base * 2**( #mgk/2 + #civ + #mil/2 )	*/
-/*race			magical		civilian	military	*/
-/*	elves -		50K		50K		50K		*/
-/*	dwarves -	80K		40K		40K		*/
-/*	humans -	100K		25K		50K		*/
-/*	orcs -		100K		50K		25K		*/
-
-/* returns cost of magic power - returns -1 if invalid */
-long getmgkcost(type, nation) int type, nation;
-{
-  int i;
-  long cost;
-  long base = BASEMAGIC;
-  int npowers;
-
-  switch (type) {
-    case M_MGK:
-      if (ntn[nation].race == DWARF)
-        base = DWFMAGIC;
-      else if (ntn[nation].race == HUMAN)
-        base = HUMMAGIC;
-      else if (ntn[nation].race == ORC)
-        base = ORCMAGIC;
-      npowers = num_powers(nation, M_CIV) + num_powers(nation, M_MIL) + 1 +
-                2 * num_powers(nation, M_MGK);
-      npowers /= 2;
-      break;
-    case M_CIV:
-      if (ntn[nation].race == DWARF)
-        base = DWFCIVIL;
-      else if (ntn[nation].race == HUMAN)
-        base = HUMCIVIL;
-      else if (ntn[nation].race == ORC)
-        base = ORCCIVIL;
-      npowers = num_powers(nation, M_MGK) + num_powers(nation, M_MIL) + 1 +
-                2 * num_powers(nation, M_CIV);
-      npowers /= 2;
-      break;
-    case M_MIL:
-      if (ntn[nation].race == DWARF)
-        base = DWFMILIT;
-      else if (ntn[nation].race == ORC)
-        base = ORCMILIT;
-      npowers = num_powers(nation, M_CIV) + num_powers(nation, M_MGK) + 1 +
-                2 * num_powers(nation, M_MIL);
-      npowers /= 2;
-      break;
-    default:
-      return (-1);
-  }
-  cost = base;
-  for (i = 1; i < npowers; i++) {
-    cost <<= 1;
-    if (cost > BIG)
-      return (BIG / 2L);
-  }
-  return (cost);
-}
-
-int todigit(character) register int character;
-{
-  if (character >= '0' && character <= '9')
-    return (character - '0');
-  return (-1);
-}
-
-/* set up occ[][] for country.
- * if leader==true, only for leader sectors plus ntn.communicatins range
- * if leader==(-1), do not include ships on the sector search
- */
-void prep(nation, leader) int nation, leader;
-{
-  short armynum, nvynum;
-  int save, i, j, x, y, start, end, com;
-
-  /* set occ to 0 */
-  for (i = 0; i < MAPX; i++)
-    for (j = 0; j < MAPY; j++)
-      occ[i][j] = 0;
-
-  save = nation;
-  if (leader == TRUE) {
-    /* only do the given country */
-    start = save;
-    end = save + 1;
-  } else {
-    /* go through all countries */
-    start = 0;
-    end = NTOTAL;
-  }
-
-  /* set occ to country of occupant army */
-  for (nation = start; nation < end; nation++)
-    if (ntn[nation].active != INACTIVE) {
-      curntn = &ntn[nation];
-      for (armynum = 0; armynum < MAXARM; armynum++) {
-        if (leader == TRUE) {
-          if ((P_ATYPE < MINLEADER) || (P_ATYPE >= MINMONSTER) ||
-              (P_ASOLD <= 0))
-            continue;
-          i = P_AXLOC;
-          j = P_AYLOC;
-          com = P_NTNCOM; /* do communications radius */
-          for (x = i - com; x <= i + com; x++)
-            for (y = j - com; y <= j + com; y++)
-              if (ONMAP(x, y))
-                occ[x][y] = nation;
-        } else if ((P_ASOLD > 0) && (P_ASTAT != SCOUT)) {
-          i = P_AXLOC;
-          j = P_AYLOC;
-          if ((occ[i][j] == 0) || (occ[i][j] == nation))
-            occ[i][j] = nation;
-          else
-            occ[i][j] = NTOTAL;
-        }
-      }
-      if (leader == FALSE)
-        for (nvynum = 0; nvynum < MAXNAVY; nvynum++) {
-          if ((P_NWSHP != 0) || (P_NGSHP != 0) || (P_NMSHP != 0)) {
-            i = P_NXLOC;
-            j = P_NYLOC;
-            if ((occ[i][j] == 0) || (occ[i][j] == nation))
-              occ[i][j] = nation;
-            else
-              occ[i][j] = NTOTAL;
-          }
-        }
-    }
-  nation = save;
-  curntn = &ntn[nation];
-}
-
-#ifdef ADMIN
 /*routine to depelete a nation without a capitol */
-void deplete(nation) int nation;
+void deplete(int nation)
 {
   struct s_nation *saventn = curntn;
   int i, j, x, y, armynum;
@@ -954,7 +852,7 @@ void deplete(nation) int nation;
 }
 
 /*routine to sack a nation's captiol */
-void sackem(cntry) int cntry;
+void sackem(int cntry)
 {
   struct s_nation *saventn = curntn;
   int x, y, i, j, foundcap, nation;
@@ -1097,10 +995,412 @@ void sackem(cntry) int cntry;
 #endif
 }
 
+/* determines whether or not a unit has the ability to fly */
+int avian(unsigned char typ)
+{
+  switch (typ) {
+    case A_ROC:
+    case A_GRIFFON:
+    case SPIRIT:
+    case DJINNI:
+    case DEMON:
+    case DRAGON:
+      return (TRUE);
+    default:
+      return (FALSE);
+  }
+}
+
+int getleader(int class)
+{
+  switch (class) {
+    case C_NPC:
+    case C_KING:
+    case C_TRADER:
+      return (L_BARON);
+    case C_EMPEROR:
+      return (L_PRINCE);
+    case C_WIZARD:
+      return (L_MAGI);
+    case C_PRIEST:
+      return (L_BISHOP);
+    case C_PIRATE:
+      return (L_CAPTAIN);
+    case C_WARLORD:
+      return (L_LORD);
+    case C_DEMON:
+      return (L_DEVIL);
+    case C_DRAGON:
+      return (L_WYRM);
+    case C_SHADOW:
+      return (L_NAZGUL);
+    default:
+      printf("ERROR-national class (%d) undefined\n", class);
+      exit(0);
+  }
+  return (-1); /* shut lint up */
+}
+
+void getmetal(struct s_sector *sptr)
+{
+  int randval;
+
+  randval = rand() % 100;
+  if ((sptr->tradegood != TG_none) && (sptr->tradegood != 0))
+    return;
+  if (randval < 20) {
+    sptr->tradegood = TG_copper;
+    sptr->metal = rand() % 2 + 1;
+  } else if (randval < 30) {
+    sptr->tradegood = TG_lead;
+    sptr->metal = rand() % 4 + 1;
+  } else if (randval < 40) {
+    sptr->tradegood = TG_tin;
+    sptr->metal = rand() % 4 + 2;
+  } else if (randval < 55) {
+    sptr->tradegood = TG_bronze;
+    sptr->metal = rand() % 4 + 2;
+  } else if (randval < 80) {
+    sptr->tradegood = TG_iron;
+    sptr->metal = rand() % 7 + 2;
+  } else if (randval < 95) {
+    sptr->tradegood = TG_steel;
+    sptr->metal = rand() % 8 + 3;
+  } else if (randval < 99) {
+    sptr->tradegood = TG_mithral;
+    sptr->metal = rand() % 11 + 5;
+  } else {
+    sptr->tradegood = TG_adamantine;
+    sptr->metal = rand() % 13 + 8;
+  }
+}
+
+void getjewel(struct s_sector *sptr)
+{
+  int randval;
+
+  if ((sptr->tradegood != TG_none) && (sptr->tradegood != 0))
+    return;
+  randval = rand() % 100;
+  if (randval < 20) {
+    sptr->tradegood = TG_spice;
+    sptr->jewels = rand() % 2 + 1;
+  } else if (randval < 40) {
+    sptr->tradegood = TG_silver;
+    sptr->jewels = rand() % 3 + 1;
+  } else if (randval < 48) {
+    sptr->tradegood = TG_pearls;
+    sptr->jewels = rand() % 3 + 1;
+  } else if (randval < 56) {
+    sptr->tradegood = TG_dye;
+    sptr->jewels = rand() % 5 + 1;
+  } else if (randval < 64) {
+    sptr->tradegood = TG_silk;
+    sptr->jewels = rand() % 5 + 1;
+  } else if (randval < 84) {
+    sptr->tradegood = TG_gold;
+    sptr->jewels = rand() % 6 + 1;
+  } else if (randval < 91) {
+    sptr->tradegood = TG_rubys;
+    sptr->jewels = rand() % 6 + 1;
+  } else if (randval < 96) {
+    sptr->tradegood = TG_ivory;
+    sptr->jewels = rand() % 7 + 2;
+  } else if (randval < 99) {
+    sptr->tradegood = TG_diamonds;
+    sptr->jewels = rand() % 11 + 2;
+  } else {
+    sptr->tradegood = TG_platinum;
+    sptr->jewels = rand() % 17 + 4;
+  }
+}
+
 #endif /* ADMIN */
 
+#ifdef XYZ /* XYZ never is defined */
+int water_reachp(int ax, int ay, int gx, int gy, int move_points, int movee);
+
+/*
+ *	water_reachp()
+ */
+int water_reachp(int ax, int ay, int gx, int gy, int move_points, int movee)
+{
+  if (move_points >= MAX_MOVE_UNITS) {
+    fprintf(stderr, "water_reachp(): move_points = %d\n", move_points);
+
+    abrt();
+  }
+
+#ifdef SYSV
+  memset(history_reachp, MAX_MOVE_UNITS, MAPX * MAPY * sizeof(history_reachp));
+#else
+  {
+    register int i, j;
+
+    for (i = 0; i < MAPX; i++)
+      for (j = 0; j < MAPY; j++)
+        history_reachp[i][j] = MAX_MOVE_UNITS;
+  } /* eof memset replacement block */
+#endif
+
+  history_reachp[ax][ay] = 0;
+
+  bx = gx;
+  by = gy;
+  moving_country = movee;
+
+  return (water_2reachp(ax, ay, move_points));
+} /* water_reachp() */
+
+#endif /* 0 */
+
+/*
+ *	solds_in_sector()
+ */
+
+long solds_in_sector(int x, int y, int nation)
+{
+  register struct s_nation *nptr = &ntn[nation];
+  register int j;
+  long total = 0;
+
+  for (j = 0; j < MAXARM; j++) {
+    if (nptr->arm[j].sold == 0)
+      continue;
+
+    if (nptr->arm[j].xloc == x && nptr->arm[j].yloc == y)
+      total += nptr->arm[j].sold;
+  }
+
+  return (total);
+} /* solds_in_sector() */
+
+
+  /*
+   *	print_accum()
+   */
+
+/* max number of print_accum() calls in one printf() */
+#define MAX_BUFFER 4
+#define BUFFER_SIZE 20
+
+/* is_habitable() - returns TRUE/FALSE if habitable */
+int is_habitable(int x, int y)
+{
+  char temp;
+
+  if (((temp = sct[x][y].altitude) == WATER) || (temp == PEAK))
+    return (FALSE);
+
+  if (((temp = sct[x][y].vegetation) == BARREN) || (temp == LT_VEG) ||
+      (temp == GOOD) || (temp == WOOD) || (temp == FOREST))
+    return (TRUE);
+
+  return (FALSE);
+}
+
+
+int num_powers(int nation, int type)
+{
+  int count_magic = 0;
+  int try;
+  long start, end;
+
+  switch (type) {
+    case M_MGK:
+      start = S_MGK;
+      end = E_MGK;
+      break;
+    case M_CIV:
+      start = S_CIV;
+      end = E_CIV;
+      break;
+    case M_MIL:
+      start = S_MIL;
+      end = E_MIL;
+      break;
+    case M_ALL:
+      start = S_MIL;
+      end = E_MGK;
+      break;
+    default:
+      fprintf(stderr, "fatal error in num_powers");
+      abrt();
+  }
+  for (try = start; try < start + end; try ++)
+    if (magic(nation, powers[try]) == 1)
+      count_magic++;
+  return (count_magic);
+}
+
+/* returns food value of sector */
+/* 4 is limit of livable land */
+int tofood(struct s_sector *sptr, int cntry)
+{
+  register int i = 0;
+  register int foodvalue;
+
+  while (sptr->vegetation != *(veg + i))
+    i++;
+  foodvalue = *(vegfood + i) - '0';
+  if (cntry != 0) {
+    if (foodvalue == 0) {
+
+#ifdef DERVDESG
+      if ((magic(cntry, DERVISH) || magic(cntry, DESTROYER)) &&
+          (sptr->vegetation == DESERT || sptr->vegetation == ICE))
+        return (6);
+#endif /* DERVDESG */
+
+      return (0);
+    }
+    if (ntn[cntry].race == ELF) {
+      if (sptr->vegetation == FOREST)
+        foodvalue += 3;
+      else if (sptr->vegetation == BARREN)
+        foodvalue--;
+    }
+  }
+  if ((sptr->tradegood <= END_EATRATE) && (sptr->tradegood > END_COMMUNICATION))
+    foodvalue += *(tg_value + sptr->tradegood) - '0';
+  return (foodvalue);
+}
+
+/*jewel cost for civilian power = Base * 2**( #mgk/2 + #civ + #mil/2 )	*/
+/*race			magical		civilian	military	*/
+/*	elves -		50K		50K		50K		*/
+/*	dwarves -	80K		40K		40K		*/
+/*	humans -	100K		25K		50K		*/
+/*	orcs -		100K		50K		25K		*/
+
+/* returns cost of magic power - returns -1 if invalid */
+long getmgkcost(int type, int nation)
+{
+  int i;
+  long cost;
+  long base = BASEMAGIC;
+  int npowers;
+
+  switch (type) {
+    case M_MGK:
+      if (ntn[nation].race == DWARF)
+        base = DWFMAGIC;
+      else if (ntn[nation].race == HUMAN)
+        base = HUMMAGIC;
+      else if (ntn[nation].race == ORC)
+        base = ORCMAGIC;
+      npowers = num_powers(nation, M_CIV) + num_powers(nation, M_MIL) + 1 +
+                2 * num_powers(nation, M_MGK);
+      npowers /= 2;
+      break;
+    case M_CIV:
+      if (ntn[nation].race == DWARF)
+        base = DWFCIVIL;
+      else if (ntn[nation].race == HUMAN)
+        base = HUMCIVIL;
+      else if (ntn[nation].race == ORC)
+        base = ORCCIVIL;
+      npowers = num_powers(nation, M_MGK) + num_powers(nation, M_MIL) + 1 +
+                2 * num_powers(nation, M_CIV);
+      npowers /= 2;
+      break;
+    case M_MIL:
+      if (ntn[nation].race == DWARF)
+        base = DWFMILIT;
+      else if (ntn[nation].race == ORC)
+        base = ORCMILIT;
+      npowers = num_powers(nation, M_CIV) + num_powers(nation, M_MGK) + 1 +
+                2 * num_powers(nation, M_MIL);
+      npowers /= 2;
+      break;
+    default:
+      return (-1);
+  }
+  cost = base;
+  for (i = 1; i < npowers; i++) {
+    cost <<= 1;
+    if (cost > BIG)
+      return (BIG / 2L);
+  }
+  return (cost);
+}
+
+int todigit(register int character)
+{
+  if (character >= '0' && character <= '9')
+    return (character - '0');
+  return (-1);
+}
+
+/* set up occ[][] for country.
+ * if leader==true, only for leader sectors plus ntn.communicatins range
+ * if leader==(-1), do not include ships on the sector search
+ */
+void prep(int nation, int leader)
+{
+  short armynum, nvynum;
+  int save, i, j, x, y, start, end, com;
+
+  /* set occ to 0 */
+  for (i = 0; i < MAPX; i++)
+    for (j = 0; j < MAPY; j++)
+      occ[i][j] = 0;
+
+  save = nation;
+  if (leader == TRUE) {
+    /* only do the given country */
+    start = save;
+    end = save + 1;
+  } else {
+    /* go through all countries */
+    start = 0;
+    end = NTOTAL;
+  }
+
+  /* set occ to country of occupant army */
+  for (nation = start; nation < end; nation++)
+    if (ntn[nation].active != INACTIVE) {
+      curntn = &ntn[nation];
+      for (armynum = 0; armynum < MAXARM; armynum++) {
+        if (leader == TRUE) {
+          if ((P_ATYPE < MINLEADER) || (P_ATYPE >= MINMONSTER) ||
+              (P_ASOLD <= 0))
+            continue;
+          i = P_AXLOC;
+          j = P_AYLOC;
+          com = P_NTNCOM; /* do communications radius */
+          for (x = i - com; x <= i + com; x++)
+            for (y = j - com; y <= j + com; y++)
+              if (ONMAP(x, y))
+                occ[x][y] = nation;
+        } else if ((P_ASOLD > 0) && (P_ASTAT != SCOUT)) {
+          i = P_AXLOC;
+          j = P_AYLOC;
+          if ((occ[i][j] == 0) || (occ[i][j] == nation))
+            occ[i][j] = nation;
+          else
+            occ[i][j] = NTOTAL;
+        }
+      }
+      if (leader == FALSE)
+        for (nvynum = 0; nvynum < MAXNAVY; nvynum++) {
+          if ((P_NWSHP != 0) || (P_NGSHP != 0) || (P_NMSHP != 0)) {
+            i = P_NXLOC;
+            j = P_NYLOC;
+            if ((occ[i][j] == 0) || (occ[i][j] == nation))
+              occ[i][j] = nation;
+            else
+              occ[i][j] = NTOTAL;
+          }
+        }
+    }
+  nation = save;
+  curntn = &ntn[nation];
+}
+
+
 /*destroy nation--special case if capitol not owned by other nation*/
-void destroy(cntry) int cntry;
+void destroy(int cntry)
 {
   short armynum, nvynum;
   int i, x, y;
@@ -1202,8 +1502,7 @@ void destroy(cntry) int cntry;
 
 /*movecost contains movement cost unless water  -1 or unenterable land (-2)*/
 /* if water and not ajacent to land will cost -4*/
-void updmove(race, cntry) int cntry;
-char race;
+void updmove(int race, char cntry)
 {
   register struct s_sector *sptr;
   register int i, j;
@@ -1283,50 +1582,8 @@ char race;
     } /* for */
 }     /* updmove() */
 
-#ifdef CONQUER
-/* calculations for cost of movement during flight */
-int flightcost(i, j) int i, j;
-{
-  int cnt, hold = (-1), hold2 = (-1);
 
-  for (cnt = 0; ele[cnt] != '0'; cnt++) {
-    if (sct[i][j].altitude == ele[cnt])
-      hold = (FElecost[cnt] - '0');
-  }
-  for (cnt = 0; veg[cnt] != '0'; cnt++) {
-    if (sct[i][j].vegetation == veg[cnt])
-      hold2 = (FVegcost[cnt] - '0');
-  }
-  if (hold == (-1) || hold2 == (-1)) {
-    hold = (-1);
-  } else
-    hold += hold2;
-
-  return (hold);
-}
-
-#endif /* CONQUER */
-
-#ifdef ADMIN
-/* determines whether or not a unit has the ability to fly */
-int avian(typ) unsigned char typ;
-{
-  switch (typ) {
-    case A_ROC:
-    case A_GRIFFON:
-    case SPIRIT:
-    case DJINNI:
-    case DEMON:
-    case DRAGON:
-      return (TRUE);
-    default:
-      return (FALSE);
-  }
-}
-
-#endif /* ADMIN */
-
-void spreadsheet(nation) int nation;
+void spreadsheet(int nation)
 {
   register struct s_sector *sptr;
   register struct s_nation *nptr;
@@ -1498,7 +1755,7 @@ void spreadsheet(nation) int nation;
 }
 
 /* string inputing routine to allow deleting */
-void get_nname(str) char str[];
+void get_nname(char str[])
 {
   char ch;
   int done = 0, count = 0, xpos, ypos;
@@ -1527,113 +1784,11 @@ void get_nname(str) char str[];
   str[count] = '\0';
 }
 
-#ifdef CONQUER
-/* routine to find a nation number using name or number  */
-/* returns NTOTAL+1 if input is invalid; -1 for no input */
-int get_country() {
-  char name[NAMELTH + 1], ch;
-  int i, l, hold;
-
-  /* get name and check through list */
-  get_nname(name);
-
-  /* return on no entry */
-  if ((l = strlen(name)) == 0) {
-    return (-1);
-  }
-  for (hold = 0; hold < NTOTAL; hold++)
-    if (strcmp(ntn[hold].name, name) == 0)
-      break;
-
-  /* check for 'god' */
-  if (strcmp("god", name) == 0)
-    hold = 0;
-  if (strcmp("news", name) == 0)
-    hold = NEWSMAIL;
-
-  /* check for numbers if name too long */
-  if (hold == NTOTAL) {
-    hold = 0;
-    for (i = 0; i < l; i++) {
-      ch = name[i];
-      if (ch < '0' || ch > '9') {
-        errormsg("There is no nation by that name.");
-        return (NTOTAL);
-      } else {
-        hold *= 10;
-        hold += (ch - '0');
-      }
-    }
-    if (hold > NTOTAL)
-      hold = NTOTAL;
-  }
-  /* send back result */
-  return (hold);
-}
-
-/* finds a nation for god to be, returns 1 on failure */
-int get_god() {
-  clear_bottom(0);
-  mvaddstr(LINES - 4, 0, "Super User; For what nation? ");
-  refresh();
-
-  /* return on no entry or bad entry */
-  if ((country = get_country()) == (-1) || country == NTOTAL) {
-    country = 0;
-    redraw = DONE;
-    makebottom();
-    return (1);
-  }
-  curntn = &ntn[country];
-  return (0);
-}
-
-/* quick routine to reassign god and gods nations */
-void reset_god() {
-  /* simple routine; but improves readibility */
-  country = 0;
-  curntn = &ntn[country];
-}
-
-#endif /* CONQUER */
-
-#ifdef ADMIN
-int getleader(class) int class;
-{
-  switch (class) {
-    case C_NPC:
-    case C_KING:
-    case C_TRADER:
-      return (L_BARON);
-    case C_EMPEROR:
-      return (L_PRINCE);
-    case C_WIZARD:
-      return (L_MAGI);
-    case C_PRIEST:
-      return (L_BISHOP);
-    case C_PIRATE:
-      return (L_CAPTAIN);
-    case C_WARLORD:
-      return (L_LORD);
-    case C_DEMON:
-      return (L_DEVIL);
-    case C_DRAGON:
-      return (L_WYRM);
-    case C_SHADOW:
-      return (L_NAZGUL);
-    default:
-      printf("ERROR-national class (%d) undefined\n", class);
-      exit(0);
-  }
-  return (-1); /* shut lint up */
-}
-
-#endif /* ADMIN */
 
 /* name of the currently open mail file */
 char tmp_mail_name[LINELTH];
 
-int mailopen(to) {
+int mailopen(int to) {
 
 #ifdef CONQUER
   char line[LINELTH];
@@ -1703,7 +1858,7 @@ int mailopen(to) {
   return (0);
 }
 
-void mailclose(to) {
+void mailclose(int to) {
   if (mailok == DONEMAIL)
     return;
 
@@ -1744,9 +1899,7 @@ void mailclose(to) {
 #endif
 
 /* markok returns TRUE if mark is ok as a nation mark */
-int oldmarkok(mark, prtflag, dupflag) char mark;
-int prtflag; /* if true printf reason */
-int dupflag; /* if true ignore duplicates */
+int oldmarkok(char mark, int prtflag /* if true printf reason */, int dupflag /* if true ignore duplicates */)
 {
   register int i;
   char temp[LINELTH];
@@ -1804,7 +1957,7 @@ int dupflag; /* if true ignore duplicates */
 /* DEFAULTUNIT() returns the default army type for a given country */
 /* this is mostly used by npc's to take advantage of their powers  */
 /*******************************************************************/
-long defaultunit(nation) int nation;
+long defaultunit(int nation)
 {
   if (magic(nation, VAMPIRE))
     return (A_ZOMBIE);
@@ -1823,86 +1976,9 @@ long defaultunit(nation) int nation;
   return (A_INFANTRY);
 }
 
-#ifdef ADMIN
-void getmetal(sptr) struct s_sector *sptr;
-{
-  int randval;
-
-  randval = rand() % 100;
-  if ((sptr->tradegood != TG_none) && (sptr->tradegood != 0))
-    return;
-  if (randval < 20) {
-    sptr->tradegood = TG_copper;
-    sptr->metal = rand() % 2 + 1;
-  } else if (randval < 30) {
-    sptr->tradegood = TG_lead;
-    sptr->metal = rand() % 4 + 1;
-  } else if (randval < 40) {
-    sptr->tradegood = TG_tin;
-    sptr->metal = rand() % 4 + 2;
-  } else if (randval < 55) {
-    sptr->tradegood = TG_bronze;
-    sptr->metal = rand() % 4 + 2;
-  } else if (randval < 80) {
-    sptr->tradegood = TG_iron;
-    sptr->metal = rand() % 7 + 2;
-  } else if (randval < 95) {
-    sptr->tradegood = TG_steel;
-    sptr->metal = rand() % 8 + 3;
-  } else if (randval < 99) {
-    sptr->tradegood = TG_mithral;
-    sptr->metal = rand() % 11 + 5;
-  } else {
-    sptr->tradegood = TG_adamantine;
-    sptr->metal = rand() % 13 + 8;
-  }
-}
-
-void getjewel(sptr) struct s_sector *sptr;
-{
-  int randval;
-
-  if ((sptr->tradegood != TG_none) && (sptr->tradegood != 0))
-    return;
-  randval = rand() % 100;
-  if (randval < 20) {
-    sptr->tradegood = TG_spice;
-    sptr->jewels = rand() % 2 + 1;
-  } else if (randval < 40) {
-    sptr->tradegood = TG_silver;
-    sptr->jewels = rand() % 3 + 1;
-  } else if (randval < 48) {
-    sptr->tradegood = TG_pearls;
-    sptr->jewels = rand() % 3 + 1;
-  } else if (randval < 56) {
-    sptr->tradegood = TG_dye;
-    sptr->jewels = rand() % 5 + 1;
-  } else if (randval < 64) {
-    sptr->tradegood = TG_silk;
-    sptr->jewels = rand() % 5 + 1;
-  } else if (randval < 84) {
-    sptr->tradegood = TG_gold;
-    sptr->jewels = rand() % 6 + 1;
-  } else if (randval < 91) {
-    sptr->tradegood = TG_rubys;
-    sptr->jewels = rand() % 6 + 1;
-  } else if (randval < 96) {
-    sptr->tradegood = TG_ivory;
-    sptr->jewels = rand() % 7 + 2;
-  } else if (randval < 99) {
-    sptr->tradegood = TG_diamonds;
-    sptr->jewels = rand() % 11 + 2;
-  } else {
-    sptr->tradegood = TG_platinum;
-    sptr->jewels = rand() % 17 + 4;
-  }
-}
-
-#endif /* ADMIN */
 
 /* tg_ok returns true if a trade good can be seen by the owner of sector */
-int tg_ok(nation, sptr) int nation;
-struct s_sector *sptr;
+int tg_ok(int nation, struct s_sector *sptr)
 {
   if ((nation == 0) || (nation >= NTOTAL))
     return (TRUE);
@@ -1973,7 +2049,7 @@ struct s_sector *sptr;
 }
 
 /* this routine computes the fortification value of a sector */
-int fort_val(sptr) struct s_sector *sptr;
+int fort_val(struct s_sector *sptr)
 {
   if (sptr->designation == DSTOCKADE) {
     return (DEF_BASE);
@@ -2000,7 +2076,7 @@ int fort_val(sptr) struct s_sector *sptr;
 }
 
 /* routine to determine compass direction of x1,y1 from x0,y0 */
-int compass(x0, y0, x1, y1) int x0, y0, x1, y1;
+int compass(int x0, int y0, int x1, int y1)
 {
   int dx = x1 - x0, dy = y1 - y0; /* diplacements */
   int hold;
@@ -2037,88 +2113,3 @@ int compass(x0, y0, x1, y1) int x0, y0, x1, y1;
   }
   return (hold);
 }
-
-#ifdef CONQUER
-extern short xcurs;
-extern short ycurs;
-off_t conq_mail_size = 0;
-
-#ifdef SYSMAIL
-static off_t sys_mail_size = 0;
-
-#endif /* SYSMAIL */
-void check_mail() {
-  struct stat info;
-
-#ifdef SYSMAIL
-  int osys_mail = sys_mail_status;
-
-#endif
-  int oconq_mail = conq_mail_status;
-
-  /* check conquer mail box */
-  if (stat(conqmail, &info) == (-1)) {
-    conq_mail_status = NO_MAIL;
-    conq_mail_size = 0;
-  } else {
-    if (info.st_size > conq_mail_size) {
-      conq_mail_status = NEW_MAIL;
-      conq_mail_size = info.st_size;
-    } else if (info.st_size < conq_mail_size) {
-      conq_mail_status = NO_MAIL;
-      conq_mail_size = info.st_size;
-    }
-  }
-
-#ifdef SYSMAIL
-  /* check system mail box */
-  if (stat(sysmail, &info) == (-1)) {
-    sys_mail_status = NO_MAIL;
-    sys_mail_size = 0;
-  } else {
-    if (info.st_atime > info.st_mtime) {
-      sys_mail_status = NO_MAIL;
-      sys_mail_size = info.st_size;
-    } else if (info.st_size > sys_mail_size) {
-      sys_mail_status = NEW_MAIL;
-      sys_mail_size = info.st_size;
-    } else if (info.st_size < sys_mail_size) {
-      sys_mail_status = NO_MAIL;
-      sys_mail_size = info.st_size;
-    }
-  }
-
-  /* display mail information */
-  if (sys_mail_status != osys_mail) {
-    if (sys_mail_status == NEW_MAIL) {
-      mvaddstr(LINES - 3, COLS / 2 - 6, "You have System Mail");
-    } else {
-      mvaddstr(LINES - 3, COLS / 2 - 6, "                    ");
-    }
-    move(ycurs, 2 * xcurs);
-    refresh();
-  }
-  if (conq_mail_status != oconq_mail) {
-    if (conq_mail_status == NEW_MAIL) {
-      mvaddstr(LINES - 2, COLS / 2 - 6, "You have Conquer Mail");
-    } else {
-      mvaddstr(LINES - 2, COLS / 2 - 6, "                     ");
-    }
-    move(ycurs, 2 * xcurs);
-    refresh();
-  }
-#else
-  /* display mail information */
-  if (conq_mail_status != oconq_mail) {
-    if (conq_mail_status == NEW_MAIL) {
-      mvaddstr(LINES - 3, COLS / 2 - 6, "You have Conquer Mail");
-    } else {
-      mvaddstr(LINES - 3, COLS / 2 - 6, "                     ");
-    }
-    move(ycurs, 2 * xcurs);
-    refresh();
-  }
-#endif /* SYSMAIL */
-}
-
-#endif /* CONQUER */
