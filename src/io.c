@@ -300,21 +300,24 @@ if((fh = open(hack, O_CREAT|O_WRONLY, 0600))< 0) {
 }
 
 #ifdef USE_COMPRESS
-  sprintf(line, "%s.%s", datafile, ZEXT);
-  chmod(line, (mode_t)FCMASK);
-  sprintf(line, "%s > %s.%s", COMPRESS, datafile, ZEXT);
 #ifdef DEBUG
 fprintf(stderr, "Opening pipe to compress %s.%s\n", datafile, ZEXT);
 #endif
+  sprintf(line, "%s.%s", datafile, ZEXT);
+  chmod(line, (mode_t)FCMASK);
+  sprintf(line, "%s > %s.%s", COMPRESS, datafile, ZEXT);
   if (!(fp = popen(line, "w"))) {
-#else
-  chmod(datafile, (mode_t)FCMASK);
-  if (!(fp = fopen(datafile, "w"))) {
-#endif
-
     fprintf(stderr, "cant open data.  check permissions\n");
     abrt();
   }
+#else
+  chmod(datafile, (mode_t)FCMASK);
+  if (!(fp = fopen(datafile, "w"))) {
+    fprintf(stderr, "cant open data.  check permissions\n");
+    abrt();
+  }
+#endif
+
 /* write world structure */
 
 #ifdef DEBUG
@@ -385,19 +388,23 @@ readdata()
   fprintf(stderr, "reading data file\n");
 
 #ifdef USE_COMPRESS
-  sprintf(line, "%s < %s.%s", ZCAT, datafile, ZEXT);
 #ifdef DEBUG
 fprintf(stderr, "Opening pipe to read %s.%s\n", datafile, ZEXT);
 #endif
+  sprintf(line, "%s < %s.%s", ZCAT, datafile, ZEXT);
   if (!(fp = popen(line, "r")) || feof(fp)) {
-#else
-  if (!(fp = fopen(datafile, "r"))) {
-#endif
-
     fprintf(stderr, "can not open %s \n", datafile);
     fprintf(stderr, "for help with conquer, type conquer -h\n");
     exit(FAIL);
   }
+#else
+  if (!(fp = fopen(datafile, "r"))) {
+    fprintf(stderr, "can not open %s \n", datafile);
+    fprintf(stderr, "for help with conquer, type conquer -h\n");
+    exit(FAIL);
+  }
+#endif
+
 
 #ifdef DEBUG
   fprintf(stderr, "reading %d bytes of world data\n", sizeof(struct s_world));
