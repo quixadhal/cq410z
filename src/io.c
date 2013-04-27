@@ -40,56 +40,45 @@
 #include <fcntl.h>
 #include <signal.h>
 
-extern FILE    *fexe;
+extern FILE *fexe;
 
 /*offset of upper left hand corner*/
-extern short    xoffset,
-                yoffset;
+extern short xoffset, yoffset;
 
 /*current cursor postion (relative to 00 in upper corner)*/
 /*	position is 2*x,y*/
-extern short    xcurs,
-                ycurs;
-extern short    redraw;		/* redraw map in this turn if redraw is a 1 */
-extern short    hilmode,
-                dismode;	/* display state */
-extern short    country;	/* nation id of owner */
+extern short xcurs, ycurs;
+extern short redraw;           /* redraw map in this turn if redraw is a 1 */
+extern short hilmode, dismode; /* display state */
+extern short country;          /* nation id of owner */
 
 /************************************************************************/
 /*	GETSPACE() - malloc all space needed	 			*/
 /************************************************************************/
-void
-getspace()
-{
+void getspace() {
   if (sct != NULL)
     free(sct);
-  sct = (struct s_sector **) m2alloc(MAPX, MAPY, sizeof(struct s_sector));
+  sct = (struct s_sector **)m2alloc(MAPX, MAPY, sizeof(struct s_sector));
   if (occ != NULL)
     free(occ);
-  occ = (char **) m2alloc(MAPX, MAPY, sizeof(char));
+  occ = (char **)m2alloc(MAPX, MAPY, sizeof(char));
   if (movecost != NULL)
     free(movecost);
-  movecost = (short **) m2alloc(MAPX, MAPY, sizeof(short));
+  movecost = (short **)m2alloc(MAPX, MAPY, sizeof(short));
 }
 
 #ifdef CONQUER
-char          **mapseen;
+char **mapseen;
 
 /************************************************************************/
 /*	MAPPREP() - initialize map with what can be seen by nation.	*/
 /************************************************************************/
-void
-mapprep()
-{
-  int             armynum,
-                  nvynum;
-  int             x,
-                  y,
-                  i,
-                  j;
+void mapprep() {
+  int armynum, nvynum;
+  int x, y, i, j;
 
   /* get space for map */
-  mapseen = (char **) m2alloc(MAPX, MAPY, sizeof(char));
+  mapseen = (char **)m2alloc(MAPX, MAPY, sizeof(char));
 
   /* initialize the array */
   if (country == 0 || magic(country, KNOWALL) == TRUE) {
@@ -110,55 +99,52 @@ mapprep()
   for (x = 0; x < MAPX; x++)
     for (y = 0; y < MAPY; y++)
       if (sct[x][y].owner == country) {
-	for (i = x - LANDSEE; i <= x + LANDSEE; i++)
-	  for (j = y - LANDSEE; j <= y + LANDSEE; j++)
-	    if (ONMAP(i, j)) {
-	      mapseen[i][j] = TRUE;
-	    }
+        for (i = x - LANDSEE; i <= x + LANDSEE; i++)
+          for (j = y - LANDSEE; j <= y + LANDSEE; j++)
+            if (ONMAP(i, j)) {
+              mapseen[i][j] = TRUE;
+            }
       }
   /* now add all visible sections from armies */
   for (armynum = 0; armynum < MAXARM; armynum++)
     if (P_ASOLD > 0) {
       for (i = (int) P_AXLOC - ARMYSEE; i <= (int) P_AXLOC + ARMYSEE; i++)
-	for (j = (int) P_AYLOC - ARMYSEE; j <= (int) P_AYLOC + ARMYSEE; j++)
-	  if (ONMAP(i, j)) {
-	    mapseen[i][j] = TRUE;
-	  }
+        for (j = (int) P_AYLOC - ARMYSEE; j <= (int) P_AYLOC + ARMYSEE; j++)
+          if (ONMAP(i, j)) {
+            mapseen[i][j] = TRUE;
+          }
     }
   /* now add sectors visible by navy */
   for (nvynum = 0; nvynum < MAXNAVY; nvynum++)
     if ((P_NMSHP != 0) || (P_NWSHP != 0) || (P_NGSHP != 0)) {
       for (i = (int) P_NXLOC - NAVYSEE; i <= (int) P_NXLOC + NAVYSEE; i++)
-	for (j = (int) P_NYLOC - NAVYSEE; j <= (int) P_NYLOC + NAVYSEE; j++)
-	  if (ONMAP(i, j)) {
-	    mapseen[i][j] = TRUE;
-	  }
+        for (j = (int) P_NYLOC - NAVYSEE; j <= (int) P_NYLOC + NAVYSEE; j++)
+          if (ONMAP(i, j)) {
+            mapseen[i][j] = TRUE;
+          }
     }
 }
 
 /************************************************************************/
 /*	PRINTELE() - print a sector.altitude map 			*/
 /************************************************************************/
-void
-printele()
-{
-  register int    X,
-                  Y;
+void printele() {
+  register int X, Y;
 
   fprintf(stderr, "doing print of altitude\n");
   if (country == 0) {
-    printf("Conquer %s.%d.%s: Altitude Map of the World on Turn %d\n",
-	   VERSION, PATCHLEVEL, EXTPATCH, TURN);
+    printf("Conquer %s.%d.%s: Altitude Map of the World on Turn %d\n", VERSION,
+           PATCHLEVEL, EXTPATCH, TURN);
   } else {
-    printf("Conquer %s.%d.%s: Altitude Map for Nation %s on Turn %d\n",
-	   VERSION, PATCHLEVEL, EXTPATCH, curntn->name, TURN);
+    printf("Conquer %s.%d.%s: Altitude Map for Nation %s on Turn %d\n", VERSION,
+           PATCHLEVEL, EXTPATCH, curntn->name, TURN);
   }
   for (Y = 0; Y < MAPY; Y++) {
     for (X = 0; X < MAPX; X++) {
       if (mapseen[X][Y] == TRUE)
-	putc(sct[X][Y].altitude, stdout);
+        putc(sct[X][Y].altitude, stdout);
       else
-	putc(' ', stdout);
+        putc(' ', stdout);
     }
     putc('\n', stdout);
   }
@@ -167,29 +153,26 @@ printele()
 /************************************************************************/
 /*	PR_NTNS() - print nation marks					*/
 /************************************************************************/
-void
-pr_ntns()
-{
-  register int    X,
-                  Y;
+void pr_ntns() {
+  register int X, Y;
 
   fprintf(stderr, "doing print of nations\n");
   if (country == 0) {
-    printf("Conquer %s.%d.%s: Nation Map of the World on Turn %d\n",
-	   VERSION, PATCHLEVEL, EXTPATCH, TURN);
+    printf("Conquer %s.%d.%s: Nation Map of the World on Turn %d\n", VERSION,
+           PATCHLEVEL, EXTPATCH, TURN);
   } else {
-    printf("Conquer %s.%d.%s: Nation Map for Nation %s on Turn %d\n",
-	   VERSION, PATCHLEVEL, EXTPATCH, curntn->name, TURN);
+    printf("Conquer %s.%d.%s: Nation Map for Nation %s on Turn %d\n", VERSION,
+           PATCHLEVEL, EXTPATCH, curntn->name, TURN);
   }
   for (Y = 0; Y < MAPY; Y++) {
     for (X = 0; X < MAPX; X++) {
       if (mapseen[X][Y] == TRUE) {
-	if (sct[X][Y].owner == 0)
-	  putc(sct[X][Y].altitude, stdout);
-	else
-	  putc(ntn[sct[X][Y].owner].mark, stdout);
+        if (sct[X][Y].owner == 0)
+          putc(sct[X][Y].altitude, stdout);
+        else
+          putc(ntn[sct[X][Y].owner].mark, stdout);
       } else
-	putc(' ', stdout);
+        putc(' ', stdout);
     }
     putc('\n', stdout);
   }
@@ -198,35 +181,31 @@ pr_ntns()
 /************************************************************************/
 /*	PR_DESG() - print designations					*/
 /************************************************************************/
-void
-pr_desg()
-{
-  register int    X,
-                  Y;
+void pr_desg() {
+  register int X, Y;
 
   fprintf(stderr, "doing print of designations\n");
   if (country == 0) {
     printf("Conquer %s.%d.%s: Designation Map of the World on Turn %d\n",
-	   VERSION, PATCHLEVEL, EXTPATCH, TURN);
+           VERSION, PATCHLEVEL, EXTPATCH, TURN);
   } else {
     printf("Conquer %s.%d.%s: Designation Map for Nation %s on Turn %d\n",
-	   VERSION, PATCHLEVEL, EXTPATCH, curntn->name, TURN);
+           VERSION, PATCHLEVEL, EXTPATCH, curntn->name, TURN);
   }
   for (Y = 0; Y < MAPY; Y++) {
     for (X = 0; X < MAPX; X++) {
       if (mapseen[X][Y] == TRUE) {
-	if ((country == 0)
-	    || (sct[X][Y].owner == country)
-	    || (magic(country, NINJA) == TRUE)
-	    || (magic(sct[X][Y].owner, THE_VOID) != TRUE)) {
-	  if (sct[X][Y].designation == DNODESIG)
-	    putc(sct[X][Y].altitude, stdout);
-	  else
-	    putc(sct[X][Y].designation, stdout);
-	} else
-	  putc('?', stdout);
+        if ((country == 0) || (sct[X][Y].owner == country) ||
+            (magic(country, NINJA) == TRUE) ||
+            (magic(sct[X][Y].owner, THE_VOID) != TRUE)) {
+          if (sct[X][Y].designation == DNODESIG)
+            putc(sct[X][Y].altitude, stdout);
+          else
+            putc(sct[X][Y].designation, stdout);
+        } else
+          putc('?', stdout);
       } else
-	putc(' ', stdout);
+        putc(' ', stdout);
     }
     putc('\n', stdout);
   }
@@ -235,43 +214,38 @@ pr_desg()
 /************************************************************************/
 /*	PRINTVEG() -	print a vegetation map subroutine		*/
 /************************************************************************/
-void
-printveg()
-{
-  register int    X,
-                  Y;
+void printveg() {
+  register int X, Y;
 
   fprintf(stderr, "doing print of vegetation\n");
   if (country == 0) {
     printf("Conquer %s.%d.%s: Vegetation Map of the World on Turn %d\n",
-	   VERSION, PATCHLEVEL, EXTPATCH, TURN);
+           VERSION, PATCHLEVEL, EXTPATCH, TURN);
   } else {
     printf("Conquer %s.%d.%s: Vegetation Map for Nation %s on Turn %d\n",
-	   VERSION, PATCHLEVEL, EXTPATCH, curntn->name, TURN);
+           VERSION, PATCHLEVEL, EXTPATCH, curntn->name, TURN);
   }
   for (Y = 0; Y < MAPY; Y++) {
     for (X = 0; X < MAPX; X++) {
       if (mapseen[X][Y] == TRUE) {
-	putc(sct[X][Y].vegetation, stdout);
+        putc(sct[X][Y].vegetation, stdout);
       } else
-	putc(' ', stdout);
+        putc(' ', stdout);
     }
     putc('\n', stdout);
   }
 }
 
-#endif	/* CONQUER */
+#endif /* CONQUER */
 
 /************************************************************************/
 /*	WRITEDATA() - write data to datafile 				*/
 /*	trashes/creates datafile in the process				*/
 /************************************************************************/
-void
-writedata()
-{
-  FILE            *fp;
-  int             n_write, fh, count;
-  char            line[256], hack[256];
+void writedata() {
+  FILE *fp;
+  int n_write, fh, count;
+  char line[256], hack[256];
 
   sigblock(sigmask(SIGTSTP));
   sigblock(sigmask(SIGHUP));
@@ -283,35 +257,35 @@ writedata()
   signal(SIGTERM, SIG_IGN);
 
   fprintf(stderr, "\ndoing write of data\n");
-  count= 0;
+  count = 0;
 
   sprintf(hack, "%s-hack", datafile);
-while(access(hack, F_OK) != -1) {
-  count++;
-  if(count > 6) {
-    fprintf(stderr, "*** DATA FILE IS LOCKED!!! ABORTING!!! ***");
+  while (access(hack, F_OK) != -1) {
+    count++;
+    if (count > 6) {
+      fprintf(stderr, "*** DATA FILE IS LOCKED!!! ABORTING!!! ***");
+      exit(10);
+    }
+    usleep(random() % 5000 + 100);
+  }
+  if ((fh = open(hack, O_CREAT | O_WRONLY, 0600)) < 0) {
+    fprintf(stderr, "*** LOCK STILL FAILED... ABORTING! ***");
     exit(10);
   }
-  usleep(random()%5000 + 100);
-}
-if((fh = open(hack, O_CREAT|O_WRONLY, 0600))< 0) {
-  fprintf(stderr, "*** LOCK STILL FAILED... ABORTING! ***");
-  exit(10);
-}
 
 #ifdef USE_COMPRESS
 #ifdef DEBUG
-fprintf(stderr, "Opening pipe to compress %s.%s\n", datafile, ZEXT);
+  fprintf(stderr, "Opening pipe to compress %s.%s\n", datafile, ZEXT);
 #endif
   sprintf(line, "%s.%s", datafile, ZEXT);
-  chmod(line, (mode_t)FCMASK);
+  chmod(line, (mode_t) FCMASK);
   sprintf(line, "%s > %s.%s", COMPRESS, datafile, ZEXT);
   if (!(fp = popen(line, "w"))) {
     fprintf(stderr, "cant open data.  check permissions\n");
     abrt();
   }
 #else
-  chmod(datafile, (mode_t)FCMASK);
+  chmod(datafile, (mode_t) FCMASK);
   if (!(fp = fopen(datafile, "w"))) {
     fprintf(stderr, "cant open data.  check permissions\n");
     abrt();
@@ -321,67 +295,66 @@ fprintf(stderr, "Opening pipe to compress %s.%s\n", datafile, ZEXT);
 /* write world structure */
 
 #ifdef DEBUG
-  fprintf(stderr, "writing %d bytes of world data\n", 
-    sizeof(struct s_world));
+  fprintf(stderr, "writing %d bytes of world data\n", sizeof(struct s_world));
 #endif
   if ((n_write = fwrite(&world, sizeof(struct s_world), 1, fp)) != 1) {
     fprintf(stderr, "error writing world data\n");
-    fprintf(stderr, "wrong data format (%d vs. %d)\n", n_write *
-    sizeof(struct s_world), sizeof(struct s_world));
+    fprintf(stderr, "wrong data format (%d vs. %d)\n",
+            n_write * sizeof(struct s_world), sizeof(struct s_world));
     abrt();
   }
 /* write map */
 
 #ifdef DEBUG
-  fprintf(stderr, "writing %d bytes of sector data\n", MAPX * MAPY *
-    sizeof(struct s_sector));
+  fprintf(stderr, "writing %d bytes of sector data\n",
+          MAPX * MAPY * sizeof(struct s_sector));
 #endif
   if ((n_write = fwrite(*sct, sizeof(struct s_sector), MAPX * MAPY, fp)) !=
-    (MAPX * MAPY)) {
-    fprintf(stderr, "Wrong number of bytes (%d) written for sct \
-(should be %d)\n", n_write * sizeof(struct s_sector),
-MAPX * MAPY * sizeof(struct s_sector));
+      (MAPX * MAPY)) {
+    fprintf(stderr,
+            "Wrong number of bytes (%d) written for sct (should be %d)\n",
+            n_write * sizeof(struct s_sector),
+            MAPX * MAPY * sizeof(struct s_sector));
     abrt();
-  };
+  }
+  ;
 /* write nations */
 
 #ifdef DEBUG
-  fprintf(stderr, "writing %d bytes of nation data\n", NTOTAL *
-    sizeof(struct s_nation));
+  fprintf(stderr, "writing %d bytes of nation data\n",
+          NTOTAL * sizeof(struct s_nation));
 #endif
-  if ((n_write = fwrite(ntn, sizeof(struct s_nation), NTOTAL, fp)) !=
-    NTOTAL) {
-    fprintf(stderr, "Wrong number of bytes (%d) written for ntn \
-(should be %d)\n", n_write * sizeof(struct s_nation),
-NTOTAL * sizeof(struct s_nation));
+  if ((n_write = fwrite(ntn, sizeof(struct s_nation), NTOTAL, fp)) != NTOTAL) {
+    fprintf(
+        stderr, "Wrong number of bytes (%d) written for ntn (should be %d)\n",
+        n_write * sizeof(struct s_nation), NTOTAL * sizeof(struct s_nation));
     abrt();
   }
 #ifdef USE_COMPRESS
 #ifdef DEBUG
-fprintf(stderr, "Closing pipe to compress %s.%s\n", datafile, ZEXT);
+  fprintf(stderr, "Closing pipe to compress %s.%s\n", datafile, ZEXT);
 #endif
   pclose(fp);
   sprintf(line, "%s.%s", datafile, ZEXT);
-  chmod(line, (mode_t)FCMASK);
+  chmod(line, (mode_t) FCMASK);
 #else
   fclose(fp);
   sprintf(line, "%s.%s", datafile, ZEXT);
-  chmod(line, (mode_t)FCMASK);
+  chmod(line, (mode_t) FCMASK);
 #endif
   sync();
-  if(fh) close(fh);
+  if (fh)
+    close(fh);
   unlink(hack);
 }
 
 /************************************************************************/
 /*	READDATA()	-	read data & malloc space		*/
 /************************************************************************/
-void
-readdata()
-{
-  FILE		  *fp;
-  int             n_read;
-  char            line[256];
+void readdata() {
+  FILE *fp;
+  int n_read;
+  char line[256];
 
   /* read in existing nation army and navy data */
   /* check if file openable */
@@ -389,7 +362,7 @@ readdata()
 
 #ifdef USE_COMPRESS
 #ifdef DEBUG
-fprintf(stderr, "Opening pipe to read %s.%s\n", datafile, ZEXT);
+  fprintf(stderr, "Opening pipe to read %s.%s\n", datafile, ZEXT);
 #endif
   sprintf(line, "%s < %s.%s", ZCAT, datafile, ZEXT);
   if (!(fp = popen(line, "r")) || feof(fp)) {
@@ -405,56 +378,55 @@ fprintf(stderr, "Opening pipe to read %s.%s\n", datafile, ZEXT);
   }
 #endif
 
-
 #ifdef DEBUG
   fprintf(stderr, "reading %d bytes of world data\n", sizeof(struct s_world));
-#endif	/* DEBUG */
+#endif /* DEBUG */
 
-/* read world structure */
+  /* read world structure */
   if ((n_read = fread(&world, sizeof(struct s_world), 1, fp)) != 1) {
     fprintf(stderr, "error reading world data\n");
     fprintf(stderr, "wrong data format (%d vs. %d)\n",
-      n_read* sizeof(struct s_world), sizeof(struct s_world));
+            n_read * sizeof(struct s_world), sizeof(struct s_world));
     abrt();
   }
 
   getspace();
 
 #ifdef DEBUG
-  fprintf(stderr, "reading %d bytes of sector data\n", MAPX * MAPY *
-  sizeof(struct s_sector));
-#endif	/* DEBUG */
+  fprintf(stderr, "reading %d bytes of sector data\n",
+          MAPX * MAPY * sizeof(struct s_sector));
+#endif /* DEBUG */
 
-  if ((n_read = fread(*sct, sizeof(struct s_sector), MAPX* MAPY, fp)) !=
-    (MAPX * MAPY)) {
+  if ((n_read = fread(*sct, sizeof(struct s_sector), MAPX * MAPY, fp)) !=
+      (MAPX * MAPY)) {
     fprintf(stderr, "error reading sector data (sct)\n");
     fprintf(stderr, "wrong data format (%d vs. %d)\n",
-      n_read * sizeof(struct s_sector), MAPX * MAPY * sizeof(struct s_sector));
+            n_read * sizeof(struct s_sector),
+            MAPX * MAPY * sizeof(struct s_sector));
     abrt();
   }
 
 #ifdef DEBUG
-  fprintf(stderr, "reading %d bytes of nation data\n", NTOTAL *
-    sizeof(struct s_nation));
-#endif	/* DEBUG */
+  fprintf(stderr, "reading %d bytes of nation data\n",
+          NTOTAL * sizeof(struct s_nation));
+#endif /* DEBUG */
 
-  if ((n_read = fread(ntn, sizeof(struct s_nation), NTOTAL, fp)) !=
-    NTOTAL) {
+  if ((n_read = fread(ntn, sizeof(struct s_nation), NTOTAL, fp)) != NTOTAL) {
     fprintf(stderr, "error reading s_nation data (ntn)\n");
-    fprintf(stderr, "wrong data format (%d vs. %d)\n", n_read *
-      sizeof(struct s_nation), NTOTAL * sizeof(struct s_nation));
+    fprintf(stderr, "wrong data format (%d vs. %d)\n",
+            n_read * sizeof(struct s_nation), NTOTAL * sizeof(struct s_nation));
     abrt();
   }
 
 #ifdef USE_COMPRESS
 #ifdef DEBUG
-fprintf(stderr, "Closing read pipe to %s.%s\n", datafile, ZEXT);
+  fprintf(stderr, "Closing read pipe to %s.%s\n", datafile, ZEXT);
 #endif
   pclose(fp);
 #else
   fclose(fp);
 #endif
-}				/* readdata() */
+} /* readdata() */
 
 #ifdef CONQUER
 
@@ -462,9 +434,7 @@ fprintf(stderr, "Closing read pipe to %s.%s\n", datafile, ZEXT);
 /************************************************************************/
 /*	OFFMAP()	deal if cursor is off the map			*/
 /************************************************************************/
-void
-offmap()
-{
+void offmap() {
   /* set offset offsets can not be < 0 */
   if (xcurs < 1) {
     if (XREAL <= 0) {
@@ -529,16 +499,13 @@ offmap()
   whatcansee();
 }
 
-#endif				/* XYZZY */
+#endif /* XYZZY */
 
 /************************************************************************/
 /*	CENTERMAP()	- redraws screen so that cursor is centered	*/
 /************************************************************************/
-void
-centermap()
-{
-  int             xx,
-                  yy;
+void centermap() {
+  int xx, yy;
 
   xx = XREAL;
   yy = YREAL;
@@ -557,49 +524,44 @@ centermap()
 /*   JUMP_TO()      - move screen position to a specific location       */
 /*                    home indicates just go to capitol sector.         */
 /************************************************************************/
-void
-jump_to(home)
-  int             home;
+void jump_to(home) int home;
 {
-  int             i,
-                  j,
-                  done;
-  static int      next_ntn;
+  int i, j, done;
+  static int next_ntn;
 
   /* find location to jump to */
   if (home) {
     if (country == 0) {
       /* check if in sequence */
-      if ((XREAL != ntn[next_ntn].capx)
-	  || (YREAL != ntn[next_ntn].capy)) {
-	next_ntn = 0;
+      if ((XREAL != ntn[next_ntn].capx) || (YREAL != ntn[next_ntn].capy)) {
+        next_ntn = 0;
       }
       /* find next capitol */
       done = FALSE;
       do {
-	next_ntn++;
-	if (next_ntn == NTOTAL) {
-	  j = 0;
-	  for (i = 0; i < NTOTAL; i++)
-	    if (isntn(ntn[i].active)) {
-	      j = i;
-	      i = NTOTAL;
-	    }
-	  next_ntn = j;
-	  done = TRUE;
-	} else {
-	  if (isntn(ntn[next_ntn].active)) {
-	    done = TRUE;
-	  }
-	}
+        next_ntn++;
+        if (next_ntn == NTOTAL) {
+          j = 0;
+          for (i = 0; i < NTOTAL; i++)
+            if (isntn(ntn[i].active)) {
+              j = i;
+              i = NTOTAL;
+            }
+          next_ntn = j;
+          done = TRUE;
+        } else {
+          if (isntn(ntn[next_ntn].active)) {
+            done = TRUE;
+          }
+        }
       } while (done == FALSE);
       /* default location; or next capitol */
       if (next_ntn == 0) {
-	i = MAPX / 2 - 1;
-	j = MAPY / 2 - 1;
+        i = MAPX / 2 - 1;
+        j = MAPY / 2 - 1;
       } else {
-	i = ntn[next_ntn].capx;
-	j = ntn[next_ntn].capy;
+        i = ntn[next_ntn].capx;
+        j = ntn[next_ntn].capy;
       }
     } else {
       /* go to capitol */
@@ -638,21 +600,18 @@ jump_to(home)
 /************************************************************************/
 /*	PRINTSCORE()	- like it says					*/
 /************************************************************************/
-void
-printscore()
-{
-  int             i;
-  int             nationid;	/* current nation id */
+void printscore() {
+  int i;
+  int nationid; /* current nation id */
 
 #ifdef TIMELOG
-  FILE           *timefp,
-                 *fopen();
-  char            timestr[LINELTH + 1];
+  FILE *timefp, *fopen();
+  char timestr[LINELTH + 1];
 
-#endif				/* TIMELOG */
+#endif /* TIMELOG */
 
   printf("Conquer %s.%d.%s: %s of Year %d, Turn %d\n", VERSION, PATCHLEVEL,
-	 EXTPATCH, PMONTH(TURN), YEAR(TURN), TURN);
+         EXTPATCH, PMONTH(TURN), YEAR(TURN), TURN);
 
 #ifdef TIMELOG
   if ((timefp = fopen(timefile, "r")) != NULL) {
@@ -660,9 +619,10 @@ printscore()
     printf("Last Update: %s", timestr);
     fclose(timefp);
   }
-#endif				/* TIMELOG */
+#endif /* TIMELOG */
 
-  printf("id      name   race    class    align  score    talons military  civilians sect\n");
+  printf("id      name   race    class    align  score    talons military  "
+         "civilians sect\n");
   for (nationid = 1; nationid < NTOTAL; nationid++) {
     if (!isactive(ntn[nationid].active))
       continue;
@@ -672,9 +632,9 @@ printscore()
     if (ntn[nationid].race == 'B') {
       printf("%6s ", "SAVAGE");
     } else {
-      for (i = 1; (*(races + i)[0]) != 'U'; i++)
-	if (ntn[nationid].race == *(races + i)[0])
-	  printf("%6s ", *(races + i));
+      for (i = 1;(*(races + i)[0]) != 'U'; i++)
+        if (ntn[nationid].race == *(races + i)[0])
+          printf("%6s ", *(races + i));
     }
 
     printf("%8s ", *(Class + ntn[nationid].class));
@@ -682,42 +642,34 @@ printscore()
     if (isntn(ntn[nationid].active)) {
 
 #ifdef NOSCORE
-      printf("%6ld  %8s %8s   %8s %4s\n",
-	     ntn[nationid].score, "-----", "----", "-----", "--");
+      printf("%6ld  %8s %8s   %8s %4s\n", ntn[nationid].score, "-----", "----",
+             "-----", "--");
 #else
-      printf("%6ld  %8ld %8ld   %8ld %4d\n",
-	     ntn[nationid].score, ntn[nationid].tgold
-	     ,ntn[nationid].tmil, ntn[nationid].tciv
-	     ,ntn[nationid].tsctrs);
-#endif				/* NOSCORE */
+      printf("%6ld  %8ld %8ld   %8ld %4d\n", ntn[nationid].score,
+             ntn[nationid].tgold, ntn[nationid].tmil, ntn[nationid].tciv,
+             ntn[nationid].tsctrs);
+#endif /* NOSCORE */
     } else {
-      printf("%6s  %8s %8s   %8s %4s\n",
-	     "---", "-----", "----", "-----", "--");
+      printf("%6s  %8s %8s   %8s %4s\n", "---", "-----", "----", "-----", "--");
     }
   }
 }
 
-#endif	/* CONQUER */
+#endif /* CONQUER */
 
 /************************************************************************/
 /*	FLEE() - civilains in x,y flee from somebody			*/
 /*	slaver means 25% of populace stays				*/
 /* 	isupd is TRUE if it is update					*/
 /************************************************************************/
-void
-flee(x, y, isupd, slaver)
-  int             x,
-                  y,
-                  isupd,
-                  slaver;
+void flee(x, y, isupd, slaver) int x, y, isupd, slaver;
 {
-  int             count = 0;	/* count is number of acceptable sectors to
+  int count = 0; /* count is number of acceptable sectors to
 				 * go to */
-  int             svcountry = country;
-  int             slaves = 0;
-  int             i,
-                  j;
-  int             people_to_add;
+  int svcountry = country;
+  int slaves = 0;
+  int i, j;
+  int people_to_add;
 
   country = sct[x][y].owner;
   if (slaver == TRUE) {
@@ -730,61 +682,61 @@ flee(x, y, isupd, slaver)
   /* check if next to anybody of the sectors owners race */
   for (i = x - 2; i <= x + 2; i++)
     for (j = y - 2; j <= y + 2; j++)
-      if (ONMAP(i, j)
-	  && (ntn[sct[i][j].owner].race == ntn[sct[x][y].owner].race))
-	count++;
+      if (ONMAP(i, j) &&
+          (ntn[sct[i][j].owner].race == ntn[sct[x][y].owner].race))
+        count++;
 
   if (count > 0) {
 
 #ifdef CONQUER
     if (isupd == 0) {
       if (slaver == TRUE) {
-	mvprintw(LINES - 2, 20, "CIVILIANS ABANDON SECTOR (%d slaves)", slaves);
+        mvprintw(LINES - 2, 20, "CIVILIANS ABANDON SECTOR (%d slaves)", slaves);
       } else {
-	mvaddstr(LINES - 2, 20, "CIVILIANS ABANDON SECTOR");
+        mvaddstr(LINES - 2, 20, "CIVILIANS ABANDON SECTOR");
       }
     }
-#endif	/* CONQUER */
+#endif /* CONQUER */
 
     for (i = x - 2; i <= x + 2; i++)
       for (j = y - 2; j <= y + 2; j++)
-	if (ONMAP(i, j)
-	    && (ntn[sct[i][j].owner].race == ntn[sct[x][y].owner].race)) {
-	  people_to_add = sct[x][y].people / count;
-	  /* don't show until next turn if player move */
-	  if (isupd == 0)
-	    SADJCIV3;
-	  else
-	    sct[x][y].people += people_to_add;
-	}
+        if (ONMAP(i, j) &&
+            (ntn[sct[i][j].owner].race == ntn[sct[x][y].owner].race)) {
+          people_to_add = sct[x][y].people / count;
+          /* don't show until next turn if player move */
+          if (isupd == 0)
+            SADJCIV3;
+          else
+            sct[x][y].people += people_to_add;
+        }
   } else {
     sct[x][y].people /= 2;
     for (i = x - 4; i <= x + 4; i++)
       for (j = y - 4; j <= y + 4; j++)
-	if (ONMAP(i, j)
-	    && (ntn[sct[i][j].owner].race == ntn[sct[x][y].owner].race))
-	  count++;
+        if (ONMAP(i, j) &&
+            (ntn[sct[i][j].owner].race == ntn[sct[x][y].owner].race))
+          count++;
     if (count > 0) {
 
 #ifdef CONQUER
       if (isupd == 0)
-	mvaddstr(LINES - 2, 20, "PEOPLE FLEE SECTOR AND HALF DIE");
-#endif	/* CONQUER */
+        mvaddstr(LINES - 2, 20, "PEOPLE FLEE SECTOR AND HALF DIE");
+#endif /* CONQUER */
 
       for (i = x - 4; i <= x + 4; i++)
-	for (j = y - 4; j <= y + 4; j++)
-	  if (ONMAP(i, j)
-	      && (ntn[sct[i][j].owner].race == ntn[sct[x][y].owner].race)) {
-	    sct[i][j].people += sct[x][y].people / count;
-	    if (isupd == 0)
-	      SADJCIV2;
-	  }
+        for (j = y - 4; j <= y + 4; j++)
+          if (ONMAP(i, j) &&
+              (ntn[sct[i][j].owner].race == ntn[sct[x][y].owner].race)) {
+            sct[i][j].people += sct[x][y].people / count;
+            if (isupd == 0)
+              SADJCIV2;
+          }
     }
 
 #ifdef CONQUER
-    else if (isupd == 0)
+        else if (isupd == 0)
       mvaddstr(LINES - 2, 20, "PEOPLE IN SECTOR DIE");
-#endif	/* CONQUER */
+#endif /* CONQUER */
   }
 
   sct[x][y].people = slaves;
@@ -805,13 +757,10 @@ flee(x, y, isupd, slaver)
 /*	READMAP()	- read a map in from map files 			*/
 /*	returns TRUE for success, FALSE for fail			*/
 /************************************************************************/
-int
-readmap()
-{
-  FILE           *mapfile;
-  char            line[BIGLTH + 1];
-  register int    x,
-                  y;
+int readmap() {
+  FILE *mapfile;
+  char line[BIGLTH + 1];
+  register int x, y;
 
   /* read in ele.map */
   strcpy(line, scenario);
@@ -857,30 +806,28 @@ readmap()
   return (TRUE);
 }
 
-#endif	/* ADMIN */
+#endif /* ADMIN */
 
 /*********************************************************************/
 /* M2ALLOC() - two dimensional array allocator (because C is stupid) */
 /*********************************************************************/
-char          **
-m2alloc(nrows, ncols, entrysize)
-  int             nrows;	/* row dimension */
-  int             ncols;	/* column dimension */
-  int             entrysize;	/* # bytes in items to be stored */
+char **m2alloc(nrows, ncols, entrysize) int nrows; /* row dimension */
+int ncols;                                         /* column dimension */
+int entrysize; /* # bytes in items to be stored */
 {
-  char          **baseaddr;
-  int             j;
+  char **baseaddr;
+  int j;
 
   entrysize *= ncols;
-  baseaddr = (char **)
-    malloc((unsigned) (nrows * (sizeof(char *) + entrysize)));
+  baseaddr = (char **)malloc((unsigned)(nrows * (sizeof(char *) + entrysize)));
 
-  if (baseaddr == (char **) NULL) {
-    printf("OOPS - cant allocate %d by %d blocks of %d bytes\n", nrows, ncols, entrysize);
+  if (baseaddr == (char **)NULL) {
+    printf("OOPS - cant allocate %d by %d blocks of %d bytes\n", nrows, ncols,
+           entrysize);
     abrt();
   }
   if (nrows > 0) {
-    *baseaddr = (char *) (baseaddr + nrows);
+    *baseaddr = (char *)(baseaddr + nrows);
     for (j = 1; j < nrows; j++)
       baseaddr[j] = baseaddr[j - 1] + entrysize;
   }
@@ -889,20 +836,17 @@ m2alloc(nrows, ncols, entrysize)
 
 /* If the string entered is too long, then a truncated */
 /* string is returned.  Length entered is returned.    */
-int
-get_pass(str)
-  char           *str;
+int get_pass(str) char *str;
 {
-  char            ch;
-  int             done = FALSE,
-                  count = 0;
+  char ch;
+  int done = FALSE, count = 0;
 
   while (done == FALSE) {
     ch = getch();
     if (ch == '\b' || ch == '\177') {
       /* delete any entered characters */
       if (count > 0) {
-	count--;
+        count--;
       }
     } else if (ch == '\025') {
       /* make sure that ^U works */
@@ -912,8 +856,8 @@ get_pass(str)
     } else if (ch != '\0') {
       /* add any other character to the string */
       if (count < PASSLTH) {
-	/* don't try adding too many */
-	str[count] = ch;
+        /* don't try adding too many */
+        str[count] = ch;
       }
       count++;
     }
