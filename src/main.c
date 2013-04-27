@@ -108,11 +108,22 @@ FILE *fexe, *fopen();
 
 static char filename[FILELTH];
 
+void makebottom(void);
+int parse(int ch);
+void sect_info(void);
+void makeside(int alwayssee);
+int aretheyon(void);
+void copyscreen(void);
+void bye(int dounlink);
+void credits(void);
+void camp_info(void);
+void dummy(void);
+int pwdchk(uid_t user, char *attempt);
+
 /************************************************************************/
 /*	MAIN() - main loop for conquer					*/
 /************************************************************************/
-void main(argc, argv) int argc;
-char **argv;
+int main(int argc, char **argv)
 {
   int geteuid(), getuid(), setuid();
   register int i, j;
@@ -427,7 +438,7 @@ char **argv;
       fprintf(stderr, " or %s", ntn[0].leader);
     }
     fprintf(stderr, ".\n");
-    return;
+    exit(FAIL);
   } else if (country == 0 && !pflag) {
     sprintf(filename, "%sadd", isonfile);
     if (check_lock(filename, FALSE) == TRUE) {
@@ -709,7 +720,7 @@ char **argv;
 /************************************************************************/
 /* MAKEBOTTOM() - make the bottom of the screen				*/
 /************************************************************************/
-void makebottom() {
+void makebottom(void) {
   standend();
   move(LINES - 4, 0);
   clrtoeol();
@@ -751,7 +762,7 @@ void makebottom() {
 /*	PARSE() - interpret entered character				*/
 /*	  return TRUE if command is repeatable FALSE otherwise		*/
 /************************************************************************/
-int parse(ch) int ch;
+int parse(int ch)
 {
   char name[LINELTH + 1];
   char passwd[PASSLTH + 1];
@@ -1213,7 +1224,7 @@ int parse(ch) int ch;
 /************************************************************************/
 /*	SECT_INFO() - display sector debugging information		*/
 /************************************************************************/
-void sect_info() {
+void sect_info(void) {
   int i, j, acnt1 = 0, acnt2 = 0, ncnt1 = 0, ncnt2 = 0, x, y;
 
   /* erase prior information */
@@ -1272,7 +1283,7 @@ void sect_info() {
 /************************************************************************/
 /*	MAKESIDE() -	make the right hand side display		*/
 /************************************************************************/
-void makeside(alwayssee) int alwayssee; /* see even if cant really see sector */
+void makeside(int alwayssee) /* see even if cant really see sector */
 {
   int i;
   int armbonus;
@@ -1602,7 +1613,7 @@ void makeside(alwayssee) int alwayssee; /* see even if cant really see sector */
 /************************************************************************/
 /* 	ARETHEYON() - returns TRUE if 'country' is logged on, else FALSE */
 /************************************************************************/
-int aretheyon() {
+int aretheyon(void) {
   /* return file descriptor for lock file */
   sprintf(fison, "%s.%03d", isonfile, country);
   return (check_lock(fison, TRUE));
@@ -1613,7 +1624,7 @@ int aretheyon() {
 /* THIS SUBROUTINE MAY NOT BE ALTERED, AND THE MESSAGE CONTAINED HEREIN	*/
 /* MUST BE SHOWN TO EACH AND EVERY PLAYER, EVERY TIME THEY LOG IN	*/
 /************************************************************************/
-void copyscreen() {
+void copyscreen(void) {
 
 #ifdef TIMELOG
   FILE *timefp, *fopen();
@@ -1666,7 +1677,7 @@ void copyscreen() {
 /************************************************************************/
 /*	BYE()	-	exit gracefully from curses			*/
 /************************************************************************/
-void bye(dounlink) int dounlink; /* TRUE if want to do unlink */
+void bye(int dounlink) /* TRUE if want to do unlink */
 {
   if (dounlink)
     if (strcmp(fison, "START") != 0)
@@ -1697,7 +1708,7 @@ void bye(dounlink) int dounlink; /* TRUE if want to do unlink */
 /************************************************************************/
 /*	CREDITS() -	print credits notice to screen			*/
 /************************************************************************/
-void credits() {
+void credits(void) {
   clear();
   mvprintw(4, 0, "Conquer %s.%d.%s", VERSION, PATCHLEVEL, EXTPATCH);
   mvaddstr(5, 0, "Copyright (c) 1988 by Edward M Barlow");
@@ -1716,7 +1727,7 @@ void credits() {
 /************************************************************************/
 /*	CAMP_INFO() -	display information about current data file	*/
 /************************************************************************/
-void camp_info() {
+void camp_info(void) {
   int mercs = 0, solds = 0, armynum, nvynum, nontn = 0;
   int numarm = 0, numnvy = 0, numlead = 0;
   char garblebarg[80];
@@ -1789,10 +1800,11 @@ void camp_info() {
   getch();
 }
 
-void dummy() { /*  sigblock(sigmask(SIGTSTP)); */ }
+void dummy(void) {
+  /*  sigblock(sigmask(SIGTSTP)); */
+}
 
-int pwdchk(user, attempt) uid_t user;
-char *attempt;
+int pwdchk(uid_t user, char *attempt)
 {
   struct passwd *pwd;
   char salt[3];
