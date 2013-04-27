@@ -1442,7 +1442,7 @@ void populate() {
       else if (allign == 'i')
         curntn->active = ISOLATIONIST;
       else {
-        sprintf(line, "invalid nation alignment (%c)");
+        sprintf(line, "invalid nation alignment (%c)", allign);
         newerror(line);
         newreset();
         abrt();
