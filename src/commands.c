@@ -51,10 +51,18 @@ extern short redraw;
 
 int roads_this_turn = 0;
 
+int desg_ok(int prtflag, char desg, struct s_sector *sptr);
+void redesignate(void);
+void construct(void);
+void draft(void);
+void rmessage(void);
+void wmessage(void);
+void moveciv(void);
+int armygoto(void);
+int navygoto(void);
+
 /* routine to determine if the given designation is ok; TRUE for ok */
-int desg_ok(prtflag, desg, sptr) int prtflag;
-char desg;
-struct s_sector *sptr;
+int desg_ok(int prtflag, char desg, struct s_sector *sptr)
 {
   /* check vegetation */
   if ((desg != DNODESIG) && (desg != DROAD) && (desg != DFORT) &&
@@ -145,7 +153,7 @@ struct s_sector *sptr;
 }
 
 /*change current hex designation*/
-void redesignate() {
+void redesignate(void) {
   char newdes;
   char tgtype[NAMELTH + 1];
   struct s_sector *sptr = &sct[XREAL][YREAL];
@@ -406,7 +414,7 @@ void redesignate() {
 }
 
 /*build fort or ship-type */
-void construct() {
+void construct(void) {
   int tmpvar, tmpvar2, onboard;
   long cost;
   int armbonus;
@@ -793,7 +801,7 @@ void construct() {
 }
 
 /*DRAFT IF IN A CITY*/
-void draft() {
+void draft(void) {
   short armynum, x, y, i;
   long men = 0, mercs;
   short army = (-1), isgod = FALSE, newtype = 0;
@@ -1129,7 +1137,7 @@ void draft() {
 
 /*go through msgfile not rewriting to temp messages you discard*/
 /* then move temp to msgfile*/
-void rmessage() {
+void rmessage(void) {
   int unlink();
   FILE *mesgfp;
   FILE *fptemp;
@@ -1254,7 +1262,7 @@ void rmessage() {
 #endif /* SYSMAIL */
 }
 
-void wmessage() {
+void wmessage(void) {
   int x, y;
   int done = FALSE;
   char ch;
@@ -1434,7 +1442,7 @@ void wmessage() {
 }
 
 /*strategic move of civilians...once only*/
-void moveciv() {
+void moveciv(void) {
   long people;
   short i, j;
 
@@ -1514,7 +1522,7 @@ void moveciv() {
   }
 }
 
-int armygoto() {
+int armygoto(void) {
   short armynum = 0, loop = 0;
 
   armynum = getselunit();
@@ -1548,7 +1556,7 @@ int armygoto() {
   return (1);
 }
 
-int navygoto() {
+int navygoto(void) {
   short nvynum = 0, loop = 0;
 
   nvynum = getselunit() - MAXARM;
