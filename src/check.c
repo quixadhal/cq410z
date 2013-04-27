@@ -59,7 +59,7 @@ void verify_ntn(char v_file[], int v_line)
     for (i = 0; i < MAXARM; i++) {
       a = &nptr->arm[i];
       if (a->sold < 0) {
-        fprintf(stderr, "file %s: line %d: nation[%d] army[%d] sold = %d\n",
+        fprintf(stderr, "file %s: line %d: nation[%d] army[%d] sold = %ld\n",
                 v_file, v_line, country, i, a->sold);
         a->sold = 0;
       }
@@ -103,7 +103,7 @@ void verify_ntn(char v_file[], int v_line)
       if (a->stat != ONBOARD && sct[a->xloc][a->yloc].altitude == WATER) {
         fprintf(
             stderr,
-            "file %s: line %d: nation[%d] army[%d] loc=%d,%d (water) men=%d\n",
+            "file %s: line %d: nation[%d] army[%d] loc=%d,%d (water) men=%ld\n",
             v_file, v_line, country, i, a->xloc, a->yloc, a->sold);
         a->sold = 0;
       }
@@ -177,7 +177,7 @@ void verify_sct(char v_file[], int v_line)
         sptr->people = ABSMAXPEOPLE;
 
       if (sptr->people < 0) {
-        fprintf(stderr, "file %s: line %d: sct[%d][%d].people = %d\n", v_file,
+        fprintf(stderr, "file %s: line %d: sct[%d][%d].people = %ld\n", v_file,
                 v_line, x, y, sptr->people);
         if (sptr->people < -1 * ABSMAXPEOPLE)
           sptr->people = ABSMAXPEOPLE;
