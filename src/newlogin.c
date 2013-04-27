@@ -533,19 +533,23 @@ newlogin()
     curntn->owner = calleruid;
     /* strcpy(curntn->owner, (getpwinfo(getuid()))->pw_name); */
 #ifdef ENCODE_EXECS
-    sprintf(tempc, "%s > %s.%03d", ENCODE, exefile, country);
 #ifdef DEBUG
 fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
 #endif
+    sprintf(tempc, "%s > %s.%03d", ENCODE, exefile, country);
     if ((fexe = popen(tempc, "w")) == NULL) {
-#else
-    sprintf(tempc, "%s.%03d", exefile, country);
-    if ((fexe = fopen(tempc, "w")) == NULL) {
-#endif
       sprintf(tempc, "Error opening <%s>", tempc);
       newerror(tempc);
       newbye(FAIL);
     }
+#else
+    sprintf(tempc, "%s.%03d", exefile, country);
+    if ((fexe = fopen(tempc, "w")) == NULL) {
+      sprintf(tempc, "Error opening <%s>", tempc);
+      newerror(tempc);
+      newbye(FAIL);
+    }
+#endif
     move(0, 0);
     clrtoeol();
     move(1, 0);
