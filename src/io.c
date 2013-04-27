@@ -262,11 +262,12 @@ void writedata(void) {
   FILE *fp;
   int n_write, fh, count;
   char line[256], hack[256];
-
+/* I think I can just remove these calls to sigblock(), since the signal will
+ * be ignored, delivered or not.
   sigblock(sigmask(SIGTSTP));
   sigblock(sigmask(SIGHUP));
   sigblock(sigmask(SIGINT));
-  sigblock(sigmask(SIGTERM));
+  sigblock(sigmask(SIGTERM)); */
   signal(SIGTSTP, SIG_IGN);
   signal(SIGHUP, SIG_IGN);
   signal(SIGINT, SIG_IGN);
