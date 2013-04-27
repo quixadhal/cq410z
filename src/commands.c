@@ -35,32 +35,27 @@
 #ifdef CONQUER
 #include <sys/types.h>
 #include <sys/stat.h>
-#endif				/* CONQUER */
+#endif /* CONQUER */
 
-extern long     conq_mail_size;
+extern long conq_mail_size;
 
-extern FILE    *fexe;		/* execute file pointer */
-extern short    country;
-extern short    selector;
-extern short    pager;
-extern short    xcurs,
-                ycurs,
-                xoffset,
-                yoffset;
-extern short    redraw;
+extern FILE *fexe; /* execute file pointer */
+extern short country;
+extern short selector;
+extern short pager;
+extern short xcurs, ycurs, xoffset, yoffset;
+extern short redraw;
 
-int             roads_this_turn = 0;
+int roads_this_turn = 0;
 
 /* routine to determine if the given designation is ok; TRUE for ok */
-int
-desg_ok(prtflag, desg, sptr)
-  int             prtflag;
-  char            desg;
-  struct s_sector *sptr;
+int desg_ok(prtflag, desg, sptr) int prtflag;
+char desg;
+struct s_sector *sptr;
 {
   /* check vegetation */
-  if ((desg != DNODESIG) && (desg != DROAD) && (desg != DFORT)
-      && (desg != DSTOCKADE) && (tofood(sptr, country) < DESFOOD)) {
+  if ((desg != DNODESIG) && (desg != DROAD) && (desg != DFORT) &&
+      (desg != DSTOCKADE) && (tofood(sptr, country) < DESFOOD)) {
     if (prtflag)
       errormsg("vegetation too sparse");
     return (FALSE);
@@ -72,20 +67,20 @@ desg_ok(prtflag, desg, sptr)
     return (FALSE);
   }
   /* check for city/capitol being made into something else */
-  if ((desg != DRUIN)
-      && ((desg != DCAPITOL && sptr->designation == DCITY)
-	  || sptr->designation == DCAPITOL)) {
+  if ((desg != DRUIN) && ((desg != DCAPITOL && sptr->designation == DCITY) ||
+                          sptr->designation == DCAPITOL)) {
     if (prtflag) {
-      char            buf[LINELTH + 1];
+      char buf[LINELTH + 1];
 
-      sprintf(buf, "Must first burn down city/capitol (designate as '%c')", DRUIN);
+      sprintf(buf, "Must first burn down city/capitol (designate as '%c')",
+              DRUIN);
       errormsg(buf);
     }
     return (FALSE);
   }
   /* check for proper population */
-  if ((sptr->people < 500)
-      && (desg == DCAPITOL || desg == DCITY || desg == DTOWN)) {
+  if ((sptr->people < 500) &&
+      (desg == DCAPITOL || desg == DCITY || desg == DTOWN)) {
     if (prtflag)
       errormsg("Need 500 people to build a city or town");
     return (FALSE);
@@ -98,43 +93,43 @@ desg_ok(prtflag, desg, sptr)
   }
   /* should not appear in display list */
   if (prtflag == FALSE &&
-   ((desg == DSPECIAL && sptr->tradegood != TG_stones) || desg == DNODESIG))
+      ((desg == DSPECIAL && sptr->tradegood != TG_stones) || desg == DNODESIG))
     return (FALSE);
 
   if (desg == DRUIN) {
     if (sptr->designation != DCITY && sptr->designation != DCAPITOL) {
       if (prtflag)
-	errormsg("Ruins may only come from cities or capitols");
+        errormsg("Ruins may only come from cities or capitols");
       return (FALSE);
     }
   }
   if (desg == DCAPITOL || desg == DCITY) {
-    if ((desg == DCAPITOL && sptr->designation != DCITY)
-	&& sptr->designation != DTOWN && sptr->designation != DRUIN) {
+    if ((desg == DCAPITOL && sptr->designation != DCITY) &&
+        sptr->designation != DTOWN && sptr->designation != DRUIN) {
       if (prtflag)
-	errormsg("You can't build a city from that!");
+        errormsg("You can't build a city from that!");
       return (FALSE);
     }
   }
   if (desg == DUNIVERSITY || desg == DLUMBERYD) {
-    if ((sptr->tradegood != TG_none)
-	&& (*(tg_stype + sptr->tradegood) != desg)
-	&& (*(tg_stype + sptr->tradegood) != 'x')) {
+    if ((sptr->tradegood != TG_none) &&
+        (*(tg_stype + sptr->tradegood) != desg) &&
+        (*(tg_stype + sptr->tradegood) != 'x')) {
       if (prtflag)
-	errormsg("You can't have one of those here!");
+        errormsg("You can't have one of those here!");
       return (FALSE);
     }
   }
   if (desg == DMINE || desg == DGOLDMINE) {
     if (!tg_ok(country, sptr)) {
       if (prtflag)
-	errormsg("Your people refuse to be unemployed");
+        errormsg("Your people refuse to be unemployed");
       return (FALSE);
     }
-    if ((desg == DMINE && sptr->metal == 0)
-	|| (desg == DGOLDMINE && sptr->jewels == 0)) {
+    if ((desg == DMINE && sptr->metal == 0) ||
+        (desg == DGOLDMINE && sptr->jewels == 0)) {
       if (prtflag)
-	errormsg("Your people refuse to be unemployed");
+        errormsg("Your people refuse to be unemployed");
       return (FALSE);
     }
   }
@@ -147,16 +142,13 @@ desg_ok(prtflag, desg, sptr)
 }
 
 /*change current hex designation*/
-void
-redesignate()
-{
-  char            newdes;
-  char            tgtype[NAMELTH + 1];
+void redesignate() {
+  char newdes;
+  char tgtype[NAMELTH + 1];
   struct s_sector *sptr = &sct[XREAL][YREAL];
-  short           x,
-                  y;
-  long            metal = 0;
-  int             isgod = FALSE;
+  short x, y;
+  long metal = 0;
+  int isgod = FALSE;
 
   if (country == 0) {
     isgod = TRUE;
@@ -167,120 +159,120 @@ redesignate()
     mvaddstr(LINES - 4, 0, "change: v,e,d,o,p,t");
     refresh();
     switch (getch()) {
-     case 'd':
-      /* fall into normal redesignation command */
-      break;
-     case 'e':
-      /* simple contour map definitions */
-      mvprintw(LINES - 3, 0, "elev: %c,%c,%c,%c,%c", WATER, PEAK, MOUNTAIN, HILL, CLEAR);
-      refresh();
-      newdes = getch();
-      if (newdes != WATER && newdes != PEAK && newdes != MOUNTAIN
-	  && newdes != HILL && newdes != CLEAR) {
-	reset_god();
-	return;
-      }
-      sptr->altitude = newdes;
-      if ((newdes == PEAK) || (newdes == WATER)) {
-	sptr->owner = 0;
-	sptr->people = 0;
-	sptr->fortress = 0;
-      }
-      /* will fall through as must change vegetation */
-/* NO... we MUST not...  I want to just change conquers... */
-       reset_god();
-       return;
-     case 'v':
-      /* vegetation types */
-      mvprintw(LINES - 3, 0, "veg: %c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c",
-	       VOLCANO, DESERT, TUNDRA, BARREN, LT_VEG,
-	       GOOD, WOOD, FOREST, JUNGLE, SWAMP, ICE, NONE);
-      refresh();
-      newdes = getch();
-      if (newdes != VOLCANO
-	  && newdes != DESERT && newdes != TUNDRA
-	  && newdes != BARREN && newdes != LT_VEG
-	  && newdes != NONE && newdes != GOOD
-	  && newdes != WOOD && newdes != FOREST && newdes != JUNGLE
-	  && newdes != SWAMP && newdes != ICE) {
-	reset_god();
-	return;
-      }
-      sptr->vegetation = newdes;
-/*
- * Ummmmm... since god is usually doing this, we want it to be undesignated.
- *
- *      if (tofood(sptr, 0) < DESFOOD)
- *	sptr->designation = newdes;
- *     else
- */
-	sptr->designation = DNODESIG;
-      reset_god();
-      return;
-     case 'o':
-      mvaddstr(LINES - 3, 0, "owner: ");
-      refresh();
-      x = get_country();
-      if (x > 0 && x < NTOTAL)
-	sptr->owner = x;
-      reset_god();
-      return;
-     case 'p':
-      if (sptr->altitude == WATER) {
-	errormsg("Trying to build a colony of mermen?");
-	reset_god();
-	return;
-      }
-      mvaddstr(LINES - 3, 0, "pop: ");
-      refresh();
-      metal = get_number();
-      if (metal <= (-1))
-	return;
-      sptr->people = metal;
-      reset_god();
-      return;
-     case 't':
-      x = TRUE;
-      while (x == TRUE) {
-	mvaddstr(LINES - 3, 0, "tgood: ");
-	clrtoeol();
-	refresh();
-	get_nname(tgtype);
-	if (strlen(tgtype) == 0) {
-	  reset_god();
-	  return;
-	}
-	for (y = 0; x == TRUE && y <= TG_none; y++)
-	  if (strcmp(tg_name[y], tgtype) == 0)
-	    x = FALSE;
-      }
-      y--;
-      if ((y != TG_none) && (y > END_NORMAL)) {
-	mvaddstr(LINES - 2, 0, "value: ");
-	refresh();
-	x = get_number();
-	if (x < 100 && x > 0) {
-	  if (y > END_MINE) {
-	    sptr->jewels = (char) x;
-	    sptr->metal = 0;
-	  } else {
-	    sptr->metal = (char) x;
-	    sptr->jewels = 0;
-	  }
-	} else {
-	  sptr->jewels = 0;
-	  sptr->metal = 0;
-	}
-      } else {
-	sptr->jewels = 0;
-	sptr->metal = 0;
-      }
-      sptr->tradegood = (char) y;
-      reset_god();
-      return;
-     default:
-      reset_god();
-      return;
+      case 'd':
+        /* fall into normal redesignation command */
+        break;
+      case 'e':
+        /* simple contour map definitions */
+        mvprintw(LINES - 3, 0, "elev: %c,%c,%c,%c,%c", WATER, PEAK, MOUNTAIN,
+                 HILL, CLEAR);
+        refresh();
+        newdes = getch();
+        if (newdes != WATER && newdes != PEAK && newdes != MOUNTAIN &&
+            newdes != HILL && newdes != CLEAR) {
+          reset_god();
+          return;
+        }
+        sptr->altitude = newdes;
+        if ((newdes == PEAK) || (newdes == WATER)) {
+          sptr->owner = 0;
+          sptr->people = 0;
+          sptr->fortress = 0;
+        }
+        /* will fall through as must change vegetation */
+        /* NO... we MUST not...  I want to just change conquers... */
+        reset_god();
+        return;
+      case 'v':
+        /* vegetation types */
+        mvprintw(LINES - 3, 0, "veg: %c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c,%c",
+                 VOLCANO, DESERT, TUNDRA, BARREN, LT_VEG, GOOD, WOOD, FOREST,
+                 JUNGLE, SWAMP, ICE, NONE);
+        refresh();
+        newdes = getch();
+        if (newdes != VOLCANO && newdes != DESERT && newdes != TUNDRA &&
+            newdes != BARREN && newdes != LT_VEG && newdes != NONE &&
+            newdes != GOOD && newdes != WOOD && newdes != FOREST &&
+            newdes != JUNGLE && newdes != SWAMP && newdes != ICE) {
+          reset_god();
+          return;
+        }
+        sptr->vegetation = newdes;
+        /*
+         * Ummmmm... since god is usually doing this, we want it to be
+         * undesignated.
+         *
+         *      if (tofood(sptr, 0) < DESFOOD)
+         *	sptr->designation = newdes;
+         *     else
+         */
+        sptr->designation = DNODESIG;
+        reset_god();
+        return;
+      case 'o':
+        mvaddstr(LINES - 3, 0, "owner: ");
+        refresh();
+        x = get_country();
+        if (x > 0 && x < NTOTAL)
+          sptr->owner = x;
+        reset_god();
+        return;
+      case 'p':
+        if (sptr->altitude == WATER) {
+          errormsg("Trying to build a colony of mermen?");
+          reset_god();
+          return;
+        }
+        mvaddstr(LINES - 3, 0, "pop: ");
+        refresh();
+        metal = get_number();
+        if (metal <= (-1))
+          return;
+        sptr->people = metal;
+        reset_god();
+        return;
+      case 't':
+        x = TRUE;
+        while (x == TRUE) {
+          mvaddstr(LINES - 3, 0, "tgood: ");
+          clrtoeol();
+          refresh();
+          get_nname(tgtype);
+          if (strlen(tgtype) == 0) {
+            reset_god();
+            return;
+          }
+          for (y = 0; x == TRUE && y <= TG_none; y++)
+            if (strcmp(tg_name[y], tgtype) == 0)
+              x = FALSE;
+        }
+        y--;
+        if ((y != TG_none) && (y > END_NORMAL)) {
+          mvaddstr(LINES - 2, 0, "value: ");
+          refresh();
+          x = get_number();
+          if (x < 100 && x > 0) {
+            if (y > END_MINE) {
+              sptr->jewels = (char) x;
+              sptr->metal = 0;
+            } else {
+              sptr->metal = (char) x;
+              sptr->jewels = 0;
+            }
+          } else {
+            sptr->jewels = 0;
+            sptr->metal = 0;
+          }
+        } else {
+          sptr->jewels = 0;
+          sptr->metal = 0;
+        }
+        sptr->tradegood = (char) y;
+        reset_god();
+        return;
+      default:
+        reset_god();
+        return;
     }
   }
   clear_bottom(0);
@@ -296,15 +288,14 @@ redesignate()
       mvprintw(y, x, "%c,", *(des + newdes));
       x += 2;
       if (x > COLS - 15) {
-	x = 5;
-	y++;
+        x = 5;
+        y++;
       }
     }
   }
 
-  if ((sptr->tradegood != TG_none)
-      && (*(tg_stype + sptr->tradegood) != 'x')
-  && (isgod == TRUE || desg_ok(FALSE, *(tg_stype + sptr->tradegood), sptr)))
+  if ((sptr->tradegood != TG_none) && (*(tg_stype + sptr->tradegood) != 'x') &&
+      (isgod == TRUE || desg_ok(FALSE, *(tg_stype + sptr->tradegood), sptr)))
     mvprintw(y, x, "(%c => %c)", DSPECIAL, *(tg_stype + sptr->tradegood));
 
   mvaddstr(++y, 0, "desig?");
@@ -312,12 +303,13 @@ redesignate()
 
   /* read answer */
   if ((newdes = getch()) == DSPECIAL) {
-    if ((sptr->tradegood == TG_none)
-	|| (*(tg_stype + sptr->tradegood) == 'x') || (isgod == FALSE
-		 && !desg_ok(FALSE, *(tg_stype + sptr->tradegood), sptr))) {
+    if ((sptr->tradegood == TG_none) ||
+        (*(tg_stype + sptr->tradegood) == 'x') ||
+        (isgod == FALSE &&
+         !desg_ok(FALSE, *(tg_stype + sptr->tradegood), sptr))) {
       errormsg("no special designation possible");
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     } else
       newdes = *(tg_stype + sptr->tradegood);
@@ -350,17 +342,18 @@ redesignate()
   /* do not need metal to build a capitol from a city */
   if ((newdes == DFORT) || (newdes == DTOWN))
     metal = DESCOST;
-  else if ((newdes == DCITY)
-	   || (newdes == DCAPITOL && sptr->designation != DCITY))
+  else if ((newdes == DCITY) ||
+           (newdes == DCAPITOL && sptr->designation != DCITY))
     metal = 5 * DESCOST;
 
-  if ((newdes != DTOWN) && (newdes != DFORT) && (newdes != DCITY) && (newdes != DCAPITOL)) {
+  if ((newdes != DTOWN) && (newdes != DFORT) && (newdes != DCITY) &&
+      (newdes != DCAPITOL)) {
     /* decrement treasury */
     if (newdes == DRUIN) {
       if (sptr->fortress > 4) {
-	sptr->fortress -= 4;
+        sptr->fortress -= 4;
       } else {
-	sptr->fortress = 0;
+        sptr->fortress = 0;
       }
     } else if (sptr->designation == DRUIN) {
       curntn->tgold -= REBUILDCOST;
@@ -383,15 +376,15 @@ redesignate()
     } else {
       curntn->tgold -= 20 * DESCOST * (1 - isgod);
       if (newdes == DCITY || sptr->designation != DCITY)
-	curntn->metals -= metal * (1 - isgod);
+        curntn->metals -= metal * (1 - isgod);
     }
-    x = curntn->capx;		/* need this for SADJDES2 */
+    x = curntn->capx; /* need this for SADJDES2 */
     y = curntn->capy;
     /* can only have one capitol */
     if (newdes == DCAPITOL) {
       if (sct[x][y].owner == country) {
-	sct[x][y].designation = DCITY;
-	SADJDES2;
+        sct[x][y].designation = DCITY;
+        SADJDES2;
       }
       curntn->capx = XREAL;
       curntn->capy = YREAL;
@@ -410,21 +403,15 @@ redesignate()
 }
 
 /*build fort or ship-type */
-void
-construct()
-{
-  int             tmpvar,
-                  tmpvar2,
-                  onboard;
-  long            cost;
-  int             armbonus;
-  int             x,
-                  y;
-  short           nvynum = 0;
-  short           shipsize,
-                  amount;
-  short           isgod = FALSE;
-  char            type;
+void construct() {
+  int tmpvar, tmpvar2, onboard;
+  long cost;
+  int armbonus;
+  int x, y;
+  short nvynum = 0;
+  short shipsize, amount;
+  short isgod = FALSE;
+  char type;
 
   clear_bottom(0);
   if (country == 0) {
@@ -450,19 +437,19 @@ construct()
   for (x = XREAL - 1; x <= XREAL + 1; x++)
     for (y = YREAL - 1; y <= YREAL + 1; y++)
       if (ONMAP(x, y) && sct[x][y].altitude == WATER)
-	tmpvar = TRUE;
+        tmpvar = TRUE;
 
-  if ((sct[XREAL][YREAL].designation == DTOWN)
-      || (sct[XREAL][YREAL].designation == DFORT)
-      || (sct[XREAL][YREAL].designation == DCAPITOL)
-      || (sct[XREAL][YREAL].designation == DCITY)) {
+  if ((sct[XREAL][YREAL].designation == DTOWN) ||
+      (sct[XREAL][YREAL].designation == DFORT) ||
+      (sct[XREAL][YREAL].designation == DCAPITOL) ||
+      (sct[XREAL][YREAL].designation == DCITY)) {
     /* calculate cost for fort */
     cost = FORTCOST;
     if (isgod == TRUE)
       cost = 0;
     else
       for (x = 1; x <= sct[XREAL][YREAL].fortress; x++)
-	cost *= 2;
+        cost *= 2;
 
     if (sct[XREAL][YREAL].designation == DTOWN)
       armbonus = TOWNSTR;
@@ -476,9 +463,13 @@ construct()
       armbonus *= 2;
 
     if (tmpvar)
-      mvprintw(LINES - 4, 0, "<f>ortify sector (+%d%%/%ld talons); <b>uild or <r>epair ships?: ", armbonus, cost);
+      mvprintw(
+          LINES - 4, 0,
+          "<f>ortify sector (+%d%%/%ld talons); <b>uild or <r>epair ships?: ",
+          armbonus, cost);
     else
-      mvprintw(LINES - 4, 0, "<f>ortify sector (+%d%% - %ld talons):", armbonus, cost);
+      mvprintw(LINES - 4, 0, "<f>ortify sector (+%d%% - %ld talons):", armbonus,
+               cost);
     refresh();
     type = getch();
   } else {
@@ -494,20 +485,20 @@ construct()
     if ((tmpvar == FALSE) || (sct[XREAL][YREAL].designation == DFORT)) {
       errormsg("not in a harbor");
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
     nvynum = getselunit() - MAXARM;
     if (type == 'r') {
       if ((nvynum >= MAXNAVY) || (nvynum < 0)) {
-	errormsg("INVALID NAVY");
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        errormsg("INVALID NAVY");
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
       if (P_NCREW == SHIPCREW) {
-	errormsg("You may only &^#$! repair damaged fleets!!!");
-	return;
+        errormsg("You may only &^#$! repair damaged fleets!!!");
+        return;
       }
       clear_bottom(0);
       shipsize = flthold(nvynum);
@@ -520,41 +511,41 @@ construct()
       refresh();
       amount = (short) get_number();
       if (amount < 0) {
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
       /* find cost of repairs on all ships */
       cost = 0;
       for (tmpvar = N_LIGHT; tmpvar <= N_HEAVY; tmpvar++) {
-	cost += (tmpvar + 1) * WARSHPCOST * P_NWAR(tmpvar);
-	cost += (tmpvar + 1) * MERSHPCOST * P_NMER(tmpvar);
-	cost += (tmpvar + 1) * GALSHPCOST * P_NGAL(tmpvar);
+        cost += (tmpvar + 1) * WARSHPCOST * P_NWAR(tmpvar);
+        cost += (tmpvar + 1) * MERSHPCOST * P_NMER(tmpvar);
+        cost += (tmpvar + 1) * GALSHPCOST * P_NGAL(tmpvar);
       }
       cost *= amount / SHIPCREW;
 
       if (isgod == TRUE)
-	cost = 0;
+        cost = 0;
       else if (magic(country, SAILOR) == TRUE)
-	cost /= 2L;
+        cost /= 2L;
 
       if (curntn->tgold < cost) {
-	errormsg("NOT ENOUGH GOLD");
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        errormsg("NOT ENOUGH GOLD");
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
       if (sct[XREAL][YREAL].people < amount * shipsize) {
-	errormsg("NOT ENOUGH CIVILIANS IN SECTOR");
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        errormsg("NOT ENOUGH CIVILIANS IN SECTOR");
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
       if (SHIPCREW < P_NCREW + amount) {
-	errormsg("THAT WOULD EXCEED MAXIMUM SHIP CREW");
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        errormsg("THAT WOULD EXCEED MAXIMUM SHIP CREW");
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
       curntn->tgold -= cost;
       sct[XREAL][YREAL].people -= amount * shipsize;
@@ -563,7 +554,7 @@ construct()
       SADJCIV;
 
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
     mvaddstr(LINES - 3, 0, "Do you wish to raise a new fleet? (y or n)");
@@ -577,35 +568,36 @@ construct()
       nvynum = 0;
       x = (-1);
       while ((x == (-1)) && (nvynum < MAXNAVY)) {
-	if (P_NWSHP == 0 && P_NMSHP == 0 && P_NGSHP == 0) {
-	  x = nvynum;
-	  P_NWSHP = 0;
-	  P_NMSHP = 0;
-	  P_NGSHP = 0;
-	  P_NCREW = 0;
-	  P_NARMY = MAXARM;
-	  P_NPEOP = 0;
-	  NADJHLD;
-	  NADJCRW;
-	  NADJWAR;
-	  NADJMER;
-	  NADJGAL;
-	}
-	nvynum++;
+        if (P_NWSHP == 0 && P_NMSHP == 0 && P_NGSHP == 0) {
+          x = nvynum;
+          P_NWSHP = 0;
+          P_NMSHP = 0;
+          P_NGSHP = 0;
+          P_NCREW = 0;
+          P_NARMY = MAXARM;
+          P_NPEOP = 0;
+          NADJHLD;
+          NADJCRW;
+          NADJWAR;
+          NADJMER;
+          NADJGAL;
+        }
+        nvynum++;
       }
       nvynum = x;
       if (nvynum < 0) {
-	errormsg("NO FREE NAVIES");
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        errormsg("NO FREE NAVIES");
+        if (isgod == TRUE)
+          reset_god();
+        return;
       } else
-	mvprintw(LINES - 1, 0, "Raising New Fleet (%d)", nvynum);
+        mvprintw(LINES - 1, 0, "Raising New Fleet (%d)", nvynum);
     } else
       mvprintw(LINES - 1, 0, "Adding to Fleet (%d)", nvynum);
 
     /* process type first to be consistant with drafting */
-    mvaddstr(LINES - 4, 0, "What ship type to construct: (W)arship (M)erchant (G)alley?");
+    mvaddstr(LINES - 4, 0,
+             "What ship type to construct: (W)arship (M)erchant (G)alley?");
     refresh();
     /*
      * Note:  3 and 6 hard-coded for ship sizes based on 0 = light   1 =
@@ -613,27 +605,27 @@ construct()
      * (N_HEAVY-N_LIGHT+1) everywhere.
      */
     switch (getch()) {
-     case 'w':
-     case 'W':
-      shipsize = 0;
-      break;
-     case 'g':
-     case 'G':
-      shipsize = 3;
-      break;
-     case 'm':
-     case 'M':
-      shipsize = 6;
-      break;
-     case ' ':
-      if (isgod == TRUE)
-	reset_god();
-      return;
-     default:
-      errormsg("Invalid Ship Type");
-      if (isgod == TRUE)
-	reset_god();
-      return;
+      case 'w':
+      case 'W':
+        shipsize = 0;
+        break;
+      case 'g':
+      case 'G':
+        shipsize = 3;
+        break;
+      case 'm':
+      case 'M':
+        shipsize = 6;
+        break;
+      case ' ':
+        if (isgod == TRUE)
+          reset_god();
+        return;
+      default:
+        errormsg("Invalid Ship Type");
+        if (isgod == TRUE)
+          reset_god();
+        return;
     }
 
     mvaddstr(LINES - 3, 0, "What ship class to construct: (L)ight  (M)edium");
@@ -643,33 +635,33 @@ construct()
       addstr("?");
     refresh();
     switch (getch()) {
-     case 'l':
-     case 'L':
-      shipsize += N_LIGHT;
-      break;
-     case 'm':
-     case 'M':
-      shipsize += N_MEDIUM;
-      break;
-     case 'h':
-     case 'H':
-      if (sct[XREAL][YREAL].designation == DTOWN) {
-	errormsg("Towns cannot construct heavy ships");
-	if (isgod == TRUE)
-	  reset_god();
-	return;
-      }
-      shipsize += N_HEAVY;
-      break;
-     case ' ':
-      if (isgod == TRUE)
-	reset_god();
-      return;
-     default:
-      errormsg("Invalid Ship Class");
-      if (isgod == TRUE)
-	reset_god();
-      return;
+      case 'l':
+      case 'L':
+        shipsize += N_LIGHT;
+        break;
+      case 'm':
+      case 'M':
+        shipsize += N_MEDIUM;
+        break;
+      case 'h':
+      case 'H':
+        if (sct[XREAL][YREAL].designation == DTOWN) {
+          errormsg("Towns cannot construct heavy ships");
+          if (isgod == TRUE)
+            reset_god();
+          return;
+        }
+        shipsize += N_HEAVY;
+        break;
+      case ' ':
+        if (isgod == TRUE)
+          reset_god();
+        return;
+      default:
+        errormsg("Invalid Ship Class");
+        if (isgod == TRUE)
+          reset_god();
+        return;
     }
 
     mvaddstr(LINES - 2, 0, "How many ships to construct?");
@@ -681,11 +673,11 @@ construct()
       amount = 0;
     if (amount <= 0) {
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
     /* 6 and 3 hard coded ... see above comment */
-    cost = (long) amount *(shipsize % 3 + 1);
+    cost = (long) amount * (shipsize % 3 + 1);
 
     if (shipsize >= 6) {
       cost *= MERSHPCOST;
@@ -707,35 +699,35 @@ construct()
     if (sct[XREAL][YREAL].people < amount * (shipsize + 1) * SHIPCREW) {
       errormsg("NOT ENOUGH CIVILIANS IN SECTOR");
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
     if ((nvynum >= 0) && (nvynum < MAXNAVY)) {
       clear_bottom(0);
-      tmpvar = amount * SHIPCREW * (shipsize % 3 + 1)
-	+ flthold(nvynum) * P_NCREW;
+      tmpvar =
+          amount * SHIPCREW * (shipsize % 3 + 1) + flthold(nvynum) * P_NCREW;
       onboard = P_NPEOP * fltmhold(nvynum);
 
       if (shipsize >= 6) {
-	shipsize %= 3;
-	tmpvar2 = NADD_MER(amount);
+        shipsize %= 3;
+        tmpvar2 = NADD_MER(amount);
       } else if (shipsize >= 3) {
-	shipsize %= 3;
-	tmpvar2 = NADD_GAL(amount);
+        shipsize %= 3;
+        tmpvar2 = NADD_GAL(amount);
       } else {
-	shipsize %= 3;
-	tmpvar2 = NADD_WAR(amount);
+        shipsize %= 3;
+        tmpvar2 = NADD_WAR(amount);
       }
 
       /* check for bad build */
       if (tmpvar2 == FALSE) {
-	errormsg("Too many such ships in fleet.");
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        errormsg("Too many such ships in fleet.");
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
       /* crew average based on number of holding units */
-      P_NCREW = (unsigned char) (tmpvar / flthold(nvynum));
+      P_NCREW = (unsigned char)(tmpvar / flthold(nvynum));
 
       sct[XREAL][YREAL].people -= amount * (shipsize + 1) * SHIPCREW;
       curntn->tgold -= cost;
@@ -744,14 +736,23 @@ construct()
       P_NYLOC = YREAL;
       P_NMOVE = 0;
 
-      mvprintw(LINES - 4, 0, "Fleet (%2d):     Warships  = [Light %2hd/Medium %2hd/Heavy %2hd]", nvynum, P_NWAR(N_LIGHT), P_NWAR(N_MEDIUM), P_NWAR(N_HEAVY));
-      mvprintw(LINES - 3, 0, "                Merchants = [Light %2hd/Medium %2hd/Heavy %2hd]", P_NMER(N_LIGHT), P_NMER(N_MEDIUM), P_NMER(N_HEAVY));
-      mvprintw(LINES - 2, 0, "Avg Crew[%3d]   Galleys   = [Light %2hd/Medium %2hd/Heavy %2hd]", (int) P_NCREW, P_NGAL(N_LIGHT), P_NGAL(N_MEDIUM), P_NGAL(N_HEAVY));
+      mvprintw(
+          LINES - 4, 0,
+          "Fleet (%2d):     Warships  = [Light %2hd/Medium %2hd/Heavy %2hd]",
+          nvynum, P_NWAR(N_LIGHT), P_NWAR(N_MEDIUM), P_NWAR(N_HEAVY));
+      mvprintw(
+          LINES - 3, 0,
+          "                Merchants = [Light %2hd/Medium %2hd/Heavy %2hd]",
+          P_NMER(N_LIGHT), P_NMER(N_MEDIUM), P_NMER(N_HEAVY));
+      mvprintw(
+          LINES - 2, 0,
+          "Avg Crew[%3d]   Galleys   = [Light %2hd/Medium %2hd/Heavy %2hd]",
+          (int) P_NCREW, P_NGAL(N_LIGHT), P_NGAL(N_MEDIUM), P_NGAL(N_HEAVY));
 
       if (fltmhold(nvynum) > 0)
-	P_NPEOP = (unsigned char) (onboard / fltmhold(nvynum));
+        P_NPEOP = (unsigned char)(onboard / fltmhold(nvynum));
       else
-	P_NPEOP = 0;
+        P_NPEOP = 0;
       SADJCIV;
       NADJCRW;
       NADJWAR;
@@ -766,14 +767,14 @@ construct()
 
     } else
       errormsg("ERROR!!!!!!!!!!!!!");
-  }
-  /* construct fortification points */
-  else if (type == 'f') {
+  } /* construct fortification points */
+      else if (type == 'f') {
     /* can only go into debt as much as the nation has jewels */
     if (sct[XREAL][YREAL].fortress > 11) {
       errormsg("That sector is as impregnable as you can make it");
     } else if ((curntn->tgold - cost) >= ((-1) * 10 * curntn->jewels)) {
-      mvprintw(LINES - 2, 5, "you build +%d%% fort points for %ld gold", armbonus, cost);
+      mvprintw(LINES - 2, 5, "you build +%d%% fort points for %ld gold",
+               armbonus, cost);
       curntn->tgold -= cost;
       sct[XREAL][YREAL].fortress++;
       INCFORT;
@@ -789,21 +790,12 @@ construct()
 }
 
 /*DRAFT IF IN A CITY*/
-void
-draft()
-{
-  short           armynum,
-                  x,
-                  y,
-                  i;
-  long            men = 0,
-                  mercs;
-  short           army = (-1),
-                  isgod = FALSE,
-                  newtype = 0;
-  long            i_cost,
-                  e_cost;
-  char            ch;
+void draft() {
+  short armynum, x, y, i;
+  long men = 0, mercs;
+  short army = (-1), isgod = FALSE, newtype = 0;
+  long i_cost, e_cost;
+  char ch;
 
   clear_bottom(0);
   if (country == 0) {
@@ -814,9 +806,9 @@ draft()
     errormsg("You do not own");
     return;
   }
-  if ((sct[XREAL][YREAL].designation != DTOWN)
-      && (sct[XREAL][YREAL].designation != DCAPITOL)
-      && (sct[XREAL][YREAL].designation != DCITY)) {
+  if ((sct[XREAL][YREAL].designation != DTOWN) &&
+      (sct[XREAL][YREAL].designation != DCAPITOL) &&
+      (sct[XREAL][YREAL].designation != DCITY)) {
     errormsg("must raise in towns/cities/capitols");
     if (isgod == TRUE)
       reset_god();
@@ -828,9 +820,11 @@ draft()
       reset_god();
     return;
   }
-  if (ISCITY(sct[XREAL][YREAL].designation)
-      && (sct[XREAL][YREAL].people * (3 * CITYLIMIT + (curntn->tsctrs / 2)) < curntn->tciv)) {
-    mvprintw(LINES - 1, 0, "Need %d people in sector: hit any key", curntn->tciv / (3 * CITYLIMIT + (curntn->tsctrs / 2)));
+  if (ISCITY(sct[XREAL][YREAL].designation) &&
+      (sct[XREAL][YREAL].people * (3 * CITYLIMIT + (curntn->tsctrs / 2)) <
+       curntn->tciv)) {
+    mvprintw(LINES - 1, 0, "Need %d people in sector: hit any key",
+             curntn->tciv / (3 * CITYLIMIT + (curntn->tsctrs / 2)));
     refresh();
     getch();
     if (isgod == TRUE)
@@ -848,17 +842,17 @@ draft()
       mvprintw(y, x, "(%c)", *(shunittype + i)[0]);
       x += strlen(*(shunittype + i)) + 3;
       if (x > COLS - 10) {
-	x = 0;
-	y++;
+        x = 0;
+        y++;
       }
     }
   }
   move(y, x);
   clrtoeol();
-  if ((magic(country, WARRIOR) == TRUE)
-      || (magic(country, WARLORD) == TRUE)
-      || (magic(country, CAPTAIN) == TRUE))
-    mvaddstr(LINES - 3, 0, "(Warrior = 1/2 enlist cost) what type of unit do you want:");
+  if ((magic(country, WARRIOR) == TRUE) || (magic(country, WARLORD) == TRUE) ||
+      (magic(country, CAPTAIN) == TRUE))
+    mvaddstr(LINES - 3, 0,
+             "(Warrior = 1/2 enlist cost) what type of unit do you want:");
   else
     mvaddstr(LINES - 3, 0, "what type of unit do you want to raise:");
 
@@ -877,7 +871,7 @@ draft()
     else {
       errormsg("Invalid type");
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
   }
@@ -888,17 +882,17 @@ draft()
     i = FALSE;
     for (x = XREAL - 1; x <= XREAL + 1; x++)
       for (y = YREAL - 1; y <= YREAL + 1; y++)
-	if (sct[x][y].altitude == WATER)
-	  i = TRUE;
+        if (sct[x][y].altitude == WATER)
+          i = TRUE;
 
     /* not a harbor */
     if (i == FALSE) {
       if (newtype == A_MARINES)
-	errormsg("Huh?  What would marines do without the water?");
+        errormsg("Huh?  What would marines do without the water?");
       else
-	errormsg("You gotta be kinding!?  Sailors on land?");
+        errormsg("You gotta be kinding!?  Sailors on land?");
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
   }
@@ -907,13 +901,14 @@ draft()
   if (newtype == A_SPY || newtype == A_SCOUT) {
     men = 1;
   } else {
-    mvprintw(LINES - 3, 0, "how many %s do you wish to raise:", unittype[newtype]);
+    mvprintw(LINES - 3, 0, "how many %s do you wish to raise:",
+             unittype[newtype]);
     clrtoeol();
     refresh();
     men = get_number();
     if (men <= 0) {
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
   }
@@ -923,8 +918,9 @@ draft()
   /* = imen/4 - ( imen - people)   */
   /* = -3/4 * imen + people)  	 */
   /* 192 comes from 3*256/4 			 */
-  if ((newtype != A_MERCENARY && (men > sct[XREAL][YREAL].people - (sct[XREAL][YREAL].i_people * 192)))
-      || (sct[XREAL][YREAL].i_people < 0)) {
+  if ((newtype != A_MERCENARY &&
+       (men > sct[XREAL][YREAL].people - (sct[XREAL][YREAL].i_people * 192))) ||
+      (sct[XREAL][YREAL].i_people < 0)) {
     if (sct[XREAL][YREAL].i_people < 0)
       errormsg("error: sector wasn't city at beginning of turn");
     else
@@ -936,39 +932,38 @@ draft()
   /* check that you dont have too many mercenaries */
   mercs = 0;
   if (newtype == A_MERCENARY) {
-    int             totalsolds = 0;
+    int totalsolds = 0;
 
     for (armynum = 0; armynum < MAXARM; armynum++) {
       if (P_ATYPE < MINLEADER) {
-	if (P_ATYPE == A_MERCENARY)
-	  mercs += P_ASOLD;
-	totalsolds += P_ASOLD;
+        if (P_ATYPE == A_MERCENARY)
+          mercs += P_ASOLD;
+        totalsolds += P_ASOLD;
       }
     }
     if (men + mercs > (totalsolds + men) / 2) {
       errormsg("you would then have more than 50%% mercenaries");
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
     if (mercgot + men > MERCMEN / NTOTAL) {
       errormsg("there are not that many mercanaries available");
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
   }
-  e_cost = (long) *(u_encost + newtype) * men;
-  i_cost = (long) *(u_enmetal + newtype) * men;
+  e_cost = (long) * (u_encost + newtype) * men;
+  i_cost = (long) * (u_enmetal + newtype) * men;
 
   /* magiced get 1/2 enlistment costs */
-  if ((magic(country, WARRIOR) == TRUE)
-      || (magic(country, WARLORD) == TRUE)
-      || (magic(country, CAPTAIN) == TRUE))
+  if ((magic(country, WARRIOR) == TRUE) || (magic(country, WARLORD) == TRUE) ||
+      (magic(country, CAPTAIN) == TRUE))
     e_cost /= 2;
 
-  if ((magic(country, SAPPER) == TRUE)
-      && ((newtype == A_SIEGE) || (newtype == A_CATAPULT))) {
+  if ((magic(country, SAPPER) == TRUE) &&
+      ((newtype == A_SIEGE) || (newtype == A_CATAPULT))) {
     e_cost /= 2;
     i_cost /= 2;
   }
@@ -1000,19 +995,21 @@ draft()
     } else {
       /* if different types, must raise new army */
       if ((newtype == P_ATYPE) && (P_ASTAT != ONBOARD)) {
-	mvaddstr(LINES - 1, 0, "Do you wish to raise a new army:");
-	clrtoeol();
-	refresh();
-	if (getch() != 'y')
-	  army = armynum;
-	else
-	  army = -1;
+        mvaddstr(LINES - 1, 0, "Do you wish to raise a new army:");
+        clrtoeol();
+        refresh();
+        if (getch() != 'y')
+          army = armynum;
+        else
+          army = -1;
       } else
-	army = (-1);
+        army = (-1);
     }
   }
   if (army == (-1)) {
-    mvprintw(LINES - 2, 0, "(%s, gold talons=%ld, metal=%ld) raising a new army", *(unittype + newtype), e_cost, i_cost);
+    mvprintw(LINES - 2, 0,
+             "(%s, gold talons=%ld, metal=%ld) raising a new army",
+             *(unittype + newtype), e_cost, i_cost);
     clrtoeol();
     refresh();
     sleep(1);
@@ -1020,26 +1017,28 @@ draft()
     armynum = 0;
     while ((army == (-1)) && (armynum < MAXARM)) {
       if (P_ASOLD <= 0) {
-	army = armynum;
-	P_ASOLD = 0;
-	if (newtype == A_MILITIA)
-	  P_ASTAT = MILITIA;	/* new militia units=MILITIA */
-	else
-	  P_ASTAT = DEFEND;	/* set new armies to DEFEND */
-	AADJSTAT;
-	AADJMEN;
+        army = armynum;
+        P_ASOLD = 0;
+        if (newtype == A_MILITIA)
+          P_ASTAT = MILITIA; /* new militia units=MILITIA */
+        else
+          P_ASTAT = DEFEND; /* set new armies to DEFEND */
+        AADJSTAT;
+        AADJMEN;
       }
       armynum++;
     }
     if (army == (-1)) {
       errormsg("NO FREE ARMIES");
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
     armynum = army;
   } else {
-    mvprintw(LINES - 2, 0, "(%s, gold talons=%ld, metal=%ld) adding to existing army", *(unittype + newtype), e_cost, i_cost);
+    mvprintw(LINES - 2, 0,
+             "(%s, gold talons=%ld, metal=%ld) adding to existing army",
+             *(unittype + newtype), e_cost, i_cost);
     clrtoeol();
     refresh();
     sleep(2);
@@ -1051,26 +1050,26 @@ draft()
       mvaddstr(LINES - 3, 0, "Spy Against What Nation: ");
       refresh();
       if ((i = get_country()) == (-1)) {
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
       if (i == country) {
-	errormsg("What?  You don't even trust yourself?");
-	i = NTOTAL;
+        errormsg("What?  You don't even trust yourself?");
+        i = NTOTAL;
       }
       if (!(isntn(ntn[i].active))) {
-	errormsg("You can't spy against them");
-	i = NTOTAL;
+        errormsg("You can't spy against them");
+        i = NTOTAL;
       }
       if (i < NTOTAL && isactive(i))
-	break;
+        break;
     }
     if (curntn->dstatus[i] != UNMET) {
       P_AYLOC = ntn[i].capy;
       P_AXLOC = ntn[i].capx;
       mvprintw(LINES - 2, 0, "The Spy Starts in %s's Capitol (%d,%d)",
-	       ntn[i].name, rel_x((int)P_AXLOC), rel_y((int)P_AYLOC));
+               ntn[i].name, rel_x((int) P_AXLOC), rel_y((int) P_AYLOC));
       clrtoeol();
     } else {
       clear_bottom(0);
@@ -1078,15 +1077,16 @@ draft()
       mvaddstr(LINES - 3, 0, "Have the Spy start from this sector? [y or n]");
       refresh();
       if (getch() != 'y') {
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
       P_AYLOC = YREAL;
       P_AXLOC = XREAL;
-      mvprintw(LINES - 2, 0, "Intelligence indicates that %s lies to the %s", ntn[i].name,
-	       *(directions + compass((int) P_AXLOC, (int) P_AYLOC,
-				    (int) ntn[i].capx, (int) ntn[i].capy)));
+      mvprintw(LINES - 2, 0, "Intelligence indicates that %s lies to the %s",
+               ntn[i].name,
+               *(directions + compass((int) P_AXLOC, (int) P_AYLOC,
+                                      (int) ntn[i].capx, (int) ntn[i].capy)));
       clrtoeol();
     }
     errormsg("");
@@ -1118,7 +1118,7 @@ draft()
   }
   curntn->metals -= i_cost;
   curntn->tgold -= e_cost;
-  makemap();			/* if display 'y' is set, this will show new
+  makemap(); /* if display 'y' is set, this will show new
 				 * army */
   if (isgod == TRUE)
     reset_god();
@@ -1126,23 +1126,19 @@ draft()
 
 /*go through msgfile not rewriting to temp messages you discard*/
 /* then move temp to msgfile*/
-void
-rmessage()
-{
-  int             unlink();
-  FILE           *mesgfp;
-  FILE           *fptemp;
-  int             i;
-  int             count,
-                  msglen;
-  int             contd;
-  int             done = FALSE;
-  char            tempfile[FILELTH];
-  char            mesgfile[FILELTH];
-  char            line[LINELTH + 1],
-                  inpch;
-  char            save[LINELTH][LINELTH + 1];
-  struct stat     fst;
+void rmessage() {
+  int unlink();
+  FILE *mesgfp;
+  FILE *fptemp;
+  int i;
+  int count, msglen;
+  int contd;
+  int done = FALSE;
+  char tempfile[FILELTH];
+  char mesgfile[FILELTH];
+  char line[LINELTH + 1], inpch;
+  char save[LINELTH][LINELTH + 1];
+  struct stat fst;
 
   /* open file; used in mailopen() as well */
   sprintf(tempfile, "/tmp/%s.%03d-tmp", msgfile, country);
@@ -1154,7 +1150,7 @@ rmessage()
     makebottom();
     return;
   }
-  chmod(tempfile, (mode_t)FCMASK);
+  chmod(tempfile, (mode_t) FCMASK);
   sprintf(mesgfile, "%s.%03d", msgfile, country);
   if ((mesgfp = fopen(mesgfile, "r")) == NULL) {
     (void) unlink(tempfile);
@@ -1167,7 +1163,7 @@ rmessage()
   /* check for people sending mail */
   sprintf(line, "send.%s-%03d", msgfile, country);
   if (stat(line, &fst) == 0) {
-    long            now;
+    long now;
 
     now = time(0);
     if (now - fst.st_mtime < TIME_DEAD) {
@@ -1202,24 +1198,24 @@ rmessage()
     /* print to end of message */
     while (contd == FALSE) {
       if (msglen < LINELTH)
-	strcpy(save[msglen], line);
+        strcpy(save[msglen], line);
       if (count == LINES - 3) {
-	standout();
-	mvaddstr(LINES - 3, (COLS / 2) - 8, "--- more ---");
-	standend();
-	refresh();
-	getch();
-	clear();
-	count = 3;
+        standout();
+        mvaddstr(LINES - 3, (COLS / 2) - 8, "--- more ---");
+        standend();
+        refresh();
+        getch();
+        clear();
+        count = 3;
       }
       mvprintw(count, 0, "%s", line);
       standend();
       count++;
       msglen++;
       if (fgets(line, LINELTH, mesgfp) == NULL)
-	contd = TRUE;
+        contd = TRUE;
       if (strncmp(line, "END", 3) == 0)
-	contd = TRUE;
+        contd = TRUE;
     }
     standout();
     mvaddstr(LINES - 3, (COLS / 2) - 13, "HIT ANY KEY TO CONTINUE");
@@ -1229,7 +1225,7 @@ rmessage()
     inpch = getch();
     if ((inpch != '\n' && inpch != '\r')) {
       for (i = 0; i < msglen; i++)
-	fputs(save[i], fptemp);
+        fputs(save[i], fptemp);
       strcpy(line, "END\n");
       fputs(line, fptemp);
     }
@@ -1252,25 +1248,23 @@ rmessage()
 #ifdef SYSMAIL
   /* increase size to ensure mail check works */
   conq_mail_size++;
-#endif	/* SYSMAIL */
+#endif /* SYSMAIL */
 }
 
-void
-wmessage()
-{
-  int             x,
-                  y;
-  int             done = FALSE;
-  char            ch;
-  char            name[NAMELTH + 1];
-  int             temp = (-1);
-  int             linedone,
-                  dotitles = TRUE;
-  char            line[BIGLTH];
+void wmessage() {
+  int x, y;
+  int done = FALSE;
+  char ch;
+  char name[NAMELTH + 1];
+  int temp = (-1);
+  int linedone, dotitles = TRUE;
+  char line[BIGLTH];
 
   /* what nation to send to */
   clear_bottom(0);
-  mvaddstr(LINES - 4, 0, "The Conquer Administrator is 'god'; To send to the News use 'news';");
+  mvaddstr(
+      LINES - 4, 0,
+      "The Conquer Administrator is 'god'; To send to the News use 'news';");
   mvaddstr(LINES - 3, 0, "Send mail to what nation? ");
   refresh();
   temp = get_country();
@@ -1279,12 +1273,12 @@ wmessage()
     strcpy(name, "news");
   } else {
     /* quick return on bad input */
-    if (temp == (-1) || temp >= NTOTAL
-	|| (!isntn(ntn[temp].active) && temp != 0)) {
+    if (temp == (-1) || temp >= NTOTAL ||
+        (!isntn(ntn[temp].active) && temp != 0)) {
       makebottom();
       return;
     }
-    strcpy(name, ntn[temp].name);	/* find nation name */
+    strcpy(name, ntn[temp].name); /* find nation name */
   }
 
   if (mailopen(temp) == (-1)) {
@@ -1295,12 +1289,14 @@ wmessage()
 
   if (temp != -2) {
     if (country == 0)
-      fprintf(fm, "Message to %s from GOD (%s of year %d)\n\n", name, PMONTH(TURN), YEAR(TURN));
+      fprintf(fm, "Message to %s from GOD (%s of year %d)\n\n", name,
+              PMONTH(TURN), YEAR(TURN));
     else
-      fprintf(fm, "Message to %s from %s (%s of year %d)\n\n", name, curntn->name, PMONTH(TURN), YEAR(TURN));
+      fprintf(fm, "Message to %s from %s (%s of year %d)\n\n", name,
+              curntn->name, PMONTH(TURN), YEAR(TURN));
   } else {
-    char ugh[NAMELTH+2];
-    memchr(ugh, '-', NAMELTH+1);
+    char ugh[NAMELTH + 2];
+    memchr(ugh, '-', NAMELTH + 1);
     fprintf(fm, "5.%s\n", ugh);
   }
   strcpy(line, "");
@@ -1311,10 +1307,11 @@ wmessage()
       clrtobot();
       standout();
       if (temp != -2)
-	mvprintw(3, (COLS - 25) / 2, "Message to Nation %s", name);
+        mvprintw(3, (COLS - 25) / 2, "Message to Nation %s", name);
       else
-	mvaddstr(3, (COLS - 25) / 2, "Message to All Players");
-      mvaddstr(LINES - 2, (COLS - 37) / 2, "End with a <Control-D> on a New Line");
+        mvaddstr(3, (COLS - 25) / 2, "Message to All Players");
+      mvaddstr(LINES - 2, (COLS - 37) / 2,
+               "End with a <Control-D> on a New Line");
       mvaddstr(LINES - 1, (COLS - 28) / 2, "Hit ESC to Abort the Message");
       standend();
       mvaddstr(5, 0, line);
@@ -1329,71 +1326,72 @@ wmessage()
     while (linedone == FALSE) {
       /* check for delete or backspace */
       switch (ch) {
-       case '\b':
-       case '\177':
-	/* backspace or delete */
-	if (x > 1)
-	  x--;
-	mvaddch(y, x, ' ');
-	move(y, x);
-	line[x] = ' ';
-	refresh();
-	ch = getch();
-	break;
-       case '\n':
-       case '\r':
-	/* newline or carriage return */
-	linedone = TRUE;
-	break;
-       case '\004':
-	/* a control-d was hit */
-	if (x == 1) {
-	  linedone = TRUE;
-	  done = TRUE;
-	} else {
-	  standout();
-	  mvaddstr(LINES - 3, (COLS - 37) / 2, "Hit [RETURN] Control-D to End Message");
-	  standend();
-	  move(y, x);
-	  refresh();
-	  ch = getch();
-	  move(LINES - 3, 0);
-	  clrtoeol();
-	  refresh();
-	}
-	break;
-       case '\033':
-	/* escape key was hit */
-	mvaddstr(LINES - 3, 0, "Abort Message? ");
-	refresh();
-	if (getch() == 'y') {
-	  linedone = TRUE;
-	  done = TRUE;
-	  temp = ABORTMAIL;
-	} else {
-	  move(LINES - 3, 0);
-	  clrtoeol();
-	  move(y, x);
-	  refresh();
-	  ch = getch();
-	}
-	break;
-       case '':
-	/* new page -- end of form */
-	wrefresh(stdscr);
-	ch = getch();
-	break;
-       default:
-	/* any remaining possibilities */
-	if (isprint(ch) && (x < (74-NAMELTH))) {
-	  /* concatonate to end */
-	  line[x] = ch;
-	  mvaddch(y, x, ch);
-	  x++;
-	  refresh();
-	}
-	ch = getch();
-	break;
+        case '\b':
+        case '\177':
+          /* backspace or delete */
+          if (x > 1)
+            x--;
+          mvaddch(y, x, ' ');
+          move(y, x);
+          line[x] = ' ';
+          refresh();
+          ch = getch();
+          break;
+        case '\n':
+        case '\r':
+          /* newline or carriage return */
+          linedone = TRUE;
+          break;
+        case '\004':
+          /* a control-d was hit */
+          if (x == 1) {
+            linedone = TRUE;
+            done = TRUE;
+          } else {
+            standout();
+            mvaddstr(LINES - 3, (COLS - 37) / 2,
+                     "Hit [RETURN] Control-D to End Message");
+            standend();
+            move(y, x);
+            refresh();
+            ch = getch();
+            move(LINES - 3, 0);
+            clrtoeol();
+            refresh();
+          }
+          break;
+        case '\033':
+          /* escape key was hit */
+          mvaddstr(LINES - 3, 0, "Abort Message? ");
+          refresh();
+          if (getch() == 'y') {
+            linedone = TRUE;
+            done = TRUE;
+            temp = ABORTMAIL;
+          } else {
+            move(LINES - 3, 0);
+            clrtoeol();
+            move(y, x);
+            refresh();
+            ch = getch();
+          }
+          break;
+        case '':
+          /* new page -- end of form */
+          wrefresh(stdscr);
+          ch = getch();
+          break;
+        default:
+          /* any remaining possibilities */
+          if (isprint(ch) && (x < (74 - NAMELTH))) {
+            /* concatonate to end */
+            line[x] = ch;
+            mvaddch(y, x, ch);
+            x++;
+            refresh();
+          }
+          ch = getch();
+          break;
       }
     }
     if ((ch != '\n') && (ch != '\r') && (ch != '\033')) {
@@ -1410,22 +1408,22 @@ wmessage()
     /* write to file */
     if (done == FALSE) {
       if (temp != -2)
-	fprintf(fm, "%s\n", line);
+        fprintf(fm, "%s\n", line);
       else {
-	if (country != 0)
-	  fprintf(fm, "5.%-9s:%s\n", curntn->name, line);
-	else
-	  fprintf(fm, "5.God      :%s\n", line);
+        if (country != 0)
+          fprintf(fm, "5.%-9s:%s\n", curntn->name, line);
+        else
+          fprintf(fm, "5.God      :%s\n", line);
       }
       x = 0;
       y++;
       if (y == LINES - 3) {
-	standout();
-	mvaddstr(LINES - 3, 0, "Continuing...");
-	standend();
-	refresh();
-	sleep(2);
-	dotitles = TRUE;
+        standout();
+        mvaddstr(LINES - 3, 0, "Continuing...");
+        standend();
+        refresh();
+        sleep(2);
+        dotitles = TRUE;
       }
     }
   }
@@ -1433,29 +1431,26 @@ wmessage()
 }
 
 /*strategic move of civilians...once only*/
-void
-moveciv()
-{
-  long            people;
-  short           i,
-                  j;
+void moveciv() {
+  long people;
+  short i, j;
 
   clear_bottom(0);
 
 #ifdef OGOD
   if (sct[XREAL][YREAL].owner != country && country != 0)
 #else
-  if (sct[XREAL][YREAL].owner != country)
+    if (sct[XREAL][YREAL].owner != country)
 #endif
-
-  {
-    errormsg("Sorry, you don't own that sector.");
-    return;
-  } else if (sct[XREAL][YREAL].people == 0) {
-    errormsg("Nobody lives there!!!");
-    return;
-  }
-  mvprintw(LINES - 4, 0, "Sector contains %d people [cost 50 per civilian]", sct[XREAL][YREAL].people);
+        {
+      errormsg("Sorry, you don't own that sector.");
+      return;
+    } else if (sct[XREAL][YREAL].people == 0) {
+      errormsg("Nobody lives there!!!");
+      return;
+    }
+  mvprintw(LINES - 4, 0, "Sector contains %d people [cost 50 per civilian]",
+           sct[XREAL][YREAL].people);
   mvaddstr(LINES - 3, 0, "How many people to move?");
   clrtoeol();
   refresh();
@@ -1472,7 +1467,7 @@ moveciv()
     return;
   }
   mvprintw(LINES - 4, 0, "Sector location is x=%d, y=%d", rel_x(XREAL),
-    rel_y(YREAL));
+           rel_y(YREAL));
   clrtoeol();
   mvaddstr(LINES - 3, 0, "What X location to move to?");
   clrtoeol();
@@ -1497,14 +1492,14 @@ moveciv()
   }
 
 #ifdef OGOD
-  else if (sct[i][j].owner != country && country != 0)
+      else if (sct[i][j].owner != country && country != 0)
 #else
-  else if (sct[i][j].owner != country)
-#endif				/* OGOD */
-
-  {
-    errormsg("Sorry, you don't own that sector.");
-  } else if (movecost[i][j] < 0) {
+    else if (sct[i][j].owner != country)
+#endif /* OGOD */
+        {
+      errormsg("Sorry, you don't own that sector.");
+    }
+  else if (movecost[i][j] < 0) {
     /* need to check move cost > 0 for sector */
     errormsg("Sorry, your people refuse to enter that sector.");
   } else if ((i != XREAL) || (j != YREAL)) {
@@ -1516,11 +1511,8 @@ moveciv()
   }
 }
 
-int
-armygoto()
-{
-  short           armynum = 0,
-                  loop = 0;
+int armygoto() {
+  short armynum = 0, loop = 0;
 
   armynum = getselunit();
   if ((armynum < 0) || (armynum > MAXARM))
@@ -1553,11 +1545,8 @@ armygoto()
   return (1);
 }
 
-int
-navygoto()
-{
-  short           nvynum = 0,
-                  loop = 0;
+int navygoto() {
+  short nvynum = 0, loop = 0;
 
   nvynum = getselunit() - MAXARM;
   if ((nvynum < 0) || (nvynum > MAXNAVY))
@@ -1565,8 +1554,8 @@ navygoto()
   else
     nvynum++;
   /* move to next nvy with > 0 soldiers */
-  while ((nvynum < MAXNAVY) && (P_NMSHP == 0) && (P_NWSHP == 0)
-	 && (P_NGSHP == 0))
+  while ((nvynum < MAXNAVY) && (P_NMSHP == 0) && (P_NWSHP == 0) &&
+         (P_NGSHP == 0))
     nvynum++;
   if (nvynum >= MAXNAVY) {
     nvynum = 0;
