@@ -34,6 +34,8 @@
 #include <sys/stat.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h> /* strcmp(), strlen() */
+#include <unistd.h> /* sleep() */
 #include <pwd.h>
 #include "header.h"
 #include "data.h"
@@ -533,11 +535,12 @@ void createworld() { /* create world */
   /* calculate all 50% areas */
   for (X = 0; X < MAPX; X++)
     for (Y = 0; Y < MAPY; Y++) {
-      if (type[X][Y] == HALF)
+      if (type[X][Y] == HALF) {
         if (rand() % 100 >= (100 - pwater)) {
           type[X][Y] = WATER;
         } else
           type[X][Y] = LAND;
+      }
     }
 
   chance = 0;
@@ -719,11 +722,12 @@ void createworld() { /* create world */
             sct[x][y].vegetation = ICE;
           else
             sct[x][y].vegetation = (*(veg + 2 + rand() % 3));
-        else if (sct[x][y].altitude == PEAK)
+        else if (sct[x][y].altitude == PEAK) {
           if ((rand() % 3 == 0) && ((y > MAPY / 2 + 8) || (y < MAPY / 2 - 8)))
             sct[x][y].vegetation = ICE;
           else
             sct[x][y].vegetation = VOLCANO;
+	}
       }
   /* REWORK POLEAR/EQUATORIAL sector.vegetation */
   /* Determine which areas are North Pole and Equatorial */
@@ -752,7 +756,7 @@ void createworld() { /* create world */
   /* insert equator */
   for (y = (MAPY / 2) - 8; y <= (MAPY / 2) + 8; y++)
     for (x = 0; x < MAPX; x++)
-      if (type[x][y] == LAND)
+      if (type[x][y] == LAND) {
         if (rand() % 10 == 0)
           sct[x][y].vegetation = DESERT;
         /* increment vegetation if between Waste and Jungle */
@@ -761,10 +765,11 @@ void createworld() { /* create world */
             if ((sct[x][y].vegetation == (*(veg + n))) &&
                 (sct[x][y].altitude == CLEAR) && (rand() % 4 == 0))
               sct[x][y].vegetation = (*(veg + (n + 1)));
+      }
 
   for (y = ((MAPY / 2) - 2); y <= ((MAPY / 2) + 2); y++)
     for (x = 0; x < MAPX; x++)
-      if ((type[x][y] == LAND) && (sct[x][y].altitude == CLEAR))
+      if ((type[x][y] == LAND) && (sct[x][y].altitude == CLEAR)) {
         if (rand() % 10 == 0)
           sct[x][y].vegetation = DESERT;
         else if (rand() % 10 == 0)
@@ -776,6 +781,7 @@ void createworld() { /* create world */
           for (n = 2; n < 4; n++)
             if (sct[x][y].vegetation == (*(veg + n)))
               sct[x][y].vegetation = (*(veg + (n + 1)));
+      }
 
   /* expand swamps */
   for (y = 2; y < MAPY; y++)
