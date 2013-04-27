@@ -45,10 +45,11 @@ extern char fison[];
 #ifdef CONQUER
 extern int roads_this_turn;
 extern int terror_adj;
-
 #endif
 
-int execute(isupdate) int isupdate; /* 0 if not update, 1 if update */
+int execute(int isupdate);
+
+int execute(int isupdate /* 0 if not update, 1 if update */)
 {
   FILE *fp, *fopen();
   int cmd, savectry;
@@ -372,7 +373,9 @@ curntn->name);
 }
 
 #ifdef CONQUER
-void hangup() {
+void hangup(void);
+
+void hangup(void) {
   char line[LINELTH];
 
 /* I think I can just remove these calls to sigblock(), since the signal will
