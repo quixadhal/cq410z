@@ -19,7 +19,8 @@
 #	Conquer news mailing list: conquer-news-request@bu-cs.bu.edu.
 #
 MAKE	= /bin/make
-CC	= gcc
+STANDARD = -std=c89 -D_XOPEN_SOURCE=500
+CC	= gcc $(STANDARD)
 #CC	= /bin/cc
 RM      = /bin/rm -f
 
