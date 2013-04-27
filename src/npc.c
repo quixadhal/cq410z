@@ -858,7 +858,7 @@ void redomil() {
                 break;
               }
           }
-          if ((free == TRUE)) {
+          if (free == TRUE) {
             /* want to have ideal troops */
             ideal = sct[x][y].people / MILINCITY;
 
