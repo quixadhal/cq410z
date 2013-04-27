@@ -109,7 +109,7 @@ void display(char *s, int deftag, FILE *fp);
 classrec *lookup(char *str);
 int namecomp(register char *a, register char *b);
 void readline(void);
-int clcomp(register classrec *a, register classrec *b);
+int clcomp(const void *a, const void *b);
 char *save(char *str);
 void setup(register classrec *cp);
 defn *process(void);
@@ -152,7 +152,6 @@ void readtext(void)
   register classrec *cp;
   register defn *dp;
   defn **update;
-  int clcomp();
 
   Classptr = (classrec *)my_alloc((unsigned)(MAXCLASS * sizeof(classrec)));
   Classes = 0;
@@ -347,11 +346,11 @@ void readline(void)
   } while (InLine[0] == '\0');
 }
 
-int clcomp(register classrec *a, register classrec *b)
+int clcomp(register const void *a, register const void *b)
 {
-  if (a == b)
+  if (a == b || !a || !b)
     return 0;
-  return strcmp(a->name, b->name);
+  return strcmp(((classrec*)a)->name, ((classrec*)b)->name);
 }
 
 char *save(char *str)
