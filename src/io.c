@@ -40,6 +40,7 @@
 #include <fcntl.h>
 #include <signal.h>
 
+
 extern FILE *fexe;
 
 /*offset of upper left hand corner*/
@@ -309,24 +310,24 @@ void writedata(void) {
 /* write world structure */
 
 #ifdef DEBUG
-  fprintf(stderr, "writing %d bytes of world data\n", sizeof(struct s_world));
+  fprintf(stderr, "writing %lu bytes of world data\n", sizeof(struct s_world));
 #endif
   if ((n_write = fwrite(&world, sizeof(struct s_world), 1, fp)) != 1) {
     fprintf(stderr, "error writing world data\n");
-    fprintf(stderr, "wrong data format (%d vs. %d)\n",
+    fprintf(stderr, "wrong data format (%lu vs. %lu)\n",
             n_write * sizeof(struct s_world), sizeof(struct s_world));
     abrt();
   }
 /* write map */
 
 #ifdef DEBUG
-  fprintf(stderr, "writing %d bytes of sector data\n",
+  fprintf(stderr, "writing %lu bytes of sector data\n",
           MAPX * MAPY * sizeof(struct s_sector));
 #endif
   if ((n_write = fwrite(*sct, sizeof(struct s_sector), MAPX * MAPY, fp)) !=
       (MAPX * MAPY)) {
     fprintf(stderr,
-            "Wrong number of bytes (%d) written for sct (should be %d)\n",
+            "Wrong number of bytes (%lu) written for sct (should be %lu)\n",
             n_write * sizeof(struct s_sector),
             MAPX * MAPY * sizeof(struct s_sector));
     abrt();
@@ -335,12 +336,12 @@ void writedata(void) {
 /* write nations */
 
 #ifdef DEBUG
-  fprintf(stderr, "writing %d bytes of nation data\n",
+  fprintf(stderr, "writing %lu bytes of nation data\n",
           NTOTAL * sizeof(struct s_nation));
 #endif
   if ((n_write = fwrite(ntn, sizeof(struct s_nation), NTOTAL, fp)) != NTOTAL) {
     fprintf(
-        stderr, "Wrong number of bytes (%d) written for ntn (should be %d)\n",
+        stderr, "Wrong number of bytes (%lu) written for ntn (should be %lu)\n",
         n_write * sizeof(struct s_nation), NTOTAL * sizeof(struct s_nation));
     abrt();
   }
@@ -393,13 +394,13 @@ void readdata(void) {
 #endif
 
 #ifdef DEBUG
-  fprintf(stderr, "reading %d bytes of world data\n", sizeof(struct s_world));
+  fprintf(stderr, "reading %lu bytes of world data\n", sizeof(struct s_world));
 #endif /* DEBUG */
 
   /* read world structure */
   if ((n_read = fread(&world, sizeof(struct s_world), 1, fp)) != 1) {
     fprintf(stderr, "error reading world data\n");
-    fprintf(stderr, "wrong data format (%d vs. %d)\n",
+    fprintf(stderr, "wrong data format (%lu vs. %lu)\n",
             n_read * sizeof(struct s_world), sizeof(struct s_world));
     abrt();
   }
@@ -407,27 +408,27 @@ void readdata(void) {
   getspace();
 
 #ifdef DEBUG
-  fprintf(stderr, "reading %d bytes of sector data\n",
+  fprintf(stderr, "reading %lu bytes of sector data\n",
           MAPX * MAPY * sizeof(struct s_sector));
 #endif /* DEBUG */
 
   if ((n_read = fread(*sct, sizeof(struct s_sector), MAPX * MAPY, fp)) !=
       (MAPX * MAPY)) {
     fprintf(stderr, "error reading sector data (sct)\n");
-    fprintf(stderr, "wrong data format (%d vs. %d)\n",
+    fprintf(stderr, "wrong data format (%lu vs. %lu)\n",
             n_read * sizeof(struct s_sector),
             MAPX * MAPY * sizeof(struct s_sector));
     abrt();
   }
 
 #ifdef DEBUG
-  fprintf(stderr, "reading %d bytes of nation data\n",
+  fprintf(stderr, "reading %lu bytes of nation data\n",
           NTOTAL * sizeof(struct s_nation));
 #endif /* DEBUG */
 
   if ((n_read = fread(ntn, sizeof(struct s_nation), NTOTAL, fp)) != NTOTAL) {
     fprintf(stderr, "error reading s_nation data (ntn)\n");
-    fprintf(stderr, "wrong data format (%d vs. %d)\n",
+    fprintf(stderr, "wrong data format (%lu vs. %lu)\n",
             n_read * sizeof(struct s_nation), NTOTAL * sizeof(struct s_nation));
     abrt();
   }
@@ -804,7 +805,7 @@ int readmap(void) {
     if (y >= MAPY)
       break;
   }
-  fprintf(stderr, "done reading %d lines of %d characters\n", y, strlen(line));
+  fprintf(stderr, "done reading %d lines of %lu characters\n", y, strlen(line));
 
   /* read in veg.map */
   strcpy(line, scenario);
@@ -824,7 +825,7 @@ int readmap(void) {
     if (y >= MAPY)
       break;
   }
-  fprintf(stderr, "done reading %d lines of %d characters\n", y, strlen(line));
+  fprintf(stderr, "done reading %d lines of %lu characters\n", y, strlen(line));
 
   return (TRUE);
 }
