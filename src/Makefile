@@ -19,7 +19,8 @@
 #	Conquer news mailing list: conquer-news-request@bu-cs.bu.edu.
 #
 MAKE	= /bin/make
-CC	= gcc
+STANDARD = -std=c89 -D_XOPEN_SOURCE=500 -pedantic
+CC	= gcc -Wall -Wno-comment $(STANDARD)
 #CC	= /bin/cc
 RM      = /bin/rm -f
 
@@ -273,33 +274,33 @@ helpfile:	$(HELPOUT)0 $(HELPOUT)1 $(HELPOUT)2 $(HELPOUT)3 $(HELPOUT)4 $(HELPOUT)
 
 $(HELPOUT)0:	$(HELP)0 $(HELPSCR).1 $(HELPSCR).2
 	@echo building $(HELPOUT)0
-	cat $(HELP)0 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)0
+	@cat $(HELP)0 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)0
 
 $(HELPOUT)1:	$(HELP)1 $(HELPSCR).1 $(HELPSCR).2
 	@echo building $(HELPOUT)1
-	cat $(HELP)1 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)1
+	@cat $(HELP)1 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)1
 
 $(HELPOUT)2:	$(HELP)2 $(HELPSCR).1 $(HELPSCR).2
 	@echo building $(HELPOUT)2
-	cat $(HELP)2 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)2
+	@cat $(HELP)2 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)2
 
 $(HELPOUT)3:	$(HELP)3 $(HELPSCR).1 $(HELPSCR).2
 	@echo building $(HELPOUT)3
-	cat $(HELP)3 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)3
+	@cat $(HELP)3 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)3
 
 $(HELPOUT)4:	$(HELP)4 $(HELPSCR).1 $(HELPSCR).2
 	@echo building $(HELPOUT)4
-	cat $(HELP)4 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)4
+	@cat $(HELP)4 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)4
 
 $(HELPOUT)5:	$(HELP)5 $(HELPSCR).1 $(HELPSCR).2
 	@echo building $(HELPOUT)5
-	cat $(HELP)5 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)5
+	@cat $(HELP)5 | sed -f $(HELPSCR).1 | sed -f $(HELPSCR).2 > $(HELPOUT)5
 
 $(HELPSCR).1:	newhelp
-	newhelp
+	./newhelp
 
 $(HELPSCR).2:	newhelp
-	newhelp
+	./newhelp
 
 newhelp:	dataG.o	newhelp.o
 	$(CC) $(OPTFLG) dataG.o newhelp.o -o newhelp
@@ -332,12 +333,14 @@ shar:
 	$(SHAR) $(SHARFLG) $(ALLFILS) MANIFEST
 
 .cA.o:	$<
-	( trap "" 0 1 2 3 4 ; $(LN) $*.c $*A.c ;\
+	@echo "[CC -c]A  $@"
+	@( trap "" 0 1 2 3 4 ; $(LN) $*.c $*A.c ;\
 	$(CC) $(OPTFLG) $(CDEFS) -DADMIN -c $*A.c ;\
 	$(RM) $*A.c )
 
 .cG.o:	$<
-	( trap "" 0 1 2 3 4 ; $(LN) $*.c $*G.c ;\
+	@echo "[CC -c] G $@"
+	@( trap "" 0 1 2 3 4 ; $(LN) $*.c $*G.c ;\
 	$(CC) $(OPTFLG) $(CDEFS) -DCONQUER -c $*G.c ;\
 	$(RM) $*G.c )
 
@@ -346,7 +349,8 @@ shar:
 #	are needed for the data.h definitions for
 #	each file... but should not be needed for
 #	the actual C source file being compiled
-	$(CC) $(OPTFLG) $(CDEFS) -DADMIN -DCONQUER -c $*.c
+	@echo "[CC -c]AG $@"
+	@$(CC) $(OPTFLG) $(CDEFS) -DADMIN -DCONQUER -c $*.c
 
 $(GOBJS):	data.h header.h
 

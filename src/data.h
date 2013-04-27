@@ -32,6 +32,7 @@
 extern char    *strcpy(), *strncpy(), *strcat(), *strncat();
 
 #include <stdio.h>
+#include <stdlib.h> /* abrt() */
 #include <curses.h>
 
 /* sometimes curses.h defines TRUE	*/
@@ -556,14 +557,14 @@ struct s_nation {		/* player nation stats	 */
 #define	I_APLUS	fprintf(fexe,"INC_APLUS\t%d\t%hd\t0\t0\t0\t%s\n",INCAPLUS,country,"null")
 #define	I_DPLUS	fprintf(fexe,"INC_DPLUS\t%d\t%hd\t0\t0\t0\t%s\n",INCDPLUS,country,"null")
 #define	AADJMERC fprintf(fexe,"A_MERC\t%d\t%d\t%ld\t0\t0\t%s\n",MSETA,country,men,"null")
-#define	AADJDISB fprintf(fexe,"A_MERC\t%d\t%d\t%ld\t%d\t%d\t%s\n",MSETB,country,bemerc,attset,defset,"null")
+#define	AADJDISB fprintf(fexe,"A_MERC\t%d\t%d\t%d\t%d\t%d\t%s\n",MSETB,country,bemerc,attset,defset,"null")
 #define	AADJSTAT fprintf(fexe,"A_STAT\t%d\t%hd\t%d\t%d\t0\t%s\n",XASTAT,country,armynum,ntn[country].arm[armynum].stat,"null")
-#define	AADJMEN	fprintf(fexe,"L_ADJMEN\t%d\t%hd\t%hd\t%ld\t%d\t%s\n",XAMEN,country,armynum,P_ASOLD,P_ATYPE,"null")
+#define	AADJMEN	fprintf(fexe,"L_ADJMEN\t%d\t%hd\t%d\t%ld\t%d\t%s\n",XAMEN,country,armynum,P_ASOLD,P_ATYPE,"null")
 #define	NADJCRW	fprintf(fexe,"N_ASHP\t%d\t%hd\t%hd\t%d\t%d\t%s\n",XNACREW,country,nvynum,NCREW,ntn[country].nvy[nvynum].armynum,"null")
-#define	NADJMER	fprintf(fexe,"N_ASHP\t%d\t%hd\t%d\t%hd\t%d\t%s\n",XNAMER,country,nvynum,ntn[country].nvy[nvynum].merchant,0,"null")
+#define	NADJMER	fprintf(fexe,"N_ASHP\t%d\t%hd\t%d\t%cu\t%d\t%s\n",XNAMER,country,nvynum,ntn[country].nvy[nvynum].merchant,0,"null")
 #define	NADJWAR	fprintf(fexe,"N_ASHP\t%d\t%hd\t%d\t%hd\t%d\t%s\n",XNAWAR,country,nvynum,ntn[country].nvy[nvynum].warships,0,"null")
 #define	NADJGAL	fprintf(fexe,"N_ASHP\t%d\t%hd\t%d\t%hd\t%d\t%s\n",XNAGAL,country,nvynum,ntn[country].nvy[nvynum].galleys,0,"null")
-#define	NADJHLD	fprintf(fexe,"N_ASHP\t%d\t%hd\t%d\t%hd\t%d\t%s\n",XNAHOLD,country,nvynum,ntn[country].nvy[nvynum].armynum,ntn[country].nvy[nvynum].people,"null")
+#define	NADJHLD	fprintf(fexe,"N_ASHP\t%d\t%hd\t%d\t%cu\t%d\t%s\n",XNAHOLD,country,nvynum,ntn[country].nvy[nvynum].armynum,ntn[country].nvy[nvynum].people,"null")
 #define	AADJLOC	fprintf(fexe,"A_LOC\t%d\t%hd\t%d\t%d\t%d\t%s\n",XALOC,country,armynum,ntn[country].arm[armynum].xloc,ntn[country].arm[armynum].yloc,"null")
 #define	NADJLOC	fprintf(fexe,"N_LOC\t%d\t%hd\t%d\t%d\t%d\t%s\n",XNLOC,country,nvynum,ntn[country].nvy[nvynum].xloc,ntn[country].nvy[nvynum].yloc,"null")
 #define	AADJMOV	fprintf(fexe,"A_MOV\t%d\t%hd\t%d\t%d\t0\t%s\n",XAMOV,country,armynum,ntn[country].arm[armynum].smove,"null")
@@ -574,10 +575,10 @@ struct s_nation {		/* player nation stats	 */
 #define	SADJDES2	fprintf(fexe,"S_ADES\t%d\t%hd\t0\t%d\t%d\t%c\n",XSADES,country,x,y,sct[x][y].designation)
 #define	SADJCIV2 fprintf(fexe,"S_ACIV\t%d\t%hd\t%ld\t%d\t%d\t%s\n",XSACIV,country,sct[i][j].people,i,j,"null")
 #define	SADJCIV	fprintf(fexe,"S_ACIV\t%d\t%hd\t%ld\t%d\t%d\t%s\n",XSACIV,country,sct[xcurs+xoffset][ycurs+yoffset].people,xcurs+xoffset,ycurs+yoffset,"null")
-#define	SADJCIV3 fprintf(fexe,"S_ACIV3\t%d\t%hd\t%ld\t%d\t%d\t%s\n",XSACIV3,country,people_to_add,i,j,"null")
+#define	SADJCIV3 fprintf(fexe,"S_ACIV3\t%d\t%hd\t%d\t%d\t%d\t%s\n",XSACIV3,country,people_to_add,i,j,"null")
 #define	INCFORT fprintf(fexe,"SIFORT\t%d\t%hd\t0\t%d\t%d\t%s\n",XSIFORT,country,xcurs+xoffset,ycurs+yoffset,"null")
 #define	SADJOWN	fprintf(fexe,"S_AOWN\t%d\t%hd\t0\t%d\t%d\t%s\n",XSAOWN,country,xcurs+xoffset,ycurs+yoffset,"null")
-#define	EADJDIP(a,b)	fprintf(fexe,"E_ADJ\t%d\t%hd\t%d\t%d\t0\t%s\n",EDADJ,a,b,ntn[a].dstatus[b],"null")
+#define	EADJDIP(a,b)	fprintf(fexe,"E_ADJ\t%d\t%d\t%d\t%d\t0\t%s\n",EDADJ,a,b,ntn[a].dstatus[b],"null")
 #define	EDECSPL	fprintf(fexe,"E_SPL\t%d\t%hd\t%d\t%d\t0\t%s\n",EDSPL,country,s_cost,0,"null")
 #define NADJKLD fprintf(fexe, "N_KLUDGE \t%d \t%hd \t%d \t0 \t0 \tnull\n",NKLUDGE, country, (int) curntn->strategy);
 #define	NADJNTN  { fprintf(fexe,"N_TAX \t%d \t%hd \t%d \t%d \t%d \tnull\n",NTAX,country,(int) curntn->tax_rate,(int) curntn->active, (int) curntn->charity) ; NADJKLD; }
@@ -664,21 +665,34 @@ extern long     lrand48();
 #define	SALT "aa"		/* seed for crypt() encryption	 */
 
 /* extern all subroutine calls	*/
+extern void peasant_revolt(int *newnation);
+extern int rel_x(int absx);
+extern int rel_y(int absy);
+extern int abs_x(int relx);
+extern int abs_y(int rely);
+extern void makemess(int n, FILE *fp);
+extern void fixtrade(int cntry);
+extern int doclass(short tmp, int isupd);
+extern void updmove(int race, char cntry);
+extern void highlight(int x, int y, short hmode);
+extern int oldmarkok(char mark, int prtflag, int dupflag);
+extern int avian(unsigned char typ);
+
 extern long     getmagic(), getmagic(), getmgkcost(), score_one();
 extern long     get_number(), solds_in_sector(), defaultunit();
 
 extern int      move_file(), land_2reachp(), land_reachp(), canbeseen();
-extern int      water_reachp(), oldmarkok(), is_habitable(), parse();
+extern int      water_reachp(), is_habitable(), parse();
 extern int      units_in_sector(), num_powers(), tofood(), mailopen();
 extern int      get_god(), flightcost(), todigit(), getclass(), startcost();
-extern int      water_2reachp(), tg_ok(), readmap(), avian();
+extern int      water_2reachp(), tg_ok(), readmap();
 extern int      cbonus(), armymove(), takeover(), getnewname();
-extern int      getleader(), execute(), peasant_revolt(), other_revolt();
+extern int      getleader(), execute(), other_revolt();
 extern int      aretheyon(), armygoto(), navygoto(), getselunit();
 extern int      unitvalid(), access(), orctake(), fort_val();
 extern int      addgships(), addmships(), addwships(), fltships();
 extern int      fltghold(), fltwhold(), fltmhold(), flthold(), compass();
-extern int      get_country(), check_lock(), doclass(), get_pass();
+extern int      get_country(), check_lock(), get_pass();
 extern unsigned short fltspeed();
 extern void     do_pirate(), do_nomad(), do_savage(), do_lizard();
 extern void     getjewel(), getmetal(), loadfleet(), removemgk(), exenewmgk();
@@ -686,7 +700,7 @@ extern struct s_sector *rand_sector();
 extern void     subgships(), submships(), subwships(), getspace(), sackem();
 /* extern void     sleep(); */
 extern void	whatcansee(), reset_god(), get_nname(), camp_info();
-extern void     main(), makebottom(), makeside(), check_mail(), centermap();
+extern void     makebottom(), makeside(), check_mail(), centermap();
 extern void     checkout(), copyscreen(), bye(), credits(), init_hasseen();
 extern void     combinearmies(), change_status(), reducearmy(), splitarmy();
 extern void     errormsg(), clear_bottom(), addgroup(), ext_cmd();
@@ -695,7 +709,7 @@ extern void     randomevent(), wdisaster(), weather(), deplete();
 extern void	verifydata(), prep();
 extern void     errorbar(), newbye(), newreset(), newmsg(), newerror();
 extern void     newinit(), jump_to();
-extern void     destroy(), updmove(), spreadsheet(), mailclose();
+extern void     destroy(), spreadsheet(), mailclose();
 extern void     updexecs(), updcapture(), updsectors();
 extern void     updmil(), updcomodities(), updleader();
 extern void     nationrun(), n_atpeace(), n_trespass(), n_people();
@@ -707,7 +721,7 @@ extern void     budget(), change(), cheat(), coffmap(), combat(), construct();
 extern void     defattr(), diploscrn(), domagic(), draft(), erupt();
 extern void     fight();
 extern void     fill_edge(), flee(), fleetrpt(), hangup(), help();
-extern void     highlight(), makemap(), makeside();
+extern void     makemap(), makeside();
 extern void     makeworld(), monster(), moveciv();
 extern void     mymove(), navalcbt(), newdip(), newdisplay(), newlogin();
 extern void     newspaper(), npcredes(), offmap(), place(), populate();

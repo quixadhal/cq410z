@@ -29,35 +29,43 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h> /* chmod() */
+#include <string.h> /* strdup(), strlen(), strcmp() */
 #include "patchlevel.h"
 #include "header.h"
 #include "data.h"
 #include "newlogin.h"
 #include <pwd.h>
-#define amagod() (((getpwnam(LOGIN))->pw_uid == calleruid)||((getpwnam(ntn[0].leader))->pw_uid == calleruid)||(calleruid == 1102)||(calleruid == 6494))
-/* #define amagod() ((!strcmp(LOGIN, (getpwinfo(getuid()))->pw_name))||(!strcmp(ntn[0].leader, (getpwinfo(getuid()))->pw_name))) */
+#define amagod()                                                               \
+  (((getpwnam(LOGIN))->pw_uid == calleruid) ||                                 \
+   ((getpwnam(ntn[0].leader))->pw_uid == calleruid) || (calleruid == 1102) ||  \
+   (calleruid == 6494))
+/* #define amagod() ((!strcmp(LOGIN,
+ * (getpwinfo(getuid()))->pw_name))||(!strcmp(ntn[0].leader,
+ * (getpwinfo(getuid()))->pw_name))) */
 
 /* information about national classes */
-char           *Classwho[] = {"DEHO", "DEH", "DEH", "EH", "DH", "DHO", "HE", "DHO",
-"O", "O", "O"};
-char           *CPowlist[] = {"None", "None", "None", "SUMMON", "RELIGION", "SAILOR",
-"URBAN", "WARLORD", "DESTROYER", "MA_MONST", "THE_VOID"};
-int             Classcost[] = {0, 0, 0, 4, 2, 2, 2, 6, 4, 4, 2};
-long            Classpow[] = {0x0L, 0x0L, 0x0L, SUMMON, RELIGION, SAILOR,
-URBAN, 0x000000007L, DESTROYER, 0x00000700L, THE_VOID};
+char *Classwho[] = { "DEHO", "DEH", "DEH", "EH", "DH", "DHO", "HE", "DHO", "O",
+                     "O", "O" };
+char *CPowlist[] = { "None", "None", "None", "SUMMON", "RELIGION", "SAILOR",
+                     "URBAN", "WARLORD", "DESTROYER", "MA_MONST", "THE_VOID" };
+int Classcost[] = { 0, 0, 0, 4, 2, 2, 2, 6, 4, 4, 2 };
+long Classpow[] = { 0x0L, 0x0L, 0x0L, SUMMON, RELIGION, SAILOR, URBAN,
+                    0x000000007L, DESTROYER, 0x00000700L, THE_VOID };
 
-char           *Mprompt[] = {"<ADD", "SUB>"};
-char           *LType[] = {"Random", "Fair", "Great"};
+char *Mprompt[] = { "<ADD", "SUB>" };
+char *LType[] = { "Random", "Fair", "Great" };
 
-char           *Mlabels[] = {"Population", "Treasury", "Location",
-  "Military", "Attack Bonus", "Defense Bonus", "Reproduction",
-"Movement", "Magic Powers", "Leaders", "Raw Materials"};
+char *Mlabels[] = { "Population", "Treasury", "Location", "Military",
+                    "Attack Bonus", "Defense Bonus", "Reproduction", "Movement",
+                    "Magic Powers", "Leaders", "Raw Materials" };
 
-char           *Mitems[] = {"people", "gold talons", "location", "soldiers",
-  "percent", "percent", "percent", "move points", "powers",
-"nation leaders", "units of food"};
+char *Mitems[] = { "people", "gold talons", "location", "soldiers", "percent",
+                   "percent", "percent", "move points", "powers",
+                   "nation leaders", "units of food" };
 
-char           *Mhelp[] = {"Population: Amount of citizens in your nation",
+char *Mhelp[] = {
+  "Population: Amount of citizens in your nation",
   "Treasury: Amount of monetary wealth in your nation",
   "Location: Relative value of nation placement in world",
   "Soldiers: Number of men in the national army, not counting leaders",
@@ -67,14 +75,14 @@ char           *Mhelp[] = {"Population: Amount of citizens in your nation",
   "Movement: Number of movement points per normal army unit",
   "Magic Powers: Randomly obtain a new magical power",
   "Leaders: Number of leader units, including national ruler",
-"Raw Materials: Starting values for jewels, metal, and food"};
+  "Raw Materials: Starting values for jewels, metal, and food"
+};
 
-extern int      pwater;		/* percent water in world (0-100) */
-extern FILE    *fexe,
-               *fopen();
-extern short    country;
-int             numleaders;
-int             spent[CH_NUMBER];
+extern int pwater; /* percent water in world (0-100) */
+extern FILE *fexe, *fopen();
+extern short country;
+int numleaders;
+int spent[CH_NUMBER];
 
 extern int calleruid;
 
@@ -84,140 +92,158 @@ extern int calleruid;
  * Tossed together by Dread Quixadhal, 1991.03.29
  */
 
-#define MYOOPS {write(fileno(stderr), "Fatal error!\n", 13);exit(10);}
+#define MYOOPS                                                                 \
+  {                                                                            \
+    write(fileno(stderr), "Fatal error!\n", 13);                               \
+    exit(10);                                                                  \
+  }
 
-struct passwd *
-getpwinfo(uid)
-uid_t  uid;
+struct passwd *getpwinfo(uid_t uid);
+void teraform(int x, int y, int range, int chance);
+void mailtopc(char *string);
+void newinit(void);
+void newreset(void);
+void newbye(int status);
+void newmsg(char *str);
+void newerror(char *str);
+int in_str(char ch, char *str);
+void errorbar(char *str1, char *str2);
+void dispitem(int item, long amount);
+void showitem(int line, int item);
+void convert(void);
+void newlogin(void);
+void place(int xloc, int yloc);
+int getclass(int race);
+int nstartcst(void);
+int startcost(void);
+
+struct passwd *getpwinfo(uid_t uid)
 {
-  struct passwd *tpwd,     /* temporary pointer for library calls */
-                *pwd;      /* pointer for return */
+  struct passwd *tpwd, /* temporary pointer for library calls */
+      *pwd;            /* pointer for return */
 
-  if(!(pwd= (struct passwd *) calloc(1, sizeof(struct passwd)))) MYOOPS;
-  if(!(tpwd= getpwuid(uid))) MYOOPS;
-  if(!(pwd->pw_name= (char *) strdup(tpwd->pw_name))) MYOOPS;
-  if(!(pwd->pw_passwd= (char *) strdup(tpwd->pw_passwd))) MYOOPS;
-  pwd->pw_uid= tpwd->pw_uid;
-  pwd->pw_gid= tpwd->pw_gid;
-//  if(!(pwd->pw_age= (char *) strdup(tpwd->pw_age))) MYOOPS;
-//  if(!(pwd->pw_comment= (char *) strdup(tpwd->pw_comment))) MYOOPS;
-  if(!(pwd->pw_gecos= (char *) strdup(tpwd->pw_gecos))) MYOOPS;
-  if(!(pwd->pw_dir= (char *) strdup(tpwd->pw_dir))) MYOOPS;
-  if(!(pwd->pw_shell= (char *) strdup(tpwd->pw_shell))) MYOOPS;
-  return(pwd);
+  if (!(pwd = (struct passwd *)calloc(1, sizeof(struct passwd))))
+    MYOOPS;
+  if (!(tpwd = getpwuid(uid)))
+    MYOOPS;
+  if (!(pwd->pw_name = (char *)strdup(tpwd->pw_name)))
+    MYOOPS;
+  if (!(pwd->pw_passwd = (char *)strdup(tpwd->pw_passwd)))
+    MYOOPS;
+  pwd->pw_uid = tpwd->pw_uid;
+  pwd->pw_gid = tpwd->pw_gid;
+  /*  if(!(pwd->pw_age= (char *) strdup(tpwd->pw_age))) MYOOPS; */
+  /*  if(!(pwd->pw_comment= (char *) strdup(tpwd->pw_comment))) MYOOPS; */
+  if (!(pwd->pw_gecos = (char *)strdup(tpwd->pw_gecos)))
+    MYOOPS;
+  if (!(pwd->pw_dir = (char *)strdup(tpwd->pw_dir)))
+    MYOOPS;
+  if (!(pwd->pw_shell = (char *)strdup(tpwd->pw_shell)))
+    MYOOPS;
+  return (pwd);
 }
 
 /* Teraform the area around somebodies capitol */
 /* this gives everybody some chance of success */
-void
-teraform(x, y, range, chance)
-  int             x,
-                  y;
-  int             range,
-                  chance;
+void teraform(int x, int y, int range, int chance)
 {
-  int             i,
-                  j;
+  int i, j;
 
   switch (curntn->race) {
-   case DWARF:
-    sct[x][y].altitude = MOUNTAIN;
-    sct[x][y].vegetation = LT_VEG;
-    for (i = x - range; i <= x + range; i++)
-      for (j = y - range; j <= y + range; j++)
-	if ((i != x) && (j != y) && (ONMAP(i, j))
-	    && (sct[i][j].altitude != WATER)) {
-	  if (rand() % 3 == 0)
-	    sct[i][j].altitude = MOUNTAIN;
-	  else
-	    sct[i][j].altitude = HILL;
+    case DWARF:
+      sct[x][y].altitude = MOUNTAIN;
+      sct[x][y].vegetation = LT_VEG;
+      for (i = x - range; i <= x + range; i++)
+        for (j = y - range; j <= y + range; j++)
+          if ((i != x) && (j != y) && (ONMAP(i, j)) &&
+              (sct[i][j].altitude != WATER)) {
+            if (rand() % 3 == 0)
+              sct[i][j].altitude = MOUNTAIN;
+            else
+              sct[i][j].altitude = HILL;
 
-	  if (rand() % 100 < chance)
-	    getmetal(&sct[i][j]);
-	}
-    return;
-   case ELF:
-    sct[x][y].altitude = CLEAR;
-    sct[x][y].vegetation = FOREST;
-    for (i = x - range; i <= x + range; i++)
-      for (j = y - range; j <= y + range; j++)
-	if ((i != x) && (j != y) && (ONMAP(i, j))
-	    && (sct[i][j].altitude != WATER)) {
-	  if (rand() % 3 == 0)
-	    sct[i][j].vegetation = FOREST;
-	  else
-	    sct[i][j].vegetation = WOOD;
-	  if (rand() % 100 < chance)
-	    getjewel(&sct[i][j]);
-	}
-    return;
-   case ORC:
-    sct[x][y].altitude = MOUNTAIN;
-    sct[x][y].vegetation = LT_VEG;
-    for (i = x - range; i <= x + range; i++)
-      for (j = y - range; j <= y + range; j++)
-	if ((i != x) && (j != y) && (ONMAP(i, j))
-	    && (sct[i][j].altitude != WATER)) {
-	  if (rand() % 3 == 0)
-	    sct[i][j].altitude = MOUNTAIN;
-	  else
-	    sct[i][j].altitude = HILL;
+            if (rand() % 100 < chance)
+              getmetal(&sct[i][j]);
+          }
+      return;
+    case ELF:
+      sct[x][y].altitude = CLEAR;
+      sct[x][y].vegetation = FOREST;
+      for (i = x - range; i <= x + range; i++)
+        for (j = y - range; j <= y + range; j++)
+          if ((i != x) && (j != y) && (ONMAP(i, j)) &&
+              (sct[i][j].altitude != WATER)) {
+            if (rand() % 3 == 0)
+              sct[i][j].vegetation = FOREST;
+            else
+              sct[i][j].vegetation = WOOD;
+            if (rand() % 100 < chance)
+              getjewel(&sct[i][j]);
+          }
+      return;
+    case ORC:
+      sct[x][y].altitude = MOUNTAIN;
+      sct[x][y].vegetation = LT_VEG;
+      for (i = x - range; i <= x + range; i++)
+        for (j = y - range; j <= y + range; j++)
+          if ((i != x) && (j != y) && (ONMAP(i, j)) &&
+              (sct[i][j].altitude != WATER)) {
+            if (rand() % 3 == 0)
+              sct[i][j].altitude = MOUNTAIN;
+            else
+              sct[i][j].altitude = HILL;
 
-	  if (rand() % 100 < chance) {
-	    if (rand() % 2 == 0)
-	      getmetal(&sct[i][j]);
-	    else
-	      getjewel(&sct[i][j]);
-	  }
-	}
-    return;
-   case HUMAN:
-    sct[x][y].altitude = CLEAR;
-    sct[x][y].vegetation = GOOD;
-    for (i = x - range; i <= x + range; i++)
-      for (j = y - range; j <= y + range; j++)
-	if ((i != x) && (j != y) && (ONMAP(i, j))
-	    && (sct[i][j].altitude != WATER)) {
-	  if (rand() % 2 == 0)
-	    sct[i][j].altitude = CLEAR;
+            if (rand() % 100 < chance) {
+              if (rand() % 2 == 0)
+                getmetal(&sct[i][j]);
+              else
+                getjewel(&sct[i][j]);
+            }
+          }
+      return;
+    case HUMAN:
+      sct[x][y].altitude = CLEAR;
+      sct[x][y].vegetation = GOOD;
+      for (i = x - range; i <= x + range; i++)
+        for (j = y - range; j <= y + range; j++)
+          if ((i != x) && (j != y) && (ONMAP(i, j)) &&
+              (sct[i][j].altitude != WATER)) {
+            if (rand() % 2 == 0)
+              sct[i][j].altitude = CLEAR;
 
-	  if (rand() % 2 == 0)
-	    sct[i][j].vegetation = WOOD;
-	  else
-	    sct[i][j].vegetation = GOOD;
+            if (rand() % 2 == 0)
+              sct[i][j].vegetation = WOOD;
+            else
+              sct[i][j].vegetation = GOOD;
 
-	  if (rand() % 100 < chance) {
-	    if (rand() % 2 == 0)
-	      getmetal(&sct[i][j]);
-	    else
-	      getjewel(&sct[i][j]);
-	  }
-	}
-    return;
+            if (rand() % 100 < chance) {
+              if (rand() % 2 == 0)
+                getmetal(&sct[i][j]);
+              else
+                getjewel(&sct[i][j]);
+            }
+          }
+      return;
   }
 }
 
-void
-mailtopc(string)
-  char           *string;
+void mailtopc(char *string)
 {
-  int             ctry;
+  int ctry;
 
   for (ctry = 0; ctry < NTOTAL; ctry++) {
     if ((ctry == 0) || (ispc(ntn[ctry].active))) {
       if (mailopen(ctry) != (-1)) {
-	fprintf(fm, "Message from Conquer\n\n");
-	fprintf(fm, "%s\n", string);
-	mailclose(ctry);
+        fprintf(fm, "Message from Conquer\n\n");
+        fprintf(fm, "%s\n", string);
+        mailclose(ctry);
       }
     }
   }
 }
 
 /* function  to initialize the curses display */
-void
-newinit()
-{
+void newinit(void) {
   initscr();
   /* check terminal size */
   if (COLS < 80 || LINES < 24) {
@@ -232,9 +258,7 @@ newinit()
 }
 
 /* function to end the curses display */
-void
-newreset()
-{
+void newreset(void) {
   clear();
   refresh();
   nocrmode();
@@ -242,18 +266,14 @@ newreset()
 }
 
 /* function to leave the program completely */
-void
-newbye(status)
-  int             status;
+void newbye(int status)
 {
   newreset();
   exit(status);
 }
 
 /* message without wait for keystroke */
-void
-newmsg(str)
-  char           *str;
+void newmsg(char *str)
 {
   mvaddstr(LINES - 1, 0, str);
   clrtoeol();
@@ -261,9 +281,7 @@ newmsg(str)
 }
 
 /* message with wait for keystroke */
-void
-newerror(str)
-  char           *str;
+void newerror(char *str)
 {
   mvaddstr(LINES - 1, 0, str);
   clrtoeol();
@@ -277,13 +295,9 @@ newerror(str)
 }
 
 /* function to check if a character is in a character array */
-int
-in_str(ch, str)
-  char            ch,
-                 *str;
+int in_str(char ch, char *str)
 {
-  int             i,
-                  l = strlen(str);
+  int i, l = strlen(str);
 
   for (i = 0; i < l; i++)
     if (ch == str[i])
@@ -292,20 +306,17 @@ in_str(ch, str)
 }
 
 /* function to display the comment and error window */
-void
-errorbar(str1, str2)
-  char           *str1,
-                 *str2;
+void errorbar(char *str1, char *str2)
 {
-  int             i;
+  int i;
 
   move(LINES - 4, 0);
   standout();
   for (i = 0; i < COLS - 1; i++)
     addch(' ');
   standend();
-  mvprintw(LINES - 3, 0, " Conquer %s.%d.%s: %s", VERSION, PATCHLEVEL,
-    EXTPATCH, str1);
+  mvprintw(LINES - 3, 0, " Conquer %s.%d.%s: %s", VERSION, PATCHLEVEL, EXTPATCH,
+           str1);
   mvaddstr(LINES - 3, COLS - strlen(str2) - 2, str2);
   move(LINES - 2, 0);
   for (i = 0; i < COLS - 1; i++)
@@ -313,10 +324,7 @@ errorbar(str1, str2)
 }
 
 /* display amount string at current location */
-void
-dispitem(item, amount)
-  int             item;
-  long            amount;
+void dispitem(int item, long amount)
 {
   if (item == CH_LOCATE) {
     printw("%s %s", LType[amount], Mitems[item]);
@@ -329,19 +337,16 @@ dispitem(item, amount)
     return;
   }
   /* now show the extras for the Raw Materials */
-  printw(", %ld jewels", (long) (amount *
-				 ((float) NLJEWELS / Mvalues[CH_RAWGOODS])));
-  printw(", and %ld metal.", (long) (amount *
-				 ((float) NLMETAL / Mvalues[CH_RAWGOODS])));
+  printw(", %ld jewels",
+         (long)(amount * ((float) NLJEWELS / Mvalues[CH_RAWGOODS])));
+  printw(", and %ld metal.",
+         (long)(amount * ((float) NLMETAL / Mvalues[CH_RAWGOODS])));
 }
 
 /* show the current amount for country item */
-void
-showitem(line, item)
-  int             line,
-                  item;
+void showitem(int line, int item)
 {
-  char            tempc[LINELTH];
+  char tempc[LINELTH];
 
   move(line, 15);
   if (item == CH_LOCATE) {
@@ -356,60 +361,53 @@ showitem(line, item)
     return;
   line++;
 
-  /* now show the extras for the Raw Materials */
+/* now show the extras for the Raw Materials */
 
-#if NLJEWELS==NLMETAL
-  sprintf(tempc, "%ld jewels & metal",
-	  spent[CH_RAWGOODS] * NLJEWELS);
+#if NLJEWELS == NLMETAL
+  sprintf(tempc, "%ld jewels & metal", spent[CH_RAWGOODS] * NLJEWELS);
   mvprintw(line, 0, "%38s", tempc);
   mvprintw(line, COLS / 2 + 13, "%ld jewels & metal", NLJEWELS);
 #else
-  sprintf(tempc, "%ld jewels",
-	  spent[CH_RAWGOODS] * NLJEWELS);
+  sprintf(tempc, "%ld jewels", spent[CH_RAWGOODS] * NLJEWELS);
   mvprintw(line, 0, "%38s", tempc);
   mvprintw(line++, COLS / 2 + 10, "%ld jewels", NLJEWELS);
-  nsprintf(tempc, "%ld metal",
-	   spent[CH_RAWGOODS] * NLMETAL);
+  nsprintf(tempc, "%ld metal", spent[CH_RAWGOODS] * NLMETAL);
   mvprintw(line, 0, "%38s", tempc);
   mvprintw(line, COLS / 2 + 13, "%ld metals", NLMETAL);
 #endif
 }
 
 /* convert the stored information into the nation statistics */
-void
-convert()
-{
-  int             i,
-                  loop;
-  long            x;
+void convert(void) {
+  int i, loop;
+  long x;
 
   curntn->tciv = Mvalues[CH_PEOPLE] * spent[CH_PEOPLE];
   curntn->tgold = Mvalues[CH_TREASURY] * spent[CH_TREASURY];
   switch (spent[CH_LOCATE]) {
-   case 2:
-    curntn->location = GREAT;
-    break;
-   case 1:
-    curntn->location = FAIR;
-    break;
-   case 0:
-   default:
-    curntn->location = RANDOM;
-    break;
+    case 2:
+      curntn->location = GREAT;
+      break;
+    case 1:
+      curntn->location = FAIR;
+      break;
+    case 0:
+    default:
+      curntn->location = RANDOM;
+      break;
   }
   curntn->tmil = Mvalues[CH_SOLDIERS] * spent[CH_SOLDIERS];
   curntn->aplus = (short) Mvalues[CH_ATTACK] * spent[CH_ATTACK];
   curntn->dplus = (short) Mvalues[CH_DEFEND] * spent[CH_DEFEND];
   curntn->repro = (char) Mvalues[CH_REPRO] * spent[CH_REPRO];
-  curntn->maxmove = (unsigned char) Mvalues[CH_MOVEMENT]
-    * spent[CH_MOVEMENT];
+  curntn->maxmove = (unsigned char) Mvalues[CH_MOVEMENT] * spent[CH_MOVEMENT];
   for (i = 0; i < spent[CH_MAGIC]; i++) {
     /* purchase magic */
     loop = TRUE;
     while (loop == TRUE) {
       if ((x = getmagic((rand() % M_MGK + M_MIL))) != 0L) {
-	CHGMGK;
-	loop = FALSE;
+        CHGMGK;
+        loop = FALSE;
       }
     }
   }
@@ -419,27 +417,21 @@ convert()
   curntn->metals = NLMETAL * spent[CH_RAWGOODS];
 }
 
-void
-newlogin()
-{
+void newlogin(void) {
   /* use points to create empire, add if late starter */
-  int             points,
-                  clr;
-  int             choice,
-                  direct;
-  int             valid = TRUE;	/* valid==FALSE means continue loop */
-  int		  valid2 = TRUE;
-  int             temp,
-                  ypos,
-                  xpos;
-  int             more = TRUE;	/* 0 if add another player */
-  long            x;
-  char            tempc[LINELTH];
-  char            passwd[PASSLTH + 1];
-  char            pwd2[PASSLTH + 1];
-  register        i;
-  uid_t		  suid;
-  struct passwd   *spasswd;
+  int points, clr;
+  int choice, direct;
+  int valid = TRUE; /* valid==FALSE means continue loop */
+  int valid2 = TRUE;
+  int temp, ypos, xpos;
+  int more = TRUE; /* 0 if add another player */
+  long x;
+  char tempc[LINELTH];
+  char passwd[PASSLTH + 1];
+  char pwd2[PASSLTH + 1];
+  register int i;
+  uid_t suid;
+  struct passwd *spasswd;
 
   /* setup curses display */
   newinit();
@@ -464,32 +456,33 @@ newlogin()
     }
 #ifdef CHECK_UID
 #ifdef ONE_PER_UID
-  if(!amagod()) {
-    char uid_path[256];
-    FILE *fp;
+    if (!amagod()) {
+      char uid_path[256];
+      FILE *fp;
 
-    sprintf(uid_path, "%s/reborn.%d", DEFAULTDIR, calleruid);
-    if(!access(uid_path, 0)) {
-      sprintf(tempc, "HEY!  Quit Cheating!");
-      errorbar("Nation Builder", tempc);
-      newerror("But you were already reborn once today!");
-      newreset();
-      return;
-    } else {
-      fp = fopen(uid_path, "w");
-      if(fp) fclose(fp);
+      sprintf(uid_path, "%s/reborn.%d", DEFAULTDIR, calleruid);
+      if (!access(uid_path, 0)) {
+        sprintf(tempc, "HEY!  Quit Cheating!");
+        errorbar("Nation Builder", tempc);
+        newerror("But you were already reborn once today!");
+        newreset();
+        return;
+      } else {
+        fp = fopen(uid_path, "w");
+        if (fp)
+          fclose(fp);
+      }
+      for (i = 1; i < NTOTAL; i++)
+        if (ntn[i].active != INACTIVE)
+          if (ntn[i].owner == calleruid) {
+            /* if(!strcmp(ntn[i].owner,(getpwinfo(getuid()))->pw_name)) { */
+            sprintf(tempc, "HEY!  Quit Cheating!");
+            errorbar("Nation Builder", tempc);
+            newerror("You alredy have a nation!");
+            newreset();
+            return;
+          }
     }
-    for(i= 1; i < NTOTAL; i++)
-      if( ntn[i].active != INACTIVE)
-	if(ntn[i].owner == calleruid) {
-        /* if(!strcmp(ntn[i].owner,(getpwinfo(getuid()))->pw_name)) { */
-          sprintf(tempc, "HEY!  Quit Cheating!");
-          errorbar("Nation Builder", tempc);
-          newerror("You alredy have a nation!");
-          newreset();
-          return;
-       }
-  }
 #endif
 #endif
     /* open output for future printing */
@@ -509,65 +502,69 @@ newlogin()
       refresh();
       get_nname(tempc);
 
-      if ((strlen(tempc) <= 1)
-	  || (strlen(tempc) > NAMELTH)) {
-	newerror("Invalid Name Length");
-	valid = FALSE;
+      if ((strlen(tempc) <= 1) || (strlen(tempc) > NAMELTH)) {
+        newerror("Invalid Name Length");
+        valid = FALSE;
       }
-      for(i= 1; i< strlen(tempc); i++)
-        if(isspace(tempc[i])) tempc[i]= '_';
+      for (i = 1; i < strlen(tempc); i++)
+        if (isspace(tempc[i]))
+          tempc[i] = '_';
 
       /* check if already used */
-      if ((strcmp(tempc, "god") == 0)
-	  || (strcmp(tempc, "unowned") == 0)) {
-	newerror("Name already used");
-	valid = FALSE;
+      if ((strcmp(tempc, "god") == 0) || (strcmp(tempc, "unowned") == 0)) {
+        newerror("Name already used");
+        valid = FALSE;
       }
       for (i = 1; i < NTOTAL; i++)
-	if ((i != country) && (strcmp(ntn[i].name, tempc) == 0) && (isntn(ntn[i].active))) {
-	  newerror("Name already used");
-	  valid = FALSE;
-	}
+        if ((i != country) && (strcmp(ntn[i].name, tempc) == 0) &&
+            (isntn(ntn[i].active))) {
+          newerror("Name already used");
+          valid = FALSE;
+        }
     }
     strcpy(curntn->name, tempc);
     curntn->owner = calleruid;
-    /* strcpy(curntn->owner, (getpwinfo(getuid()))->pw_name); */
+/* strcpy(curntn->owner, (getpwinfo(getuid()))->pw_name); */
 #ifdef ENCODE_EXECS
-    sprintf(tempc, "%s > %s.%03d", ENCODE, exefile, country);
 #ifdef DEBUG
-fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
+    fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
 #endif
+    sprintf(tempc, "%s > %s.%03d", ENCODE, exefile, country);
     if ((fexe = popen(tempc, "w")) == NULL) {
-#else
-    sprintf(tempc, "%s.%03d", exefile, country);
-    if ((fexe = fopen(tempc, "w")) == NULL) {
-#endif
       sprintf(tempc, "Error opening <%s>", tempc);
       newerror(tempc);
       newbye(FAIL);
     }
+#else
+    sprintf(tempc, "%s.%03d", exefile, country);
+    if ((fexe = fopen(tempc, "w")) == NULL) {
+      sprintf(tempc, "Error opening <%s>", tempc);
+      newerror(tempc);
+      newbye(FAIL);
+    }
+#endif
     move(0, 0);
     clrtoeol();
     move(1, 0);
     clrtoeol();
     standout();
     mvprintw(0, COLS / 2 - 15 - strlen(curntn->name) / 2,
-	     "< Building Country %s >", curntn->name, country);
+             "< Building Country %s >", curntn->name, country);
     standend();
     clrtoeol();
 
     valid = FALSE;
-    while (valid == FALSE) {	/* password routine */
+    while (valid == FALSE) { /* password routine */
       mvaddstr(2, 0, "Enter National Password: ");
       clrtoeol();
       refresh();
       i = get_pass(tempc);
       if (i < 2) {
-	newerror("Password Too Short");
-	continue;
+        newerror("Password Too Short");
+        continue;
       } else if (i > PASSLTH) {
-	newerror("Password Too Long");
-	continue;
+        newerror("Password Too Long");
+        continue;
       }
       mvaddstr(2, 0, "Reenter National Password: ");
       clrtoeol();
@@ -575,9 +572,9 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
       i = get_pass(passwd);
 
       if ((i < 2) || (i > PASSLTH) || (strncmp(passwd, tempc, PASSLTH) != 0)) {
-	newerror("Invalid Password Match");
+        newerror("Invalid Password Match");
       } else
-	valid = TRUE;
+        valid = TRUE;
     }
     strncpy(curntn->passwd, crypt(tempc, SALT), PASSLTH + 1);
 
@@ -585,16 +582,17 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
     valid = FALSE;
     while (valid == FALSE) {
       valid = TRUE;
-      mvaddstr(2, 0, "Enter the name of your country's leader (Ex. The Ed, Gandalf, Conan)");
+      mvaddstr(2, 0, "Enter the name of your country's leader (Ex. The Ed, "
+                     "Gandalf, Conan)");
       clrtoeol();
       mvprintw(3, 0, "    [maximum %d characters]: ", LEADERLTH);
       refresh();
       get_nname(tempc);
       if ((strlen(tempc) > LEADERLTH) || (strlen(tempc) < 2)) {
-	newerror("Invalid Name Length");
-	valid = FALSE;
+        newerror("Invalid Name Length");
+        valid = FALSE;
       } else
-	strcpy(curntn->leader, tempc);
+        strcpy(curntn->leader, tempc);
     }
 
     mvprintw(2, 0, "Leader Name: %s", curntn->leader);
@@ -606,101 +604,101 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
     while (valid == FALSE) {
       valid = TRUE;
       switch (getch()) {
-       case 'D':
-       case 'd':
-	/* MINER POWER INATE TO DWARVES */
-	newmsg("Dwarves have MINING skills");
-	mvaddstr(3, 0, "National Race: Dwarf");
-	clrtoeol();
-	curntn->powers = MINER;
-	x = MINER;
-	CHGMGK;
-	points -= getclass(DWARF);
-	curntn->race = DWARF;
-	spent[CH_TREASURY] = NLDGOLD;
-	spent[CH_RAWGOODS] = NLDRAW;
-	spent[CH_PEOPLE] = NLDCIVIL;
-	spent[CH_SOLDIERS] = NLDMILIT;
-	spent[CH_REPRO] = NLDREPRO;
-	spent[CH_MOVEMENT] = NLDMMOVE;
-	spent[CH_ATTACK] = NLDAPLUS;
-	spent[CH_DEFEND] = NLDDPLUS;
-	spent[CH_LOCATE] = NLRANDOM;
-	points -= nstartcst();
-	break;
-       case 'E':
-       case 'e':
-	newmsg("Elves are magically cloaked (VOID power)");
-	mvaddstr(3, 0, "National Race: Elf");
-	clrtoeol();
-	curntn->powers = THE_VOID;
-	x = THE_VOID;
-	CHGMGK;
-	points -= getclass(ELF);
-	curntn->race = ELF;
-	spent[CH_TREASURY] = NLEGOLD;
-	spent[CH_RAWGOODS] = NLERAW;
-	spent[CH_PEOPLE] = NLECIVIL;
-	spent[CH_SOLDIERS] = NLEMILIT;
-	spent[CH_REPRO] = NLEREPRO;
-	spent[CH_MOVEMENT] = NLEMMOVE;
-	spent[CH_ATTACK] = NLEAPLUS;
-	spent[CH_DEFEND] = NLEDPLUS;
-	spent[CH_LOCATE] = NLFAIR;
-	points -= nstartcst();
-	break;
-       case 'O':
-       case 'o':
-	/* MINOR MONSTER POWER INATE TO ORCS */
-	newmsg("Your leader is a Monster!");
-	mvaddstr(3, 0, "National Race: Orc");
-	clrtoeol();
-	curntn->powers = MI_MONST;
-	x = MI_MONST;
-	CHGMGK;
-	points -= getclass(ORC);
-	curntn->race = ORC;
-	spent[CH_TREASURY] = NLOGOLD;
-	spent[CH_RAWGOODS] = NLORAW;
-	spent[CH_PEOPLE] = NLOCIVIL;
-	spent[CH_SOLDIERS] = NLOMILIT;
-	spent[CH_REPRO] = NLOREPRO;
-	spent[CH_MOVEMENT] = NLOMMOVE * 3 / 2; /* This makes default move 9 */
-	spent[CH_ATTACK] = NLOAPLUS;
-	spent[CH_DEFEND] = NLODPLUS;
-	spent[CH_LOCATE] = NLRANDOM;
-	points -= nstartcst();
-	break;
-       case 'H':
-       case 'h':
-	curntn->race = HUMAN;
-	newmsg("Humans have the combat skill of a WARRIOR");
-	mvaddstr(3, 0, "National Race: Human");
-	clrtoeol();
-	curntn->powers = WARRIOR;
-	x = WARRIOR;
-	CHGMGK;
-	points -= getclass(HUMAN);
-	spent[CH_TREASURY] = NLHGOLD;
-	spent[CH_RAWGOODS] = NLHRAW;
-	spent[CH_PEOPLE] = NLHCIVIL;
-	spent[CH_SOLDIERS] = NLHMILIT;
-	spent[CH_REPRO] = NLHREPRO;
-	spent[CH_MOVEMENT] = NLHMMOVE;
-	spent[CH_ATTACK] = NLHAPLUS;
-	spent[CH_DEFEND] = NLHDPLUS;
-	spent[CH_LOCATE] = NLRANDOM;
-	points -= nstartcst();
-	break;
-       default:
-	valid = FALSE;
+        case 'D':
+        case 'd':
+          /* MINER POWER INATE TO DWARVES */
+          newmsg("Dwarves have MINING skills");
+          mvaddstr(3, 0, "National Race: Dwarf");
+          clrtoeol();
+          curntn->powers = MINER;
+          x = MINER;
+          CHGMGK;
+          points -= getclass(DWARF);
+          curntn->race = DWARF;
+          spent[CH_TREASURY] = NLDGOLD;
+          spent[CH_RAWGOODS] = NLDRAW;
+          spent[CH_PEOPLE] = NLDCIVIL;
+          spent[CH_SOLDIERS] = NLDMILIT;
+          spent[CH_REPRO] = NLDREPRO;
+          spent[CH_MOVEMENT] = NLDMMOVE;
+          spent[CH_ATTACK] = NLDAPLUS;
+          spent[CH_DEFEND] = NLDDPLUS;
+          spent[CH_LOCATE] = NLRANDOM;
+          points -= nstartcst();
+          break;
+        case 'E':
+        case 'e':
+          newmsg("Elves are magically cloaked (VOID power)");
+          mvaddstr(3, 0, "National Race: Elf");
+          clrtoeol();
+          curntn->powers = THE_VOID;
+          x = THE_VOID;
+          CHGMGK;
+          points -= getclass(ELF);
+          curntn->race = ELF;
+          spent[CH_TREASURY] = NLEGOLD;
+          spent[CH_RAWGOODS] = NLERAW;
+          spent[CH_PEOPLE] = NLECIVIL;
+          spent[CH_SOLDIERS] = NLEMILIT;
+          spent[CH_REPRO] = NLEREPRO;
+          spent[CH_MOVEMENT] = NLEMMOVE;
+          spent[CH_ATTACK] = NLEAPLUS;
+          spent[CH_DEFEND] = NLEDPLUS;
+          spent[CH_LOCATE] = NLFAIR;
+          points -= nstartcst();
+          break;
+        case 'O':
+        case 'o':
+          /* MINOR MONSTER POWER INATE TO ORCS */
+          newmsg("Your leader is a Monster!");
+          mvaddstr(3, 0, "National Race: Orc");
+          clrtoeol();
+          curntn->powers = MI_MONST;
+          x = MI_MONST;
+          CHGMGK;
+          points -= getclass(ORC);
+          curntn->race = ORC;
+          spent[CH_TREASURY] = NLOGOLD;
+          spent[CH_RAWGOODS] = NLORAW;
+          spent[CH_PEOPLE] = NLOCIVIL;
+          spent[CH_SOLDIERS] = NLOMILIT;
+          spent[CH_REPRO] = NLOREPRO;
+          spent[CH_MOVEMENT] = NLOMMOVE * 3 / 2; /* This makes default move 9 */
+          spent[CH_ATTACK] = NLOAPLUS;
+          spent[CH_DEFEND] = NLODPLUS;
+          spent[CH_LOCATE] = NLRANDOM;
+          points -= nstartcst();
+          break;
+        case 'H':
+        case 'h':
+          curntn->race = HUMAN;
+          newmsg("Humans have the combat skill of a WARRIOR");
+          mvaddstr(3, 0, "National Race: Human");
+          clrtoeol();
+          curntn->powers = WARRIOR;
+          x = WARRIOR;
+          CHGMGK;
+          points -= getclass(HUMAN);
+          spent[CH_TREASURY] = NLHGOLD;
+          spent[CH_RAWGOODS] = NLHRAW;
+          spent[CH_PEOPLE] = NLHCIVIL;
+          spent[CH_SOLDIERS] = NLHMILIT;
+          spent[CH_REPRO] = NLHREPRO;
+          spent[CH_MOVEMENT] = NLHMMOVE;
+          spent[CH_ATTACK] = NLHAPLUS;
+          spent[CH_DEFEND] = NLHDPLUS;
+          spent[CH_LOCATE] = NLRANDOM;
+          points -= nstartcst();
+          break;
+        default:
+          valid = FALSE;
       }
     }
     mvprintw(4, 0, "Nation Class: %s", Class[curntn->class]);
     clrtoeol();
 
     valid = FALSE;
-    if ((curntn->race == ORC)&&(!amagod())) {	/* orcs are always evil */
+    if ((curntn->race == ORC) && (!amagod())) { /* orcs are always evil */
       valid = TRUE;
       curntn->active = PC_EVIL;
     } else {
@@ -710,21 +708,21 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
     while (valid == FALSE) {
       valid = TRUE;
       switch (getch()) {
-       case 'G':
-       case 'g':
-	curntn->active = PC_GOOD;
-	break;
-       case 'N':
-       case 'n':
-	curntn->active = PC_NEUTRAL;
-	break;
-       case 'E':
-       case 'e':
-	curntn->active = PC_EVIL;
-	break;
-       default:
-        valid = FALSE;
-        break;
+        case 'G':
+        case 'g':
+          curntn->active = PC_GOOD;
+          break;
+        case 'N':
+        case 'n':
+          curntn->active = PC_NEUTRAL;
+          break;
+        case 'E':
+        case 'e':
+          curntn->active = PC_EVIL;
+          break;
+        default:
+          valid = FALSE;
+          break;
       }
     }
     mvprintw(2, COLS / 2, "Alignment: %s", alignment[curntn->active]);
@@ -734,25 +732,27 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
     clrtoeol();
     refresh();
     valid = FALSE;
-    while(valid == FALSE) {
+    while (valid == FALSE) {
       valid = TRUE;
-      switch(getch()) {
+      switch (getch()) {
         case 'I':
         case 'i':
           curntn->strategy = ISOLATIONIST;
           break;
         case 'E':
         case 'e':
-          mvprintw(6,0,"Degree of Expansion:  [(S)low, (N)ormal, (F)ast, (L)ightning]");
+          mvprintw(
+              6, 0,
+              "Degree of Expansion:  [(S)low, (N)ormal, (F)ast, (L)ightning]");
           clrtoeol();
           refresh();
           valid2 = FALSE;
-          while(valid2 == FALSE) {
+          while (valid2 == FALSE) {
             valid2 = TRUE;
-            switch(getch()) {
+            switch (getch()) {
               case 'S':
               case 's':
-                switch(curntn->active) {
+                switch (curntn->active) {
                   case PC_GOOD:
                     curntn->strategy = GOOD_6FREE;
                     break;
@@ -769,7 +769,7 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
                 break;
               case 'N':
               case 'n':
-                switch(curntn->active) {
+                switch (curntn->active) {
                   case PC_GOOD:
                     curntn->strategy = GOOD_4FREE;
                     break;
@@ -786,7 +786,7 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
                 break;
               case 'F':
               case 'f':
-                switch(curntn->active) {
+                switch (curntn->active) {
                   case PC_GOOD:
                     curntn->strategy = GOOD_2FREE;
                     break;
@@ -803,7 +803,7 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
                 break;
               case 'L':
               case 'l':
-                switch(curntn->active) {
+                switch (curntn->active) {
                   case PC_GOOD:
                     curntn->strategy = GOOD_0FREE;
                     break;
@@ -835,32 +835,32 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
       temp = 30;
       mvaddstr(6, 0, "This can be any of the following:");
       for (tempc[0] = '!'; tempc[0] <= '~'; tempc[0]++) {
-	if (markok(tempc[0], FALSE)) {
-	  temp += 2;
-	  if (temp > COLS - 20) {
-	    printw("\n    ");
-	    temp = 8;
-	  }
-	  printw(" %c", tempc[0]);
-	} else if (marknearok(tempc[0], FALSE)) {
-	  temp += 2;
-	  if (temp > COLS - 20) {
-	    printw("\n    ");
-	    temp = 8;
-	  }
-	  printw(" ");
-	  standout();
-	  printw("%c", tempc[0]);
-	  standend();
-	}
+        if (markok(tempc[0], FALSE)) {
+          temp += 2;
+          if (temp > COLS - 20) {
+            printw("\n    ");
+            temp = 8;
+          }
+          printw(" %c", tempc[0]);
+        } else if (marknearok(tempc[0], FALSE)) {
+          temp += 2;
+          if (temp > COLS - 20) {
+            printw("\n    ");
+            temp = 8;
+          }
+          printw(" ");
+          standout();
+          printw("%c", tempc[0]);
+          standend();
+        }
       }
       mvaddstr(5, 0, "Enter National Mark (for maps): ");
       clrtoeol();
       refresh();
       tempc[0] = getch();
       if (marknearok(tempc[0], TRUE)) {
-	curntn->mark = (*tempc);
-	break;
+        curntn->mark = (*tempc);
+        break;
       }
     }
 
@@ -881,36 +881,35 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
       mvprintw(ypos, 0, "%-15s", Mlabels[i]);
       showitem(ypos, i);
       if (i == CH_LOCATE) {
-	mvprintw(ypos, COLS / 2 + 5, "%3d     %s", Mcost[i],
-		 "Better Location");
+        mvprintw(ypos, COLS / 2 + 5, "%3d     %s", Mcost[i], "Better Location");
       } else {
-	if (curntn->race == ORC) {
-	  switch (i) {
-	   case CH_MOVEMENT:
-	     if(!amagod()) {
-               mvaddstr(ypos++, COLS / 2 + 5, "  -     --------");
-	       continue;
-             } else {
-               x = Munits[i] * Mvalues[i] / 2;
-               break;
-             }
-	   case CH_REPRO:
-	    x = 2 * Munits[i] * Mvalues[i];
-	    break;
-	   case CH_ATTACK:
-	   case CH_DEFEND:
-	    x = Munits[i] * Mvalues[i] / 2;
-	    break;
-	   default:
-	    x = Munits[i] * Mvalues[i];
-	    break;
-	  }
-	  mvprintw(ypos, COLS / 2 + 5, "%3d for", Mcost[i]);
-	  printw(" %ld %s", x, Mitems[i]);
-	} else {
-	  mvprintw(ypos, COLS / 2 + 5, "%3d for", Mcost[i]);
-	  printw(" %ld %s", Munits[i] * Mvalues[i], Mitems[i]);
-	}
+        if (curntn->race == ORC) {
+          switch (i) {
+            case CH_MOVEMENT:
+              if (!amagod()) {
+                mvaddstr(ypos++, COLS / 2 + 5, "  -     --------");
+                continue;
+              } else {
+                x = Munits[i] * Mvalues[i] / 2;
+                break;
+              }
+            case CH_REPRO:
+              x = 2 * Munits[i] * Mvalues[i];
+              break;
+            case CH_ATTACK:
+            case CH_DEFEND:
+              x = Munits[i] * Mvalues[i] / 2;
+              break;
+            default:
+              x = Munits[i] * Mvalues[i];
+              break;
+          }
+          mvprintw(ypos, COLS / 2 + 5, "%3d for", Mcost[i]);
+          printw(" %ld %s", x, Mitems[i]);
+        } else {
+          mvprintw(ypos, COLS / 2 + 5, "%3d for", Mcost[i]);
+          printw(" %ld %s", Munits[i] * Mvalues[i], Mitems[i]);
+        }
       }
       ypos++;
     }
@@ -923,173 +922,176 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
     valid = FALSE;
     clr = 1;
     standout();
-    mvaddstr(LINES - 4, 2, "DONE=ESC  EXEC=SPACE  INFO=\"?\"  ADD=\"<+h\"  SUBtract=\">+l\"  UP=\"k\"  DOWN=\"j\"");
+    mvaddstr(LINES - 4, 2, "DONE=ESC  EXEC=SPACE  INFO=\"?\"  ADD=\"<+h\"  "
+                           "SUBtract=\">+l\"  UP=\"k\"  DOWN=\"j\"");
     standend();
 
     while (valid == FALSE) {
       if (clr == 1) {
-	standout();
-	mvprintw(4, COLS / 2, "Points Left: %d", points);
-	standend();
-	clrtoeol();
-	clr++;
+        standout();
+        mvprintw(4, COLS / 2, "Points Left: %d", points);
+        standend();
+        clrtoeol();
+        clr++;
       } else if (clr == 2) {
-	newmsg("");
-	clr = 0;
+        newmsg("");
+        clr = 0;
       }
       standout();
       mvaddstr(ypos + choice, xpos, Mprompt[direct]);
       standend();
       refresh();
       switch (getch()) {
-       case '':
-	/* redraw */
-	wrefresh(stdscr);
-	break;
-       case '?':
-	/* help on topic */
-	newerror(Mhelp[choice]);
-	break;
-       case '\033':
-	/* exit option */
-	if (points > 0) {
-	  newmsg("Use remaining points for population? [ny]");
-	  if (getch() != 'y') {
-	    newerror("All points must be spent prior to exiting");
-	    break;
-	  }
-	  temp = points * Munits[CH_PEOPLE] / Mcost[CH_PEOPLE];
-	  x = temp * Mvalues[CH_PEOPLE];
-	  spent[CH_PEOPLE] += temp;
-	  showitem(ypos + CH_PEOPLE, CH_PEOPLE);
-	  points = 0;
-	  sprintf(tempc, "Buying %ld more civilians", x);
-	  newerror(tempc);
-	}
-	newmsg("Is the modification complete? (y or n)");
-	while (((temp = getch()) != 'y') && (temp != 'n'));
-	if (temp == 'y') {
-	  valid = TRUE;
-	}
-	clr = 1;
-	break;
-       case '-':
-       case '>':
-       case 'l':
-       case 'L':
-	/* subtraction */
-	direct = SUBTRACTION;
-	break;
-       case '+':
-       case '<':
-       case 'h':
-       case 'H':
-	/* addition */
-	direct = ADDITION;
-	break;
-       case '\b':
-       case '\177':
-	/* decrease choice -- with wrap */
-	mvaddstr(ypos + choice, xpos, "    ");
-	if (choice == CH_PEOPLE) {
-	  choice = CH_RAWGOODS;
-	} else {
-	  choice--;
-	  if (choice == CH_MOVEMENT && curntn->race == ORC && !amagod()) {
-	    choice--;
-	  }
-	}
-	break;
-       case 'k':
-       case 'K':
-	/* move choice up one */
-	if (choice > CH_PEOPLE) {
-	  mvaddstr(ypos + choice, xpos, "    ");
-	  choice--;
-	  if (choice == CH_MOVEMENT && curntn->race == ORC && !amagod()) {
-	    choice--;
-	  }
-	}
-	break;
-       case '\r':
-       case '\n':
-	/* increase choice -- with wrap */
-	mvaddstr(ypos + choice, xpos, "    ");
-	if (choice == CH_RAWGOODS) {
-	  choice = CH_PEOPLE;
-	} else {
-	  choice++;
-	  if (choice == CH_MOVEMENT && curntn->race == ORC && !amagod()) {
-	    choice++;
-	  }
-	}
-	break;
-       case 'j':
-       case 'J':
-	/* move choice down one */
-	if (choice < CH_RAWGOODS) {
-	  mvaddstr(ypos + choice, xpos, "    ");
-	  choice++;
-/*	  if (choice == CH_MOVEMENT && curntn->race == ORC && !amagod()) {
-	    choice++;
-	  } Let them add, just ream them for it */
-	}
-	break;
-       case ' ':
-       case '.':
-	/* make the selection */
-	if (curntn->race == ORC) {
-	  switch (choice) {
-	   case CH_REPRO:
-	    temp = 2 * Munits[choice];
-	    break;
-	   case CH_ATTACK:
-	   case CH_DEFEND:
-	    temp = Munits[choice] / 2;
-	    break;
-           case CH_MOVEMENT:
-            temp = Munits[choice] / 2;
-            break;
-	   default:
-	    temp = Munits[choice];
-	    break;
-	  }
-	} else
-	  temp = Munits[choice];
-	if (direct == ADDITION) {
-	  if (Mcost[choice] > points) {
-	    sprintf(tempc, "You do not have %d points to spend",
-		    Mcost[choice]);
-	    newerror(tempc);
-	  } else if ((choice == CH_REPRO) && (curntn->race == ORC)
-		     && (spent[choice] + temp > 12)) {
-	    newerror("You may not purchase any more of that item");
-	  } else if ((spent[choice] + temp > Maxvalues[choice])
-		     && ((curntn->race != ORC) || (choice != CH_REPRO))) {
-	    newerror("You may not purchase any more of that item");
-	  } else {
-	    spent[choice] += temp;
-	    newmsg("You now have ");
-	    dispitem(choice, spent[choice] * Mvalues[choice]);
-	    showitem(ypos + choice, choice);
-	    points -= Mcost[choice];
-	    clr = 1;
-	  }
-	} else if (direct == SUBTRACTION) {
-	  if (spent[choice] - temp < Minvalues[choice]) {
-	    newerror("You may not sell back any more of that item");
-	  } else {
-	    spent[choice] -= temp;
-	    newmsg("You now have ");
-	    dispitem(choice, spent[choice] * Mvalues[choice]);
-	    showitem(ypos + choice, choice);
-	    points += Mcost[choice];
-	    clr = 1;
-	  }
-	}
-	break;
-       default:
-	break;
+        case '':
+          /* redraw */
+          wrefresh(stdscr);
+          break;
+        case '?':
+          /* help on topic */
+          newerror(Mhelp[choice]);
+          break;
+        case '\033':
+          /* exit option */
+          if (points > 0) {
+            newmsg("Use remaining points for population? [ny]");
+            if (getch() != 'y') {
+              newerror("All points must be spent prior to exiting");
+              break;
+            }
+            temp = points * Munits[CH_PEOPLE] / Mcost[CH_PEOPLE];
+            x = temp * Mvalues[CH_PEOPLE];
+            spent[CH_PEOPLE] += temp;
+            showitem(ypos + CH_PEOPLE, CH_PEOPLE);
+            points = 0;
+            sprintf(tempc, "Buying %ld more civilians", x);
+            newerror(tempc);
+          }
+          newmsg("Is the modification complete? (y or n)");
+          while (((temp = getch()) != 'y') && (temp != 'n'))
+            ;
+          if (temp == 'y') {
+            valid = TRUE;
+          }
+          clr = 1;
+          break;
+        case '-':
+        case '>':
+        case 'l':
+        case 'L':
+          /* subtraction */
+          direct = SUBTRACTION;
+          break;
+        case '+':
+        case '<':
+        case 'h':
+        case 'H':
+          /* addition */
+          direct = ADDITION;
+          break;
+        case '\b':
+        case '\177':
+          /* decrease choice -- with wrap */
+          mvaddstr(ypos + choice, xpos, "    ");
+          if (choice == CH_PEOPLE) {
+            choice = CH_RAWGOODS;
+          } else {
+            choice--;
+            if (choice == CH_MOVEMENT && curntn->race == ORC && !amagod()) {
+              choice--;
+            }
+          }
+          break;
+        case 'k':
+        case 'K':
+          /* move choice up one */
+          if (choice > CH_PEOPLE) {
+            mvaddstr(ypos + choice, xpos, "    ");
+            choice--;
+            if (choice == CH_MOVEMENT && curntn->race == ORC && !amagod()) {
+              choice--;
+            }
+          }
+          break;
+        case '\r':
+        case '\n':
+          /* increase choice -- with wrap */
+          mvaddstr(ypos + choice, xpos, "    ");
+          if (choice == CH_RAWGOODS) {
+            choice = CH_PEOPLE;
+          } else {
+            choice++;
+            if (choice == CH_MOVEMENT && curntn->race == ORC && !amagod()) {
+              choice++;
+            }
+          }
+          break;
+        case 'j':
+        case 'J':
+          /* move choice down one */
+          if (choice < CH_RAWGOODS) {
+            mvaddstr(ypos + choice, xpos, "    ");
+            choice++;
+            /*	  if (choice == CH_MOVEMENT && curntn->race == ORC && !amagod())
+            {
+            	    choice++;
+            	  } Let them add, just ream them for it */
+          }
+          break;
+        case ' ':
+        case '.':
+          /* make the selection */
+          if (curntn->race == ORC) {
+            switch (choice) {
+              case CH_REPRO:
+                temp = 2 * Munits[choice];
+                break;
+              case CH_ATTACK:
+              case CH_DEFEND:
+                temp = Munits[choice] / 2;
+                break;
+              case CH_MOVEMENT:
+                temp = Munits[choice] / 2;
+                break;
+              default:
+                temp = Munits[choice];
+                break;
+            }
+          } else
+            temp = Munits[choice];
+          if (direct == ADDITION) {
+            if (Mcost[choice] > points) {
+              sprintf(tempc, "You do not have %d points to spend",
+                      Mcost[choice]);
+              newerror(tempc);
+            } else if ((choice == CH_REPRO) && (curntn->race == ORC) &&
+                       (spent[choice] + temp > 12)) {
+              newerror("You may not purchase any more of that item");
+            } else if ((spent[choice] + temp > Maxvalues[choice]) &&
+                       ((curntn->race != ORC) || (choice != CH_REPRO))) {
+              newerror("You may not purchase any more of that item");
+            } else {
+              spent[choice] += temp;
+              newmsg("You now have ");
+              dispitem(choice, spent[choice] * Mvalues[choice]);
+              showitem(ypos + choice, choice);
+              points -= Mcost[choice];
+              clr = 1;
+            }
+          } else if (direct == SUBTRACTION) {
+            if (spent[choice] - temp < Minvalues[choice]) {
+              newerror("You may not sell back any more of that item");
+            } else {
+              spent[choice] -= temp;
+              newmsg("You now have ");
+              dispitem(choice, spent[choice] * Mvalues[choice]);
+              showitem(ypos + choice, choice);
+              points += Mcost[choice];
+              clr = 1;
+            }
+          }
+          break;
+        default:
+          break;
       }
     }
 
@@ -1101,50 +1103,55 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
       newerror("Ok, Nation Deleted");
 #ifdef ENCODE_EXECS
 #ifdef DEBUG
-fprintf(stderr, "Closing encode pipe to %s.%03d --- ABORT\n", exefile, country);
+      fprintf(stderr, "Closing encode pipe to %s.%03d --- ABORT\n", exefile,
+              country);
 #endif
       pclose(fexe);
 #else
       fclose(fexe);
 #endif
-    sprintf(tempc, "%s.%03d", exefile, country);
-    chmod(tempc, (mode_t)FCMASK);
+      sprintf(tempc, "%s.%03d", exefile, country);
+      chmod(tempc, (mode_t) FCMASK);
     } else {
       convert();
 
-      if(amagod()) {
+      if (amagod()) {
         int xxx = -1, yyy = -1;
         clear();
-        mvaddstr(2,0,"What X coordinate? (-1 for random):");
+        mvaddstr(2, 0, "What X coordinate? (-1 for random):");
         refresh();
         xxx = get_number();
-        mvaddstr(3,0,"What Y coordinate? (-1 for random):");
+        mvaddstr(3, 0, "What Y coordinate? (-1 for random):");
         refresh();
         yyy = get_number();
-        place(xxx,yyy);
-      } else place(-1, -1);
+        place(xxx, yyy);
+      } else
+        place(-1, -1);
 
       newerror("Ok, Your Nation has been Added to the World");
-      att_setup(country);	/* setup values ntn attributes */
+      att_setup(country); /* setup values ntn attributes */
 #ifdef ENCODE_EXECS
 #ifdef DEBUG
-fprintf(stderr, "Closing encode pipe to %s.%03d --- ADD\n", exefile, country);
+      fprintf(stderr, "Closing encode pipe to %s.%03d --- ADD\n", exefile,
+              country);
 #endif
       pclose(fexe);
 #else
       fclose(fexe);
 #endif
-    sprintf(tempc, "%s.%03d", exefile, country);
-    chmod(tempc, (mode_t)FCMASK);
-      sprintf(tempc, "NOTICE: Nation \"%s\" added to world on turn %d\n", curntn->name, TURN);
+      sprintf(tempc, "%s.%03d", exefile, country);
+      chmod(tempc, (mode_t) FCMASK);
+      sprintf(tempc, "NOTICE: Nation \"%s\" added to world on turn %d\n",
+              curntn->name, TURN);
       /* mailtopc(tempc); */
-      chmod(tempc, (mode_t)FCMASK);
-      suid= calleruid;
-      spasswd= getpwinfo(suid);
-      if(mailopen(0)!= -1) {
-	fprintf(fm, "Message from Nation Builder\n\n");
-	fprintf(fm, "NOTICE: New nation \"%s\" added by \"%s\" on turn %d\n", curntn->name, spasswd->pw_name, TURN);
-	mailclose(0);
+      chmod(tempc, (mode_t) FCMASK);
+      suid = calleruid;
+      spasswd = getpwinfo(suid);
+      if (mailopen(0) != -1) {
+        fprintf(fm, "Message from Nation Builder\n\n");
+        fprintf(fm, "NOTICE: New nation \"%s\" added by \"%s\" on turn %d\n",
+                curntn->name, spasswd->pw_name, TURN);
+        mailclose(0);
       }
       /* cannot clear until after placement and initializing */
       curntn->powers = 0;
@@ -1152,263 +1159,254 @@ fprintf(stderr, "Closing encode pipe to %s.%03d --- ADD\n", exefile, country);
     country = 0;
     for (i = 1; i < NTOTAL; i++)
       if (ntn[i].active == INACTIVE) {
-	country = i;
-	curntn = &ntn[country];
-	break;
+        country = i;
+        curntn = &ntn[country];
+        break;
       }
-    if ((country != 0)&&(amagod())) {
+    if ((country != 0) && (amagod())) {
       newmsg("Do you wish to Add another Nation? [ny]");
       if (getch() != 'y')
-	more = FALSE;
+        more = FALSE;
       else
-	more = TRUE;
+        more = TRUE;
     } else {
       more = FALSE;
       newerror("You can't add another nation...");
     }
   }
   newreset();
-  att_base();			/* calculate base nation attributes */
+  att_base(); /* calculate base nation attributes */
   writedata();
 }
 
 /*****************************************************************/
 /* PLACE(): put nation on the map.  Fill out army structures too */
 /*****************************************************************/
-void
-place(xloc, yloc)
-  int             xloc,
-                  yloc;		/* if not -1,-1 should place in this spot */
+void place(int xloc, int yloc)
+    /* if not -1,-1 should place in this spot */
 {
-  int             placed = 0,
-                  armysize = 100;
-  short           armynum = 0;
-  long            people;
-  char            tempo[LINELTH + 1];
-  int             x,
-                  y,
-                  i,
-                  j,
-                  temp,
-                  t;
-  int             n = 0,
-                  leadtype;
-  long            soldsleft;	/* soldiers left to place */
+  int placed = 0, armysize = 100;
+  short armynum = 0;
+  long people;
+  char tempo[LINELTH + 1];
+  int x, y, i, j, temp, t;
+  int n = 0, leadtype;
+  long soldsleft; /* soldiers left to place */
 
   if (xloc != -1 && yloc != -1 /*&& is_habitable(xloc, yloc)*/) {
     placed = 1;
     x = xloc;
     y = yloc;
-    teraform(x,y,1,100);
+    teraform(x, y, 1, 100);
   }
   switch (curntn->location) {
-   case OOPS:
-    while ((placed == 0) && (n++ < 2000)) {
-      if (ispc(curntn->active)) {
-	x = (rand() % (MAPX - 8)) + 4;
-	y = (rand() % (MAPY - 8)) + 4;
-      } else {
-	x = (rand() % (MAPX - 2)) + 1;
-	y = (rand() % (MAPY - 2)) + 1;
+    case OOPS:
+      while ((placed == 0) && (n++ < 2000)) {
+        if (ispc(curntn->active)) {
+          x = (rand() % (MAPX - 8)) + 4;
+          y = (rand() % (MAPY - 8)) + 4;
+        } else {
+          x = (rand() % (MAPX - 2)) + 1;
+          y = (rand() % (MAPY - 2)) + 1;
+        }
+        if (is_habitable(x, y))
+          placed = 1;
+
+        for (i = x - 1; i <= x + 1; i++)
+          for (j = y - 1; j <= y + 1; j++)
+            if (sct[i][j].owner != 0)
+              placed = 0;
+        temp = 0;
+        for (i = x - 1; i <= x + 1; i++)
+          for (j = y - 1; j <= y + 1; j++)
+            if (sct[i][j].altitude == WATER)
+              temp++;
+        if (temp >= 7)
+          placed = 0;
       }
-      if (is_habitable(x, y))
-	placed = 1;
-
-      for (i = x - 1; i <= x + 1; i++)
-	for (j = y - 1; j <= y + 1; j++)
-	  if (sct[i][j].owner != 0)
-	    placed = 0;
-      temp = 0;
-      for (i = x - 1; i <= x + 1; i++)
-	for (j = y - 1; j <= y + 1; j++)
-	  if (sct[i][j].altitude == WATER)
-	    temp++;
-      if (temp >= 7)
-	placed = 0;
-    }
-    if (placed)
-      teraform(x, y, 1, 25);
-    break;
-   case RANDOM:
-    while ((placed == 0) && (n++ < 2000)) {
-      if (ispc(curntn->active)) {
-	if (MAPX > 12) {
-	  x = rand() % (MAPX - 12) + 6;
-	  y = rand() % (MAPY - 12) + 6;
-	} else {
-	  x = rand() % (MAPX - 8) + 4;
-	  y = rand() % (MAPY - 8) + 4;
-	}
-	if (is_habitable(x, y))
-	  placed = 1;
-	/* important that no countries near */
-	for (i = x - 2; i <= x + 2; i++)
-	  for (j = y - 2; j <= y + 2; j++)
-	    if ((isntn(ntn[sct[i][j].owner].active))
-		&& (sct[i][j].owner != 0))
-	      placed = 0;
-      } else {
-	x = (rand() % (MAPX - 6)) + 3;
-	y = (rand() % (MAPY - 6)) + 3;
-	if (is_habitable(x, y))
-	  placed = 1;
-	/* important that no countries near */
-	for (i = x - 2; i <= x + 2; i++)
-	  for (j = y - 2; j <= y + 2; j++)
-	    if ((isntn(ntn[sct[i][j].owner].active))
-		&& (sct[i][j].owner != 0))
-	      placed = 0;
+      if (placed)
+        teraform(x, y, 1, 25);
+      break;
+    case RANDOM:
+      while ((placed == 0) && (n++ < 2000)) {
+        if (ispc(curntn->active)) {
+          if (MAPX > 12) {
+            x = rand() % (MAPX - 12) + 6;
+            y = rand() % (MAPY - 12) + 6;
+          } else {
+            x = rand() % (MAPX - 8) + 4;
+            y = rand() % (MAPY - 8) + 4;
+          }
+          if (is_habitable(x, y))
+            placed = 1;
+          /* important that no countries near */
+          for (i = x - 2; i <= x + 2; i++)
+            for (j = y - 2; j <= y + 2; j++)
+              if ((isntn(ntn[sct[i][j].owner].active)) &&
+                  (sct[i][j].owner != 0))
+                placed = 0;
+        } else {
+          x = (rand() % (MAPX - 6)) + 3;
+          y = (rand() % (MAPY - 6)) + 3;
+          if (is_habitable(x, y))
+            placed = 1;
+          /* important that no countries near */
+          for (i = x - 2; i <= x + 2; i++)
+            for (j = y - 2; j <= y + 2; j++)
+              if ((isntn(ntn[sct[i][j].owner].active)) &&
+                  (sct[i][j].owner != 0))
+                placed = 0;
+        }
+        temp = 0;
+        for (i = x - 1; i <= x + 1; i++)
+          for (j = y - 1; j <= y + 1; j++)
+            if (sct[i][j].altitude == WATER)
+              temp++;
+        if (temp >= 7)
+          placed = 0;
+        for (i = x - 1; i <= x + 1; i++)
+          for (j = y - 1; j <= y + 1; j++)
+            if (sct[i][j].owner != 0)
+              placed = 0;
       }
-      temp = 0;
-      for (i = x - 1; i <= x + 1; i++)
-	for (j = y - 1; j <= y + 1; j++)
-	  if (sct[i][j].altitude == WATER)
-	    temp++;
-      if (temp >= 7)
-	placed = 0;
-      for (i = x - 1; i <= x + 1; i++)
-	for (j = y - 1; j <= y + 1; j++)
-	  if (sct[i][j].owner != 0)
-	    placed = 0;
-    }
-    if (placed)
-      teraform(x, y, 1, 40);
-    break;
-   case FAIR:
-    while ((placed == 0) && (n++ < 2000)) {
-      if (ispc(curntn->active)) {
-	if (MAPX > 24) {
-	  x = rand() % (MAPX - 24) + 12;
-	} else {
-	  x = rand() % (MAPX - 14) + 7;
-	}
-	if (MAPY > 24) {
-	  y = rand() % (MAPY - 24) + 12;
-	} else {
-	  y = rand() % (MAPY - 14) + 7;
-	}
-      } else {
-	x = rand() % (MAPX - 10) + 5;
-	y = rand() % (MAPY - 10) + 5;
-      }
+      if (placed)
+        teraform(x, y, 1, 40);
+      break;
+    case FAIR:
+      while ((placed == 0) && (n++ < 2000)) {
+        if (ispc(curntn->active)) {
+          if (MAPX > 24) {
+            x = rand() % (MAPX - 24) + 12;
+          } else {
+            x = rand() % (MAPX - 14) + 7;
+          }
+          if (MAPY > 24) {
+            y = rand() % (MAPY - 24) + 12;
+          } else {
+            y = rand() % (MAPY - 14) + 7;
+          }
+        } else {
+          x = rand() % (MAPX - 10) + 5;
+          y = rand() % (MAPY - 10) + 5;
+        }
 
-      if (!is_habitable(x, y))
-	continue;
-      if (tofood(&sct[x][y], country) < DESFOOD)
-	continue;
+        if (!is_habitable(x, y))
+          continue;
+        if (tofood(&sct[x][y], country) < DESFOOD)
+          continue;
 
-      placed = 1;
-      for (i = x - 1; i <= x + 1; i++)
-	for (j = y - 1; j <= y + 1; j++)
-	  if (sct[i][j].owner != 0)
-	    placed = 0;
+        placed = 1;
+        for (i = x - 1; i <= x + 1; i++)
+          for (j = y - 1; j <= y + 1; j++)
+            if (sct[i][j].owner != 0)
+              placed = 0;
 
-      if (pwater > 50) {
-	temp = 0;
-	for (i = x - 1; i <= x + 1; i++)
-	  for (j = y - 1; j <= y + 1; j++)
-	    if (sct[i][j].altitude == WATER)
-	      temp++;
-	if (temp >= 7)
-	  placed = 0;
+        if (pwater > 50) {
+          temp = 0;
+          for (i = x - 1; i <= x + 1; i++)
+            for (j = y - 1; j <= y + 1; j++)
+              if (sct[i][j].altitude == WATER)
+                temp++;
+          if (temp >= 7)
+            placed = 0;
 
-	/* important that no countries near */
-	for (i = x - 3; i <= x + 3; i++)
-	  for (j = y - 3; j <= y + 3; j++) {
-	    if ((isntn(ntn[sct[i][j].owner].active))
-		&& (sct[i][j].owner != 0))
-	      placed = 0;
-	  }
-      } else {
-	temp = 0;
-	for (i = x - 1; i <= x + 1; i++)
-	  for (j = y - 1; j <= y + 1; j++)
-	    if (sct[i][j].altitude == WATER)
-	      temp++;
-	if (temp >= 5)
-	  placed = 0;
+          /* important that no countries near */
+          for (i = x - 3; i <= x + 3; i++)
+            for (j = y - 3; j <= y + 3; j++) {
+              if ((isntn(ntn[sct[i][j].owner].active)) &&
+                  (sct[i][j].owner != 0))
+                placed = 0;
+            }
+        } else {
+          temp = 0;
+          for (i = x - 1; i <= x + 1; i++)
+            for (j = y - 1; j <= y + 1; j++)
+              if (sct[i][j].altitude == WATER)
+                temp++;
+          if (temp >= 5)
+            placed = 0;
 
-	/* important that no countries near */
-	for (i = x - 3; i <= x + 3; i++)
-	  for (j = y - 3; j <= y + 3; j++) {
-	    if ((isntn(ntn[sct[i][j].owner].active))
-		&& (sct[i][j].owner != 0))
-	      placed = 0;
-	  }
-      }
-    }
-
-    if (placed)
-      teraform(x, y, 1, 65);
-    break;
-   case GREAT:
-    placed = 0;
-    while ((placed == 0) && (n++ < 2000)) {
-      if (ispc(curntn->active)) {
-	if (MAPX > 40) {
-	  x = rand() % (MAPX - 40) + 20;
-	} else {
-	  x = rand() % (MAPX - 18) + 9;
-	}
-	if (MAPY > 40) {
-	  y = rand() % (MAPY - 40) + 20;
-	} else {
-	  y = rand() % (MAPY - 18) + 9;
-	}
-
-	if (is_habitable(x, y))
-	  placed = 1;
-	/* important that no countries near */
-	for (i = x - 4; i <= x + 4; i++)
-	  for (j = y - 4; j <= y + 4; j++) {
-	    if ((isntn(ntn[sct[i][j].owner].active))
-		&& (sct[i][j].owner != 0))
-	      placed = 0;
-	  }
-      } else {
-	if (MAPX > 24) {
-	  x = rand() % (MAPX - 24) + 12;
-	} else {
-	  x = rand() % (MAPX - 12) + 6;
-	}
-	if (MAPY > 24) {
-	  y = rand() % (MAPY - 24) + 12;
-	} else {
-	  y = rand() % (MAPY - 12) + 6;
-	}
-	if (is_habitable(x, y))
-	  placed = 1;
-	/* important that no countries near */
-	for (i = x - 4; i <= x + 4; i++)
-	  for (j = y - 4; j <= y + 4; j++) {
-	    if ((isntn(ntn[sct[i][j].owner].active))
-		&& (sct[i][j].owner != 0))
-	      placed = 0;
-	  }
+          /* important that no countries near */
+          for (i = x - 3; i <= x + 3; i++)
+            for (j = y - 3; j <= y + 3; j++) {
+              if ((isntn(ntn[sct[i][j].owner].active)) &&
+                  (sct[i][j].owner != 0))
+                placed = 0;
+            }
+        }
       }
 
-      for (i = x - 1; i <= x + 1; i++)
-	for (j = y - 1; j <= y + 1; j++)
-	  if (sct[i][j].owner != 0)
-	    placed = 0;
+      if (placed)
+        teraform(x, y, 1, 65);
+      break;
+    case GREAT:
+      placed = 0;
+      while ((placed == 0) && (n++ < 2000)) {
+        if (ispc(curntn->active)) {
+          if (MAPX > 40) {
+            x = rand() % (MAPX - 40) + 20;
+          } else {
+            x = rand() % (MAPX - 18) + 9;
+          }
+          if (MAPY > 40) {
+            y = rand() % (MAPY - 40) + 20;
+          } else {
+            y = rand() % (MAPY - 18) + 9;
+          }
 
-      temp = 0;
-      /* if any water within 2 sectors placed = 0 */
-      for (i = x - 2; i <= x + 2; i++)
-	for (j = y - 2; j <= y + 2; j++)
-	  if (tofood(&sct[x][y], country) <= 0)
-	    temp++;
+          if (is_habitable(x, y))
+            placed = 1;
+          /* important that no countries near */
+          for (i = x - 4; i <= x + 4; i++)
+            for (j = y - 4; j <= y + 4; j++) {
+              if ((isntn(ntn[sct[i][j].owner].active)) &&
+                  (sct[i][j].owner != 0))
+                placed = 0;
+            }
+        } else {
+          if (MAPX > 24) {
+            x = rand() % (MAPX - 24) + 12;
+          } else {
+            x = rand() % (MAPX - 12) + 6;
+          }
+          if (MAPY > 24) {
+            y = rand() % (MAPY - 24) + 12;
+          } else {
+            y = rand() % (MAPY - 12) + 6;
+          }
+          if (is_habitable(x, y))
+            placed = 1;
+          /* important that no countries near */
+          for (i = x - 4; i <= x + 4; i++)
+            for (j = y - 4; j <= y + 4; j++) {
+              if ((isntn(ntn[sct[i][j].owner].active)) &&
+                  (sct[i][j].owner != 0))
+                placed = 0;
+            }
+        }
 
-      if (pwater > 50) {
-	if (temp >= 18)
-	  placed = 0;
-      } else {
-	if (temp >= 15)
-	  placed = 0;
+        for (i = x - 1; i <= x + 1; i++)
+          for (j = y - 1; j <= y + 1; j++)
+            if (sct[i][j].owner != 0)
+              placed = 0;
+
+        temp = 0;
+        /* if any water within 2 sectors placed = 0 */
+        for (i = x - 2; i <= x + 2; i++)
+          for (j = y - 2; j <= y + 2; j++)
+            if (tofood(&sct[x][y], country) <= 0)
+              temp++;
+
+        if (pwater > 50) {
+          if (temp >= 18)
+            placed = 0;
+        } else {
+          if (temp >= 15)
+            placed = 0;
+        }
       }
-    }
-    if (placed)
-      teraform(x, y, 1, 100);
+      if (placed)
+        teraform(x, y, 1, 100);
   }
 
   /* done with one try */
@@ -1418,7 +1416,8 @@ place(xloc, yloc)
     curntn->rlx = curntn->capx;
     curntn->rly = curntn->capy;
     sct[x][y].designation = DCAPITOL;
-    sct[x][y].tradegood = rand() % (END_KNOWLEDGE - END_SPOILRATE) + END_SPOILRATE + 1;
+    sct[x][y].tradegood =
+        rand() % (END_KNOWLEDGE - END_SPOILRATE) + END_SPOILRATE + 1;
     sct[x][y].jewels = 0;
     sct[x][y].metal = 0;
     sct[x][y].owner = country;
@@ -1447,7 +1446,7 @@ place(xloc, yloc)
 
     /* give you your leaders */
     leadtype = getleader(curntn->class);
-    P_ATYPE = leadtype - 1;	/* This is the national leader */
+    P_ATYPE = leadtype - 1; /* This is the national leader */
     P_ASOLD = *(unitminsth + ((leadtype - 1) % UTYPE));
     P_AXLOC = curntn->capx;
     P_AYLOC = curntn->capy;
@@ -1470,11 +1469,11 @@ place(xloc, yloc)
     while ((armynum < MAXARM) && (soldsleft > 0)) {
       P_ATYPE = defaultunit(country);
       if (soldsleft >= armysize) {
-	P_ASOLD = armysize;
-	soldsleft -= armysize;
+        P_ASOLD = armysize;
+        soldsleft -= armysize;
       } else {
-	P_ASOLD = soldsleft;
-	soldsleft = 0;
+        P_ASOLD = soldsleft;
+        soldsleft = 0;
       }
       P_AXLOC = curntn->capx;
       P_AYLOC = curntn->capy;
@@ -1500,7 +1499,7 @@ place(xloc, yloc)
       t = 2;
     else {
       if (ispc(curntn->active))
-	newerror("Error in finding placement");
+        newerror("Error in finding placement");
       t = 0;
     }
     if (t == 1)
@@ -1511,24 +1510,23 @@ place(xloc, yloc)
     curntn->tsctrs = 1;
     for (i = x - t; i <= x + t; i++)
       for (j = y - t; j <= y + t; j++)
-	if ((tofood(&sct[i][j], country) >= DESFOOD)
-	    && (sct[i][j].owner == 0)
-	    && (is_habitable(i, j) == TRUE)
-	    && (sct[i][j].people == 0)) {
-	  curntn->tsctrs++;
-	  sct[i][j].owner = country;
-	  sct[i][j].designation = DFARM;
-	  sct[i][j].people = people;
-	  sct[x][y].people -= people;
-	}
+        if ((tofood(&sct[i][j], country) >= DESFOOD) &&
+            (sct[i][j].owner == 0) && (is_habitable(i, j) == TRUE) &&
+            (sct[i][j].people == 0)) {
+          curntn->tsctrs++;
+          sct[i][j].owner = country;
+          sct[i][j].designation = DFARM;
+          sct[i][j].people = people;
+          sct[x][y].people -= people;
+        }
     /* make sure status is set properly */
     for (i = 0; i < NTOTAL; i++) {
       if (ntn[i].active < NPC_PEASANT) {
-	ntn[i].dstatus[country] = UNMET;
-	ntn[country].dstatus[i] = UNMET;
+        ntn[i].dstatus[country] = UNMET;
+        ntn[country].dstatus[i] = UNMET;
       } else {
-	ntn[i].dstatus[country] = WAR;
-	ntn[country].dstatus[i] = WAR;
+        ntn[i].dstatus[country] = WAR;
+        ntn[country].dstatus[i] = WAR;
       }
     }
   } else {
@@ -1539,19 +1537,21 @@ place(xloc, yloc)
       curntn->location = OOPS;
       place(-1, -1);
     } else if (curntn->location == FAIR) {
-      sprintf(tempo, "Fair Place Failed, trying again - Adding %ld people to nation", Munits[CH_PEOPLE] * Mvalues[CH_PEOPLE] / Mcost[CH_PEOPLE]);
+      sprintf(tempo,
+              "Fair Place Failed, trying again - Adding %ld people to nation",
+              Munits[CH_PEOPLE] * Mvalues[CH_PEOPLE] / Mcost[CH_PEOPLE]);
       newerror(tempo);
       /* give back one point -> NLPOP people */
-      curntn->tciv += Munits[CH_PEOPLE] * Mvalues[CH_PEOPLE]
-	/ Mcost[CH_PEOPLE];
+      curntn->tciv += Munits[CH_PEOPLE] * Mvalues[CH_PEOPLE] / Mcost[CH_PEOPLE];
       curntn->location = RANDOM;
       place(-1, -1);
     } else if (curntn->location == GREAT) {
-      sprintf(tempo, "Great Place Failed, trying again - Adding %ld people to nation", Munits[CH_PEOPLE] * Mvalues[CH_PEOPLE] / Mcost[CH_PEOPLE]);
+      sprintf(tempo,
+              "Great Place Failed, trying again - Adding %ld people to nation",
+              Munits[CH_PEOPLE] * Mvalues[CH_PEOPLE] / Mcost[CH_PEOPLE]);
       newerror(tempo);
       /* give back one point -> NLPOP people */
-      curntn->tciv += Munits[CH_PEOPLE] * Mvalues[CH_PEOPLE]
-	/ Mcost[CH_PEOPLE];
+      curntn->tciv += Munits[CH_PEOPLE] * Mvalues[CH_PEOPLE] / Mcost[CH_PEOPLE];
       curntn->location = FAIR;
       place(-1, -1);
     }
@@ -1560,35 +1560,32 @@ place(xloc, yloc)
 
 /*get class routine*/
 /* return the number of points needed */
-int
-getclass(race)
-  int             race;
+int getclass(int race)
 {
-  short           chk = FALSE;
-  short           tmp;
-  short           ypos = 4;
-  int             i,
-                  j;
+  short chk = FALSE;
+  short tmp;
+  short ypos = 4;
+  int i, j;
 
   mvaddstr(ypos, 0, "The List of Possible Nation Classes:");
   ypos += 2;
-  mvprintw(ypos++, 0, "     %-8s %4s   %15s %8s %4s", "class", "who",
-	   "", "magic", "cost");
-  mvprintw(ypos++, 0, "     %-8s %4s   %15s %8s %4s", "--------", "----",
-	   "", "-------", "----");
+  mvprintw(ypos++, 0, "     %-8s %4s   %15s %8s %4s", "class", "who", "",
+           "magic", "cost");
+  mvprintw(ypos++, 0, "     %-8s %4s   %15s %8s %4s", "--------", "----", "",
+           "-------", "----");
   for (i = 1; i < NUMCLASS; i++) {
-    if ((in_str(race, Classwho[i]) == TRUE)||amagod()) {
-      mvprintw(ypos++, 0, " %2d) %-8s %4s %15s", i, Class[i],
-	       Classwho[i], "...............");
+    if ((in_str(race, Classwho[i]) == TRUE) || amagod()) {
+      mvprintw(ypos++, 0, " %2d) %-8s %4s %15s", i, Class[i], Classwho[i],
+               "...............");
       tmp = strlen(CPowlist[i]);
       for (j = 0; j < 10 - tmp; j++) {
-	addch('.');
+        addch('.');
       }
       printw(" %s", CPowlist[i]);
       if (i == C_WARLORD && race == HUMAN)
-	printw(" %4d", Classcost[i] * 2 / 3);
+        printw(" %4d", Classcost[i] * 2 / 3);
       else
-	printw(" %4d", Classcost[i]);
+        printw(" %4d", Classcost[i]);
     }
   }
   ypos++;
@@ -1599,7 +1596,7 @@ getclass(race)
     tmp = get_number();
     if (tmp < 1 || tmp > NUMCLASS) {
       newerror("Invalid Choice");
-    } else if ((in_str(race, Classwho[tmp]) == TRUE)||(amagod())) {
+    } else if ((in_str(race, Classwho[tmp]) == TRUE) || (amagod())) {
       chk = TRUE;
     } else {
       newerror("That Class is Invalid for your Race");
@@ -1614,13 +1611,10 @@ getclass(race)
   return (doclass(curntn->class, TRUE));
 }
 
-int
-doclass(tmp, isupd)
-  short           tmp;
-  int             isupd;	/* true if update, false if interactive */
+int doclass(short tmp, int isupd /* true if update, false if interactive */)
 {
-  int             cost;
-  long            x;
+  int cost;
+  long x;
 
   /* determine number of leaders you want */
   if ((tmp == C_TRADER) || (tmp <= C_WIZARD)) {
@@ -1646,12 +1640,10 @@ doclass(tmp, isupd)
   return (cost);
 }
 
-int
-nstartcst()
-{				/* to be used for new method */
-  float           points = 0.0;
-  char            temp[LINELTH];
-  int             i;
+int nstartcst(void) { /* to be used for new method */
+  float points = 0.0;
+  char temp[LINELTH];
+  int i;
 
   /* calculate cost for all so far */
   for (i = 0; i < CH_NUMBER; i++) {
@@ -1659,21 +1651,19 @@ nstartcst()
   }
 
   /* extra points for starting late */
-  points -= (float) (TURN - 1) / LATESTART;
-  if ((float) (TURN - 1) / LATESTART > 0.0) {
+  points -= (float)(TURN - 1) / LATESTART;
+  if ((float)(TURN - 1) / LATESTART > 0.0) {
     sprintf(temp, "%.1f points added for starting late",
-	    (float) (TURN - 1) / LATESTART);
+            (float)(TURN - 1) / LATESTART);
     newerror(temp);
   }
-  points += 1.0;		/* round up */
+  points += 1.0; /* round up */
   return ((int) points);
 }
 
-int
-startcost()
-{				/* cant be used for npc nations yet!!! see
+int startcost(void) { /* cant be used for npc nations yet!!! see
 				 * below */
-  float           points;	/* points */
+  float points;   /* points */
 
   points = ((float) curntn->tciv) / ONLPOP;
   points += ((float) curntn->tgold) / ONLGOLD;
@@ -1693,10 +1683,11 @@ startcost()
   else if (curntn->location == GREAT)
     points += 2 * ONLLOCCOST;
   /* points+=ONLDBLCOST*curntn->tfood/ONLHFOOD; */
-  points -= (TURN - 1) / LATESTART;	/* extra points if you start late */
+  points -= (TURN - 1) / LATESTART; /* extra points if you start late */
   if (TURN > 1)
-    printf("point cost for nation %d is %.2f (bonus for latestart is %f)\n", country, points, (float) (TURN - 1) / LATESTART);
+    printf("point cost for nation %d is %.2f (bonus for latestart is %f)\n",
+           country, points, (float)(TURN - 1) / LATESTART);
 
-  points += 1.0;		/* round up */
+  points += 1.0; /* round up */
   return ((int) points);
 }
