@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <string.h> /* strlen() */
 
 
 extern FILE *fexe;
