@@ -34,6 +34,7 @@
  */
 
 #include <math.h>
+#include <string.h> /* strlen() */
 #include "header.h"
 #include "data.h"
 
@@ -389,11 +390,12 @@ void fight() {
     if (owner[i] > (-1))
       if (ISCITY(sct[xspot][yspot].designation)) {
         if ((ntn[owner[i]].arm[unit[i]].unittyp == A_CAVALRY) ||
-            (ntn[owner[i]].arm[unit[i]].unittyp == A_KNIGHT))
+            (ntn[owner[i]].arm[unit[i]].unittyp == A_KNIGHT)) {
           if (side[i] == ATKR)
             j += troops[i];
           else if (side[i] == DFND)
             k += troops[i];
+	}
       }
   for (i = 0; i < count; i++)
     if (owner[i] > (-1)) {
@@ -733,7 +735,7 @@ void fight() {
             else
               fprintf(fm, "in limbo: ");
 
-            fprintf(fm, "army %d (%s, men %d, bonus=%d, loss=%d)", unit[k],
+            fprintf(fm, "army %d (%s, men %ld, bonus=%d, loss=%ld)", unit[k],
                     unittype[ntn[UOWNER(k)].arm[unit[k]].unittyp % UTYPE],
                     troops[k], cbonus(k),
                     troops[k] - ntn[UOWNER(k)].arm[unit[k]].sold);
