@@ -114,7 +114,6 @@ void convert(void);
 void newlogin(void);
 void place(int xloc, int yloc);
 int getclass(int race);
-int doclass(short tmp, int isupd);
 int nstartcst(void);
 int startcost(void);
 
