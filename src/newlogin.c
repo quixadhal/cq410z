@@ -98,7 +98,27 @@ extern int calleruid;
     exit(10);                                                                  \
   }
 
-struct passwd *getpwinfo(uid) uid_t uid;
+struct passwd *getpwinfo(uid_t uid);
+void teraform(int x, int y, int range, int chance);
+void mailtopc(char *string);
+void newinit(void);
+void newreset(void);
+void newbye(int status);
+void newmsg(char *str);
+void newerror(char *str);
+int in_str(char ch, char *str);
+void errorbar(char *str1, char *str2);
+void dispitem(int item, long amount);
+void showitem(int line, int item);
+void convert(void);
+void newlogin(void);
+void place(int xloc, int yloc);
+int getclass(int race);
+int doclass(short tmp, int isupd);
+int nstartcst(void);
+int startcost(void);
+
+struct passwd *getpwinfo(uid_t uid)
 {
   struct passwd *tpwd, /* temporary pointer for library calls */
       *pwd;            /* pointer for return */
@@ -126,8 +146,7 @@ struct passwd *getpwinfo(uid) uid_t uid;
 
 /* Teraform the area around somebodies capitol */
 /* this gives everybody some chance of success */
-void teraform(x, y, range, chance) int x, y;
-int range, chance;
+void teraform(int x, int y, int range, int chance)
 {
   int i, j;
 
@@ -209,7 +228,7 @@ int range, chance;
   }
 }
 
-void mailtopc(string) char *string;
+void mailtopc(char *string)
 {
   int ctry;
 
@@ -225,7 +244,7 @@ void mailtopc(string) char *string;
 }
 
 /* function  to initialize the curses display */
-void newinit() {
+void newinit(void) {
   initscr();
   /* check terminal size */
   if (COLS < 80 || LINES < 24) {
@@ -240,7 +259,7 @@ void newinit() {
 }
 
 /* function to end the curses display */
-void newreset() {
+void newreset(void) {
   clear();
   refresh();
   nocrmode();
@@ -248,14 +267,14 @@ void newreset() {
 }
 
 /* function to leave the program completely */
-void newbye(status) int status;
+void newbye(int status)
 {
   newreset();
   exit(status);
 }
 
 /* message without wait for keystroke */
-void newmsg(str) char *str;
+void newmsg(char *str)
 {
   mvaddstr(LINES - 1, 0, str);
   clrtoeol();
@@ -263,7 +282,7 @@ void newmsg(str) char *str;
 }
 
 /* message with wait for keystroke */
-void newerror(str) char *str;
+void newerror(char *str)
 {
   mvaddstr(LINES - 1, 0, str);
   clrtoeol();
@@ -277,7 +296,7 @@ void newerror(str) char *str;
 }
 
 /* function to check if a character is in a character array */
-int in_str(ch, str) char ch, *str;
+int in_str(char ch, char *str)
 {
   int i, l = strlen(str);
 
@@ -288,7 +307,7 @@ int in_str(ch, str) char ch, *str;
 }
 
 /* function to display the comment and error window */
-void errorbar(str1, str2) char *str1, *str2;
+void errorbar(char *str1, char *str2)
 {
   int i;
 
@@ -306,8 +325,7 @@ void errorbar(str1, str2) char *str1, *str2;
 }
 
 /* display amount string at current location */
-void dispitem(item, amount) int item;
-long amount;
+void dispitem(int item, long amount)
 {
   if (item == CH_LOCATE) {
     printw("%s %s", LType[amount], Mitems[item]);
@@ -327,7 +345,7 @@ long amount;
 }
 
 /* show the current amount for country item */
-void showitem(line, item) int line, item;
+void showitem(int line, int item)
 {
   char tempc[LINELTH];
 
@@ -361,7 +379,7 @@ void showitem(line, item) int line, item;
 }
 
 /* convert the stored information into the nation statistics */
-void convert() {
+void convert(void) {
   int i, loop;
   long x;
 
@@ -400,7 +418,7 @@ void convert() {
   curntn->metals = NLMETAL * spent[CH_RAWGOODS];
 }
 
-void newlogin() {
+void newlogin(void) {
   /* use points to create empire, add if late starter */
   int points, clr;
   int choice, direct;
@@ -1165,7 +1183,7 @@ void newlogin() {
 /*****************************************************************/
 /* PLACE(): put nation on the map.  Fill out army structures too */
 /*****************************************************************/
-void place(xloc, yloc) int xloc, yloc;
+void place(int xloc, int yloc)
     /* if not -1,-1 should place in this spot */
 {
   int placed = 0, armysize = 100;
@@ -1543,7 +1561,7 @@ void place(xloc, yloc) int xloc, yloc;
 
 /*get class routine*/
 /* return the number of points needed */
-int getclass(race) int race;
+int getclass(int race)
 {
   short chk = FALSE;
   short tmp;
@@ -1594,8 +1612,7 @@ int getclass(race) int race;
   return (doclass(curntn->class, TRUE));
 }
 
-int doclass(tmp, isupd) short tmp;
-int isupd; /* true if update, false if interactive */
+int doclass(short tmp, int isupd /* true if update, false if interactive */)
 {
   int cost;
   long x;
@@ -1624,7 +1641,7 @@ int isupd; /* true if update, false if interactive */
   return (cost);
 }
 
-int nstartcst() { /* to be used for new method */
+int nstartcst(void) { /* to be used for new method */
   float points = 0.0;
   char temp[LINELTH];
   int i;
@@ -1645,7 +1662,7 @@ int nstartcst() { /* to be used for new method */
   return ((int) points);
 }
 
-int startcost() { /* cant be used for npc nations yet!!! see
+int startcost(void) { /* cant be used for npc nations yet!!! see
 				 * below */
   float points;   /* points */
 

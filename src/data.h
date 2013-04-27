@@ -687,7 +687,7 @@ extern int      aretheyon(), armygoto(), navygoto(), getselunit();
 extern int      unitvalid(), access(), orctake(), fort_val();
 extern int      addgships(), addmships(), addwships(), fltships();
 extern int      fltghold(), fltwhold(), fltmhold(), flthold(), compass();
-extern int      get_country(), check_lock(), doclass(), get_pass();
+extern int      get_country(), check_lock(), get_pass();
 extern unsigned short fltspeed();
 extern void     do_pirate(), do_nomad(), do_savage(), do_lizard();
 extern void     getjewel(), getmetal(), loadfleet(), removemgk(), exenewmgk();
