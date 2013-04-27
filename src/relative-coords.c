@@ -38,7 +38,6 @@ int rel_x(int absx)
 #endif
 #ifdef USE_RELATIVE_COORDS
 #ifdef DEBUG
-  printf("line 43:relx = %d\n", relx);
   printf("line 44:country = %d\n", country);
   printf("line 45:curntn = %s\n", curntn->name);
   printf("line 46:ntn[country].rlx = %d\n", ntn[country].rlx);
