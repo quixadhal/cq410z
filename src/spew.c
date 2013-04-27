@@ -224,7 +224,7 @@ void display(char *s, int deftag, FILE *fp)
   p = index(cp->tags, deftag); /* look it up */
   if (p == NULL) {
     variant = 0;
-    fprintf(fp, "??/%c??", deftag);
+    fprintf(fp, "?\?/%c??", deftag); /* \? is replaced with ? */
     deftag = ' '; /* for passing as deftag */
   } else
     variant = p - cp->tags;
@@ -516,7 +516,7 @@ void compdef(register defn *dp)
           fputc('\n', stderr);
           exit(1);
         } else {
-          printf("%c%d", BSLASH, cp - Classptr);
+          printf("%c%ld", BSLASH, cp - Classptr);
           while (*p != SLASH)
             ++p;
         }
