@@ -575,10 +575,10 @@ struct s_nation {		/* player nation stats	 */
 #define	SADJDES2	fprintf(fexe,"S_ADES\t%d\t%hd\t0\t%d\t%d\t%c\n",XSADES,country,x,y,sct[x][y].designation)
 #define	SADJCIV2 fprintf(fexe,"S_ACIV\t%d\t%hd\t%ld\t%d\t%d\t%s\n",XSACIV,country,sct[i][j].people,i,j,"null")
 #define	SADJCIV	fprintf(fexe,"S_ACIV\t%d\t%hd\t%ld\t%d\t%d\t%s\n",XSACIV,country,sct[xcurs+xoffset][ycurs+yoffset].people,xcurs+xoffset,ycurs+yoffset,"null")
-#define	SADJCIV3 fprintf(fexe,"S_ACIV3\t%d\t%hd\t%ld\t%d\t%d\t%s\n",XSACIV3,country,people_to_add,i,j,"null")
+#define	SADJCIV3 fprintf(fexe,"S_ACIV3\t%d\t%hd\t%d\t%d\t%d\t%s\n",XSACIV3,country,people_to_add,i,j,"null")
 #define	INCFORT fprintf(fexe,"SIFORT\t%d\t%hd\t0\t%d\t%d\t%s\n",XSIFORT,country,xcurs+xoffset,ycurs+yoffset,"null")
 #define	SADJOWN	fprintf(fexe,"S_AOWN\t%d\t%hd\t0\t%d\t%d\t%s\n",XSAOWN,country,xcurs+xoffset,ycurs+yoffset,"null")
-#define	EADJDIP(a,b)	fprintf(fexe,"E_ADJ\t%d\t%hd\t%d\t%d\t0\t%s\n",EDADJ,a,b,ntn[a].dstatus[b],"null")
+#define	EADJDIP(a,b)	fprintf(fexe,"E_ADJ\t%d\t%d\t%d\t%d\t0\t%s\n",EDADJ,a,b,ntn[a].dstatus[b],"null")
 #define	EDECSPL	fprintf(fexe,"E_SPL\t%d\t%hd\t%d\t%d\t0\t%s\n",EDSPL,country,s_cost,0,"null")
 #define NADJKLD fprintf(fexe, "N_KLUDGE \t%d \t%hd \t%d \t0 \t0 \tnull\n",NKLUDGE, country, (int) curntn->strategy);
 #define	NADJNTN  { fprintf(fexe,"N_TAX \t%d \t%hd \t%d \t%d \t%d \tnull\n",NTAX,country,(int) curntn->tax_rate,(int) curntn->active, (int) curntn->charity) ; NADJKLD; }
