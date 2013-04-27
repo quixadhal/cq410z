@@ -56,9 +56,14 @@ static char *rcsid = "$Id: main.c,v 2.3 1991/10/14 02:33:17 cclub Exp cclub $";
 #include <ctype.h>
 #include <sys/types.h>
 #include <errno.h>
-#include	"header.h"
-#include	"data.h"
-#include	"patchlevel.h"
+#include <strings.h> /* bzero() */
+#include <string.h> /* strcmp() */
+#include <time.h> /* time() */
+#include <unistd.h> /* unlink(), sleep() */
+#include <sys/stat.h> /* umask(), chmod() */
+#include "header.h"
+#include "data.h"
+#include "patchlevel.h"
 
 #include <signal.h>
 #include <pwd.h>
@@ -125,14 +130,14 @@ int pwdchk(uid_t user, char *attempt);
 /************************************************************************/
 int main(int argc, char **argv)
 {
-  int geteuid(), getuid(), setuid();
   register int i, j;
   char name[NAMELTH + 1];
 
 #ifndef __STDC__
   void srand();
-
+  int geteuid(), getuid(), setuid();
 #endif
+
   void init_hasseen(), mapprep();
   int getopt();
   char passwd[PASSLTH + 1];
@@ -387,11 +392,14 @@ int main(int argc, char **argv)
    * name of administrator of game
    */
   if (name[0] == '\0') {
+    char *newline;
     if (pflag != FALSE)
       fprintf(stderr, "Display map for what nation: ");
     else
       fprintf(stderr, "What nation would you like to be: ");
-    gets(name);
+    fgets(name, sizeof name, stdin);
+    if ((newline = strchr(name, '\n')))
+      *newline = '\0';
   }
 
 #ifdef OGOD
