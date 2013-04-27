@@ -37,6 +37,7 @@ static char *cpr[] = {
 
 #ifdef SPEW
 #include <stdio.h>
+#include <string.h> /* strlen(), strcmp() */
 #include <ctype.h>
 
 extern char *malloc();
