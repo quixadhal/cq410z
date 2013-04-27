@@ -105,10 +105,9 @@ showscore()
           && ((nationid== country) ||
               (country== 0) ||
               ((curntn->dstatus[nationid]!= UNMET) &&
-               (ntn[nationid].dstatus[country]!= UNMET)))) {
-#else
-        ) {
+               (ntn[nationid].dstatus[country]!= UNMET)))
 #endif
+        ) {
 	if (count % MAXINROW == 0) {
 	  /* display header information */
 	  mvaddstr(ypos, 0, "nationid is:");
@@ -342,18 +341,22 @@ diploscrn()
       curntn->tgold -= bribecost;
 
 #ifdef ENCODE_EXECS
-      sprintf(name, "%s >> %s.%03d", ENCODE, exefile, nation);
 #ifdef DEBUG
 fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, nation);
 #endif
+      sprintf(name, "%s >> %s.%03d", ENCODE, exefile, nation);
       if ((fm = popen(name, "w")) == NULL) {
-#else
-      sprintf(name, "%s.%03d", exefile, nation);
-      if ((fm = fopen(name, "a+")) == NULL) {
-#endif
 	printf("error opening nation file\n");
 	exit(FAIL);
       }
+#else
+      sprintf(name, "%s.%03d", exefile, nation);
+      if ((fm = fopen(name, "a+")) == NULL) {
+	printf("error opening nation file\n");
+	exit(FAIL);
+      }
+#endif
+
       BRIBENATION;
 
       ntn[nation].dstatus[country]--;
@@ -361,8 +364,7 @@ fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, nation);
 
 #ifdef ENCODE_EXECS
 #ifdef DEBUG
-fprintf(stderr, "Closing encode pipe to %s.%03d\n", exefile,
-nation);
+fprintf(stderr, "Closing encode pipe to %s.%03d\n", exefile, nation);
 #endif
   pclose(fm);
 #else
@@ -640,16 +642,14 @@ change()
       mvaddstr(LINES - 4, COLS / 2 - 22, "CANT ADD TO COMBAT BONUS");
     addstr(" 7) TOGGLE PC <-> NPC");
 
-#ifdef OGOD
     if (isgod == TRUE) {
+#ifdef OGOD
       mvaddstr(LINES - 3, COLS / 2 - 33, "HIT 8 TO DESTROY, 9 TO CHANGE COMMODITY OR '0' TO CHANGE DEMI-GOD");
       mvaddstr(LINES - 2, COLS / 2 - 33, "L) CHANGE LEADER NAME  M) CHANGE NATIONAL MARK  U) CHANGE USER-ID");
 #else	/* OGOD */
-    if (isgod == TRUE) {
       mvaddstr(LINES - 3, COLS / 2 - 24, "HIT 8 TO DESTROY NATION, OR '0' TO CHANGE DEMI-GOD");
       mvaddstr(LINES - 2, COLS / 2 - 33, "L) CHANGE LEADER NAME  M) CHANGE NATIONAL MARK  U) CHANGE USER-ID");
 #endif	/* OGOD */
-
     } else {
       mvaddstr(LINES - 3, COLS / 2 - 10, "HIT 8 TO KILL YOURSELF");
       mvaddstr(LINES - 2, COLS / 2 - 23, "L) CHANGE LEADER NAME  M) CHANGE NATIONAL MARK");
@@ -1135,20 +1135,26 @@ help()
   }
   /* open help file */
 #ifdef USE_COMPRESS
-  sprintf(fname, "%s < %s/%s%d.%s", ZCAT, RONLY_DIR, helpfile, i, ZEXT);
 #ifdef DEBUG
 fprintf(stderr, "Opening pipe to helpfile %d\n", i);
 #endif
+  sprintf(fname, "%s < %s/%s%d.%s", ZCAT, RONLY_DIR, helpfile, i, ZEXT);
   if (((fp = popen(fname, "r")) == NULL) || feof(fp)){
-#else
-  sprintf(fname, "%s/%s%d", RONLY_DIR, helpfile, i);
-  if ((fp = fopen(fname, "r")) == NULL) {
-#endif
     mvprintw(0, 0, "\nerror on read of %s\n", fname);
     refresh();
     getch();
     return;
   }
+#else
+  sprintf(fname, "%s/%s%d", RONLY_DIR, helpfile, i);
+  if ((fp = fopen(fname, "r")) == NULL) {
+    mvprintw(0, 0, "\nerror on read of %s\n", fname);
+    refresh();
+    getch();
+    return;
+  }
+#endif
+
   while (done == FALSE) {
     /* read in screen (until DONE statement) */
     fgets(line, 80, fp);
