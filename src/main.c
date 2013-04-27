@@ -637,22 +637,28 @@ if(curntn->owner != owneruid) {
 
   /* open output for future printing */
 #ifdef ENCODE_EXECS
-  sprintf(filename, "%s >> %s.%03d", ENCODE, exefile, country);
 #ifdef DEBUG
-fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile,
-country);
+  fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
 #endif
+  sprintf(filename, "%s >> %s.%03d", ENCODE, exefile, country);
   if ((fexe = popen(filename, "w")) == NULL) {
-#else
-  sprintf(filename, "%s.%03d", exefile, country);
-  if ((fexe = fopen(filename, "a")) == NULL) {
-#endif
     beep();
     mvprintw(LINES - 2, 0, "error opening %s", filename);
     refresh();
     getch();
     bye(TRUE);
   }
+#else
+  sprintf(filename, "%s.%03d", exefile, country);
+  if ((fexe = fopen(filename, "a")) == NULL) {
+    beep();
+    mvprintw(LINES - 2, 0, "error opening %s", filename);
+    refresh();
+    getch();
+    bye(TRUE);
+  }
+#endif
+
   signal(SIGINT, SIG_IGN);	/* disable keyboard signals */
   signal(SIGQUIT, SIG_IGN);
   signal(SIGHUP, hangup);	/* must catch hangups */
@@ -1153,21 +1159,25 @@ country);
     /* open output for future printing */
     sprintf(fison, "%s.%03d", isonfile, country);
 #ifdef ENCODE_EXECS
-    sprintf(name, "%s >> %s.%03d", ENCODE, exefile, country);
 #ifdef DEBUG
-fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile,
-country);
+    fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, country);
 #endif
+    sprintf(name, "%s >> %s.%03d", ENCODE, exefile, country);
     if ((fexe = popen(name, "w")) == NULL) {
-#else
-    sprintf(name, "%s.%03d", exefile, country);
-    if ((fexe = fopen(name, "a")) == NULL) {
-#endif
       beep();
       fprintf(stderr, "error opening %s\n", name);
       unlink(fison);
       exit(FAIL);
     }
+#else
+    sprintf(name, "%s.%03d", exefile, country);
+    if ((fexe = fopen(name, "a")) == NULL) {
+      beep();
+      fprintf(stderr, "error opening %s\n", name);
+      unlink(fison);
+      exit(FAIL);
+    }
+#endif
     curntn = &ntn[country];
 
     fprintf(stderr, "\n");
