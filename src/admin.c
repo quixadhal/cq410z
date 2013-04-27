@@ -751,6 +751,7 @@ void att_bonus() {
            (sptr->designation == DCITY)) ||
           ((*(tg_stype + good) == DUNIVERSITY) &&
            (sptr->designation == DCAPITOL)) || (*(tg_stype + good) == 'x'))
+      {
         if (good <= END_POPULARITY) {
           curntn->popularity += (*(tg_value + good) - '0');
           curntn->popularity = min(MAXTGVAL, curntn->popularity);
@@ -786,5 +787,6 @@ void att_bonus() {
           else
             curntn->terror = MAXTGVAL;
         }
+      }
     }
 }
