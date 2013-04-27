@@ -120,11 +120,13 @@ void newdip(ntn1, ntn2) int ntn1, ntn2;
     return;
   }
   if ((ntn[ntn1].race == ORC) || (ntn[ntn2].race == ORC)) {
-    if (ntn[ntn1].dstatus[ntn2] == UNMET)
-      if ((rand() % 2 == 0) || ispc(ntn[ntn1].active))
+    if (ntn[ntn1].dstatus[ntn2] == UNMET) {
+      if ((rand() % 2 == 0) || ispc(ntn[ntn1].active)) {
         ntn[ntn1].dstatus[ntn2] = HOSTILE;
-      else
+      } else {
         ntn[ntn1].dstatus[ntn2] = WAR;
+      }
+    }
   } else if (ismonst(ntn[ntn2].active)) {
     ntn[ntn1].dstatus[ntn2] = WAR;
   } else if (ispc(ntn[ntn1].active)) {
@@ -576,10 +578,10 @@ void redomil() {
     printf("\t%s IS AT PEACE - garrison in cap is %ld, ideal is %ld\n",
            curntn->name, P_ASOLD, ideal);
   else if (peace == 12)
-    printf("\t%s IS AT WAR - garrison in cap is %d, ideal is %ld\n",
+    printf("\t%s IS AT WAR - garrison in cap is %ld, ideal is %ld\n",
            curntn->name, P_ASOLD, ideal);
   else
-    printf("error - incap is %d ideal is %ld\n", P_ASOLD, ideal);
+    printf("error - incap is %ld ideal is %ld\n", P_ASOLD, ideal);
 #endif /* DEBUG */
 
   /* MILRATIO ratio mil:civ for non player countries */
@@ -603,7 +605,7 @@ void redomil() {
       diff = 0L;
 
 #ifdef DEBUG
-    printf("\tadding %d men to garrison (too few men on garrison)\n", diff);
+    printf("\tadding %ld men to garrison (too few men on garrison)\n", diff);
 #endif /* DEBUG */
 
     sct[curntn->capx][curntn->capy].people -= diff;
@@ -618,7 +620,7 @@ void redomil() {
 
 #ifdef DEBUG
     if (P_ASOLD < 0L)
-      printf("error 2... P_ASOLD=%d <0\n", P_ASOLD);
+      printf("error 2... P_ASOLD=%ld <0\n", P_ASOLD);
 #endif /* DEBUG */
   }    /* else split garrison army if 1.25* needed number */
       else if (P_ASOLD * 4L > 5L * ideal) {
@@ -626,7 +628,7 @@ void redomil() {
     diff = ((4L * P_ASOLD) - (5L * ideal)) / 4L;
 
 #ifdef DEBUG
-    printf("\tsplit garrison of %d men\n", diff);
+    printf("\tsplit garrison of %ld men\n", diff);
 #endif /* DEBUG */
 
     free = FALSE;
@@ -634,7 +636,7 @@ void redomil() {
 
 #ifdef DEBUG
     if (P_ASOLD < 0)
-      printf("error... subtracting %d from %d\n", diff, P_ASOLD);
+      printf("error... subtracting %ld from %ld\n", diff, P_ASOLD);
 #endif /* DEBUG */
 
     curntn->tmil -= diff;
@@ -650,8 +652,8 @@ void redomil() {
 
 #ifdef DEBUG
       else
-    printf("\tno action - P_ASOLD (%d) ~= ideal (%d)\n", P_ASOLD, ideal);
-  printf("\tFinal Garrison Army %d (%s) type is %s men is %d\n", armynum,
+    printf("\tno action - P_ASOLD (%ld) ~= ideal (%ld)\n", P_ASOLD, ideal);
+  printf("\tFinal Garrison Army %d (%s) type is %s men is %ld\n", armynum,
          curntn->name, *(unittype + (P_ATYPE)), P_ASOLD);
 #endif /* DEBUG */
 
@@ -664,7 +666,7 @@ void redomil() {
   }
 
 #ifdef DEBUG
-  printf("\t%s total military is %d -> ideal is %d\n", curntn->name,
+  printf("\t%s total military is %ld -> ideal is %ld\n", curntn->name,
          curntn->tmil, ideal);
 #endif /* DEBUG */
 
@@ -688,7 +690,7 @@ void redomil() {
         (sct[P_AXLOC][P_AYLOC].owner == country)) {
 
 #ifdef DEBUG
-      printf("\tadding %d men to weakened army %d\n", TAKESECTOR + 20 - P_ASOLD,
+      printf("\tadding %ld men to weakened army %hd\n", TAKESECTOR + 20 - P_ASOLD,
              armynum);
 #endif /* DEBUG */
 
@@ -719,7 +721,7 @@ void redomil() {
         if (P_ASOLD > 0) {
 
 #ifdef DEBUG
-          printf("\tnot enough soldiers - build new army %d with %d men\n",
+          printf("\tnot enough soldiers - build new army %hd with %ld men\n",
                  armynum, P_ASOLD);
 #endif /* DEBUG */
 
@@ -755,7 +757,7 @@ void redomil() {
            (ISCITY(sct[P_AXLOC][P_AYLOC].designation)))) {
 
 #ifdef DEBUG
-        printf("\ttoo many soldiers eliminate army %d (%d men)\n", armynum,
+        printf("\ttoo many soldiers eliminate army %hd (%ld men)\n", armynum,
                P_ASOLD);
 #endif /* DEBUG */
 
@@ -772,7 +774,7 @@ void redomil() {
   check();
 
 #ifdef DEBUG
-  printf("\twhew... new tmil is %d\n", curntn->tmil);
+  printf("\twhew... new tmil is %ld\n", curntn->tmil);
 #endif /* DEBUG */
 
   /* resize armies */
