@@ -88,18 +88,22 @@ execute(isupdate)
   if(access(line, R_OK)) return 0; /* nation has not moved yet */
 
 #ifdef ENCODE_EXECS
-  sprintf(line, "%s < %s.%03d", DECODE, exefile, country);
 #ifdef DEBUG
   fprintf(stderr, "Opening pipe to decode file %s.%03d\n", exefile,
   country);
 #endif
+  sprintf(line, "%s < %s.%03d", DECODE, exefile, country);
   if(!(fp =popen(line, "r")) || feof(fp)) {
-#else
-  if ((fp = fopen(line, "r")) == NULL) {
-#endif
     /* THIS MEANS THAT THE NATION HAS NOT MOVED YET */
     return (0);
   }
+#else
+  if ((fp = fopen(line, "r")) == NULL) {
+    /* THIS MEANS THAT THE NATION HAS NOT MOVED YET */
+    return (0);
+  }
+#endif
+
   savectry = country;
 
   /* read in file */
