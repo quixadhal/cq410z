@@ -27,9 +27,13 @@
 #include	"header.h"
 #include	"data.h"
 
-verify_ntn(__file__, __line__)
-char __file__[];
-int __line__;
+void verify_ntn(char v_file[], int v_line);
+void verify_sct(char v_file[], int v_line);
+void verifydata(char v_file[], int v_line);
+int check_lock(char *filename, int keeplock);
+
+
+void verify_ntn(char v_file[], int v_line)
 {
   register struct s_nation *nptr;
   register int i;
@@ -43,20 +47,20 @@ int __line__;
     if (country != 0 && nptr->active == 0)
       continue;
     if (nptr->metals < 0.0) {
-      fprintf(stderr, "file %s: line %d: nation[%d] metal = %ld\n", __file__,
-              __line__, country, nptr->metals);
+      fprintf(stderr, "file %s: line %d: nation[%d] metal = %ld\n", v_file,
+              v_line, country, nptr->metals);
       nptr->metals = 0.0;
     }
     if (nptr->jewels < 0) {
-      fprintf(stderr, "file %s: line %d: nation[%d] jewels = %ld\n", __file__,
-              __line__, country, nptr->jewels);
+      fprintf(stderr, "file %s: line %d: nation[%d] jewels = %ld\n", v_file,
+              v_line, country, nptr->jewels);
       nptr->jewels = 0.0;
     }
     for (i = 0; i < MAXARM; i++) {
       a = &nptr->arm[i];
       if (a->sold < 0) {
         fprintf(stderr, "file %s: line %d: nation[%d] army[%d] sold = %d\n",
-                __file__, __line__, country, i, a->sold);
+                v_file, v_line, country, i, a->sold);
         a->sold = 0;
       }
       if (a->sold == 0)
@@ -64,20 +68,20 @@ int __line__;
       if (a->xloc >= MAPX) {
         fprintf(stderr,
                 "file %s: line %d: nation[%d] army[%d] xlocation = %d\n",
-                __file__, __line__, country, i, a->xloc);
+                v_file, v_line, country, i, a->xloc);
         a->xloc = 0;
       }
       if (a->yloc >= MAPY) {
         fprintf(stderr,
                 "file %s: line %d: nation[%d] army[%d] ylocation = %d\n",
-                __file__, __line__, country, i, a->yloc);
+                v_file, v_line, country, i, a->yloc);
         a->yloc = 0;
       }
       if (a->stat == ONBOARD) {
         if (a->smove != 0) {
           fprintf(stderr,
                   "file %s: line %d: nation[%d] army[%d] onboard move = %d\n",
-                  __file__, __line__, country, i, a->smove);
+                  v_file, v_line, country, i, a->smove);
           a->smove = 0;
         }
         k = 0;
@@ -92,7 +96,7 @@ int __line__;
         if (k == 0) {
           fprintf(stderr,
                   "files %s: line %d: nation[%d] army[%d] onboard nothing\n",
-                  __file__, __line__, country, i);
+                  v_file, v_line, country, i);
           a->stat = DEFEND;
         }
       }
@@ -100,7 +104,7 @@ int __line__;
         fprintf(
             stderr,
             "file %s: line %d: nation[%d] army[%d] loc=%d,%d (water) men=%d\n",
-            __file__, __line__, country, i, a->xloc, a->yloc, a->sold);
+            v_file, v_line, country, i, a->xloc, a->yloc, a->sold);
         a->sold = 0;
       }
     } /* for */
@@ -115,7 +119,7 @@ int __line__;
           fprintf(
               stderr,
               "file %s: line %d: nation[%d] navy[%d] carrying invalid troop\n",
-              __file__, __line__, country, i);
+              v_file, v_line, country, i);
           nptr->nvy[i].armynum = MAXARM;
         }
       }
@@ -133,15 +137,14 @@ int __line__;
       if (nptr->dstatus[i] > JIHAD) {
         fprintf(stderr,
                 "file %s: line %d: nation[%d] diplomatic status with %d = %d\n",
-                __file__, __line__, country, i, nptr->dstatus[i]);
+                v_file, v_line, country, i, nptr->dstatus[i]);
         nptr->dstatus[i] = WAR;
       }
     } /* for */
   }   /* for */
 }     /* verify_ntn() */
 
-void verify_sct(__file__, __line__) char __file__[];
-int __line__;
+void verify_sct(char v_file[], int v_line)
 {
   register struct s_sector *sptr;
   register int x, y;
@@ -153,29 +156,29 @@ int __line__;
       if (sptr->tradegood > TG_none) {
         fprintf(stderr,
                 "file %s: line %d: sct[%d][%d].tradegood = %d (invalid)\n",
-                __file__, __line__, x, y, sptr->tradegood);
+                v_file, v_line, x, y, sptr->tradegood);
         sptr->tradegood = TG_none;
       }
       if ((sptr->metal != 0) &&
           ((sptr->tradegood > END_MINE) || (sptr->tradegood <= END_NORMAL))) {
         fprintf(stderr,
                 "file %s: line %d: sct[%d][%d].metal = %d with no tradegood\n",
-                __file__, __line__, x, y, sptr->metal);
+                v_file, v_line, x, y, sptr->metal);
         sptr->metal = 0;
       }
       if ((sptr->jewels != 0) &&
           ((sptr->tradegood > END_WEALTH) || (sptr->tradegood <= END_MINE))) {
         fprintf(stderr,
                 "file %s: line %d: sct[%d][%d].jewels = %d with no tradegood\n",
-                __file__, __line__, x, y, sptr->jewels);
+                v_file, v_line, x, y, sptr->jewels);
         sptr->jewels = 0;
       }
       if (sptr->people > ABSMAXPEOPLE)
         sptr->people = ABSMAXPEOPLE;
 
       if (sptr->people < 0) {
-        fprintf(stderr, "file %s: line %d: sct[%d][%d].people = %d\n", __file__,
-                __line__, x, y, sptr->people);
+        fprintf(stderr, "file %s: line %d: sct[%d][%d].people = %d\n", v_file,
+                v_line, x, y, sptr->people);
         if (sptr->people < -1 * ABSMAXPEOPLE)
           sptr->people = ABSMAXPEOPLE;
         else
@@ -184,29 +187,29 @@ int __line__;
       if (sptr->owner != 0 && sptr->altitude == WATER) {
         fprintf(stderr,
                 "file %s: line %d: sct[%d][%d].owner = %s (a water sector)\n",
-                __file__, __line__, x, y, ntn[sptr->owner].name);
+                v_file, v_line, x, y, ntn[sptr->owner].name);
         sptr->owner = 0;
       }
       if (sptr->fortress > 12) {
         fprintf(stderr, "file %s: line %d: sct[%d][%d].fortress = %d \n",
-                __file__, __line__, x, y, sptr->fortress);
+                v_file, v_line, x, y, sptr->fortress);
         sptr->fortress = 12;
       }
     } /* for */
   }   /* for */
 }     /* verify_sct() */
 
-void verifydata(__file__, __line__) char __file__[];
-int __line__;
+void verifydata(char v_file[], int v_line)
 {
   /* check for invalid values */
-  verify_ntn(__file__, __line__);
-  verify_sct(__file__, __line__);
+  verify_ntn(v_file, v_line);
+  verify_sct(v_file, v_line);
 } /* verifydata() */
 
 #ifdef DEBUG
-void checkout(file, line) int line;
-char *file;
+void checkout(int line, char *file);
+
+void checkout(int line, char *file)
 {
   fprintf(stderr, "file %s line %d\n", file, line);
   verifydata(file, line);
@@ -235,8 +238,7 @@ char *file;
  *   - setting keeplock to true means leaves lock active
  *      if it is not already active.
  */
-int check_lock(filename, keeplock) char *filename;
-int keeplock;
+int check_lock(char *filename, int keeplock)
 {
   int hold = FALSE;
 
