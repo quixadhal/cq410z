@@ -1040,7 +1040,7 @@ country");
           clrtoeol();
           refresh();
           get_nname(string);
-          if (hackpwd = getpwnam(string)) {
+          if ((hackpwd = getpwnam(string))) {
             curntn->owner = hackpwd->pw_uid;
             killself = 1;
           } else {
@@ -1457,4 +1457,5 @@ int deathok(void) {
   fp = fopen(uid_path, "w");
   if (fp)
     fclose(fp);
+  return 1;
 }
