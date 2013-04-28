@@ -53,37 +53,39 @@
 #include <sys/time.h>
 #include <time.h>
 
-extern FILE    *fexe,
-               *fnews;
-extern short    country,
-                redraw;
-extern long     startgold;
-extern short    Gaudy;
-extern int      killself;
-extern int	owneruid;
-int  deathok();
+extern FILE *fexe, *fnews;
+extern short country, redraw;
+extern long startgold;
+extern short Gaudy;
+extern int killself;
+extern int owneruid;
 struct passwd *hackpwd;
 
-static char     helplist[MAXHELP][20] = {"Commands", "General Info",
-"Military", "Magic", "Designations", "Other"};
+static char helplist[MAXHELP][20] = { "Commands", "General Info", "Military",
+                                      "Magic", "Designations", "Other" };
 
 #define RPT_LINES 14
 #define RPT_COLS 13
 #define BUF_LINES 10
 #define BUF_COLS 15
-#define MAXINROW ((COLS-BUF_COLS)/RPT_COLS)
-#define MAXINSCR (((LINES-BUF_LINES)/RPT_LINES)*MAXINROW)
-void
-showscore()
-{
-  int             i;
-  int             done = FALSE;
-  int             xpos,
-                  ypos;
-  int             count,
-                  count2;	/* number of time through the loop on this
+#define MAXINROW ((COLS - BUF_COLS) / RPT_COLS)
+#define MAXINSCR (((LINES - BUF_LINES) / RPT_LINES) * MAXINROW)
+
+void showscore(void);
+void diploscrn(void);
+void change(void);
+void help(void);
+void mvaddstrnahil(int li, int col, char *p, int hi);
+void newspaper(void);
+int deathok(void);
+
+void showscore(void) {
+  int i;
+  int done = FALSE;
+  int xpos, ypos;
+  int count, count2; /* number of time through the loop on this
 				 * screen */
-  int             nationid;	/* current nation id */
+  int nationid;      /* current nation id */
 
   count2 = 1;
   clear();
@@ -99,88 +101,86 @@ showscore()
     ypos = 3;
     count = 0;
     while ((nationid < NTOTAL) && (count < MAXINSCR)) {
-      if ((nationid < NTOTAL)
-	  && (isntn(ntn[nationid].active))
+      if ((nationid < NTOTAL) && (isntn(ntn[nationid].active))
 #ifdef HIDE_UNMET
-          && ((nationid== country) ||
-              (country== 0) ||
-              ((curntn->dstatus[nationid]!= UNMET) &&
-               (ntn[nationid].dstatus[country]!= UNMET)))) {
-#else
-        ) {
+          && ((nationid == country) || (country == 0) ||
+              ((curntn->dstatus[nationid] != UNMET) &&
+               (ntn[nationid].dstatus[country] != UNMET)))
 #endif
-	if (count % MAXINROW == 0) {
-	  /* display header information */
-	  mvaddstr(ypos, 0, "nationid is:");
-	  mvaddstr(ypos + 1, 0, "name is:");
-	  mvaddstr(ypos + 2, 0, "leader:");
-	  mvaddstr(ypos + 3, 0, "race:");
-	  mvaddstr(ypos + 4, 0, "alignment:");
-	  mvaddstr(ypos + 5, 0, "score:");
+          ) {
+        if (count % MAXINROW == 0) {
+          /* display header information */
+          mvaddstr(ypos, 0, "nationid is:");
+          mvaddstr(ypos + 1, 0, "name is:");
+          mvaddstr(ypos + 2, 0, "leader:");
+          mvaddstr(ypos + 3, 0, "race:");
+          mvaddstr(ypos + 4, 0, "alignment:");
+          mvaddstr(ypos + 5, 0, "score:");
 
 #ifdef NOSCORE
-	  if (country == 0) {
-	    mvaddstr(ypos + 6, 0, "class:");
-	    mvaddstr(ypos + 7, 0, "npc nation:");
-	    mvaddstr(ypos + 8, 0, "talons:");
-	    mvaddstr(ypos + 9, 0, "military:");
-	    mvaddstr(ypos + 10, 0, "civilians:");
-	    mvaddstr(ypos + 11, 0, "sectors:");
-	  }
+          if (country == 0) {
+            mvaddstr(ypos + 6, 0, "class:");
+            mvaddstr(ypos + 7, 0, "npc nation:");
+            mvaddstr(ypos + 8, 0, "talons:");
+            mvaddstr(ypos + 9, 0, "military:");
+            mvaddstr(ypos + 10, 0, "civilians:");
+            mvaddstr(ypos + 11, 0, "sectors:");
+          }
 #else
-	  mvaddstr(ypos + 6, 0, "class:");
-	  mvaddstr(ypos + 7, 0, "talons:");
-	  mvaddstr(ypos + 8, 0, "military:");
-	  mvaddstr(ypos + 9, 0, "civilians:");
-	  mvaddstr(ypos + 10, 0, "sectors:");
-	  mvaddstr(ypos + 11, 0, "npc nation:");
-#endif				/* NOSCORE */
-	}
-	/* display nation information */
-	mvprintw(ypos, xpos, "%d", nationid);
-	standout();
-	mvprintw(ypos + 1, xpos, "%s", ntn[nationid].name);
-	standend();
-	mvprintw(ypos + 2, xpos, "%s", ntn[nationid].leader);
-	for (i = 1; i < 8; i++)
-	  if (ntn[nationid].race == *(races + i)[0])
-	    mvprintw(ypos + 3, xpos, "%s", *(races + i));
-	mvprintw(ypos + 4, xpos, "%s", alignment[npctype(ntn[nationid].active)]);
+          mvaddstr(ypos + 6, 0, "class:");
+          mvaddstr(ypos + 7, 0, "talons:");
+          mvaddstr(ypos + 8, 0, "military:");
+          mvaddstr(ypos + 9, 0, "civilians:");
+          mvaddstr(ypos + 10, 0, "sectors:");
+          mvaddstr(ypos + 11, 0, "npc nation:");
+#endif /* NOSCORE */
+        }
+        /* display nation information */
+        mvprintw(ypos, xpos, "%d", nationid);
+        standout();
+        mvprintw(ypos + 1, xpos, "%s", ntn[nationid].name);
+        standend();
+        mvprintw(ypos + 2, xpos, "%s", ntn[nationid].leader);
+        for (i = 1; i < 8; i++)
+          if (ntn[nationid].race == *(races + i)[0])
+            mvprintw(ypos + 3, xpos, "%s", *(races + i));
+        mvprintw(ypos + 4, xpos, "%s",
+                 alignment[npctype(ntn[nationid].active)]);
 #ifdef HIDE_SCORE
         if ((country == 0) || (nationid == country))
 #endif
-	mvprintw(ypos + 5, xpos, "%ld", ntn[nationid].score);
+          mvprintw(ypos + 5, xpos, "%ld", ntn[nationid].score);
 
 #ifdef NOSCORE
-	if (country == 0) {
-	  mvprintw(ypos + 6, xpos, "%s", *(Class + ntn[nationid].class));
-	  if (isnpc(ntn[nationid].active))
-	    mvaddstr(ypos + 7, xpos, "Yes");
-	  else
-	    mvaddstr(ypos + 7, xpos, "No");
-	  mvprintw(ypos + 8, xpos, "%ld", ntn[nationid].tgold);
-	  mvprintw(ypos + 9, xpos, "%ld", ntn[nationid].tmil);
-	  mvprintw(ypos + 10, xpos, "%ld", ntn[nationid].tciv);
-	  mvprintw(ypos + 11, xpos, "%d", ntn[nationid].tsctrs);
-	}
+        if (country == 0) {
+          mvprintw(ypos + 6, xpos, "%s", *(Class + ntn[nationid].class));
+          if (isnpc(ntn[nationid].active))
+            mvaddstr(ypos + 7, xpos, "Yes");
+          else
+            mvaddstr(ypos + 7, xpos, "No");
+          mvprintw(ypos + 8, xpos, "%ld", ntn[nationid].tgold);
+          mvprintw(ypos + 9, xpos, "%ld", ntn[nationid].tmil);
+          mvprintw(ypos + 10, xpos, "%ld", ntn[nationid].tciv);
+          mvprintw(ypos + 11, xpos, "%d", ntn[nationid].tsctrs);
+        }
 #else
-	mvprintw(ypos + 7, xpos, "%ld", ntn[nationid].tgold);
-	mvprintw(ypos + 8, xpos, "%ld", ntn[nationid].tmil);
-	mvprintw(ypos + 9, xpos, "%ld", ntn[nationid].tciv);
-	mvprintw(ypos + 10, xpos, "%d", ntn[nationid].tsctrs);
-	if (isnpc(ntn[nationid].active))
-	  mvaddstr(ypos + 11, xpos, "Yes");
-	else
-	  mvaddstr(ypos + 11, xpos, "No");
-#endif				/* NOSCORE */
+        mvprintw(ypos + 7, xpos, "%ld", ntn[nationid].tgold);
+        mvprintw(ypos + 8, xpos, "%ld", ntn[nationid].tmil);
+        mvprintw(ypos + 9, xpos, "%ld", ntn[nationid].tciv);
+        mvprintw(ypos + 10, xpos, "%d", ntn[nationid].tsctrs);
+        if (isnpc(ntn[nationid].active))
+          mvaddstr(ypos + 11, xpos, "Yes");
+        else
+          mvaddstr(ypos + 11, xpos, "No");
+#endif /* NOSCORE */
 
-	count++;
-	if (count < MAXINSCR && count % MAXINROW == 0) {
-	  ypos += RPT_LINES;
-	  xpos = BUF_COLS;
-	} else {
-	  xpos += RPT_COLS;
-	}
+        count++;
+        if (count < MAXINSCR && count % MAXINROW == 0) {
+          ypos += RPT_LINES;
+          xpos = BUF_COLS;
+        } else {
+          xpos += RPT_COLS;
+        }
       }
       nationid++;
     }
@@ -194,31 +194,23 @@ showscore()
     else {
       /* go to start of next page in list */
       while (nationid < NTOTAL && !isntn(ntn[nationid].active))
-	nationid++;
+        nationid++;
       if (nationid == NTOTAL)
-	count2 = 1;
+        count2 = 1;
       else
-	count2 = nationid;
+        count2 = nationid;
     }
   }
 }
 
-#define	MAXINCOL	(LINES-10)
-#define	MAXONSCR	(MAXINCOL*(COLS/40))
-void
-diploscrn()
-{
-  int             i,
-                  j;
-  char            k,
-                  name[LINELTH];
-  short           nation,
-                  offset,
-                  count,
-                  count2,
-                  temp;
-  short           isgod = FALSE;
-  long            bribecost;
+#define MAXINCOL (LINES - 10)
+#define MAXONSCR (MAXINCOL * (COLS / 40))
+void diploscrn(void) {
+  int i, j;
+  char k, name[LINELTH];
+  short nation, offset, count, count2, temp;
+  short isgod = FALSE;
+  long bribecost;
 
   if (country == 0) {
     isgod = TRUE;
@@ -238,70 +230,74 @@ diploscrn()
     mvaddstr(2, 0, "                BY YOU,        TO YOU");
     for (i = count2; i < NTOTAL && count < MAXONSCR; i++)
       if ((isntnorp(ntn[i].active)) && (i != country) &&
-          (curntn->dstatus[i] != UNMET) &&
-          (ntn[i].dstatus[country] != UNMET)) {
-	if (count % MAXINCOL == 0) {
-	  offset += 40;
-	  mvaddstr(2, offset, "                BY YOU,        TO YOU");
-	  count++;
-	}
-	mvprintw(count % MAXINCOL + 2, offset, "%d. %s", i, ntn[i].name);
-	if ((curntn->dstatus[i] == WAR)
-	    || (curntn->dstatus[i] == JIHAD))
-	  standout();
-	mvprintw(count % MAXINCOL + 2, offset + 14, "=> %s", *(diploname + curntn->dstatus[i]));
-	standend();
-	if ((ntn[i].dstatus[country] == WAR)
-	    || (ntn[i].dstatus[country] == JIHAD))
-	  standout();
-	mvprintw(count % MAXINCOL + 2, offset + 28, "=> %s", *(diploname + ntn[i].dstatus[country]));
-	standend();
-	count++;
+          (curntn->dstatus[i] != UNMET) && (ntn[i].dstatus[country] != UNMET)) {
+        if (count % MAXINCOL == 0) {
+          offset += 40;
+          mvaddstr(2, offset, "                BY YOU,        TO YOU");
+          count++;
+        }
+        mvprintw(count % MAXINCOL + 2, offset, "%d. %s", i, ntn[i].name);
+        if ((curntn->dstatus[i] == WAR) || (curntn->dstatus[i] == JIHAD))
+          standout();
+        mvprintw(count % MAXINCOL + 2, offset + 14, "=> %s",
+                 *(diploname + curntn->dstatus[i]));
+        standend();
+        if ((ntn[i].dstatus[country] == WAR) ||
+            (ntn[i].dstatus[country] == JIHAD))
+          standout();
+        mvprintw(count % MAXINCOL + 2, offset + 28, "=> %s",
+                 *(diploname + ntn[i].dstatus[country]));
+        standend();
+        count++;
       }
     /* display options */
     standout();
-    mvaddstr(LINES - 7, COLS / 2 - 26, "HIT RETURN KEY TO CHANGE STATUS; HIT SPACE IF DONE");
-    mvprintw(LINES - 6, COLS / 2 - 31, "HIT 'B' KEY TO BRIBE NPC NATION (cost=$%ld per 1000 Mil.)", BRIBE);
-    mvaddstr(LINES - 5, COLS / 2 - 21, "HIT ANY OTHER KEY TO SCROLL NATIONS LIST");
+    mvaddstr(LINES - 7, COLS / 2 - 26,
+             "HIT RETURN KEY TO CHANGE STATUS; HIT SPACE IF DONE");
+    mvprintw(LINES - 6, COLS / 2 - 31,
+             "HIT 'B' KEY TO BRIBE NPC NATION (cost=$%ld per 1000 Mil.)",
+             BRIBE);
+    mvaddstr(LINES - 5, COLS / 2 - 21,
+             "HIT ANY OTHER KEY TO SCROLL NATIONS LIST");
     standend();
     refresh();
     k = getch();
     if (k == ' ') {
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
     if ((k != 'B') && (k != '\r') && (k != '\n')) {
       /* find start for next listing */
-      for (; i < NTOTAL && (!isntnorp(ntn[i].active) || i == country); i++);
+      for (; i < NTOTAL &&(!isntnorp(ntn[i].active) || i == country); i++)
+        ;
       if (i == NTOTAL)
-	count2 = 1;
+        count2 = 1;
       else
-	count2 = i;
+        count2 = i;
       continue;
     }
     if (k == 'B') {
       if (curntn->tgold <= BRIBE) {
-	mvaddstr(LINES - 3, 0, "NOT ENOUGH GOLD");
-	refresh();
-	getch();
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        mvaddstr(LINES - 3, 0, "NOT ENOUGH GOLD");
+        refresh();
+        getch();
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
-      mvaddstr(LINES - 4, 0, "BRIBES DONT ALWAYS WORK (only the update will show)");
+      mvaddstr(LINES - 4, 0,
+               "BRIBES DONT ALWAYS WORK (only the update will show)");
       mvaddstr(LINES - 3, 0, "WHAT NATION:");
       refresh();
       nation = get_country();
 
       /* may only change with NPCs */
-      if ((nation <= 0)
-	  || (nation >= NTOTAL)
-	  || (!isnpc(ntn[nation].active))) {
-	errormsg("That nation is not a Non-Player Country");
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+      if ((nation <= 0) || (nation >= NTOTAL) || (!isnpc(ntn[nation].active))) {
+        errormsg("That nation is not a Non-Player Country");
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
       if (curntn->dstatus[nation] == UNMET) {
         if (isgod == TRUE)
@@ -309,64 +305,68 @@ diploscrn()
         return;
       }
       if (ntn[nation].dstatus[country] == UNMET) {
-	errormsg("They have no knowledge that you exist");
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        errormsg("They have no knowledge that you exist");
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
-      if ((isgod != TRUE)
-	  && ((ntn[nation].dstatus[country] == ALLIED)
-	      || (ntn[nation].dstatus[country] == JIHAD)
-	      || (ntn[nation].dstatus[country] == UNMET)
-	      || (ntn[nation].dstatus[country] == TREATY))) {
-	errormsg("Sorry, you cannot bribe them");
-	return;
+      if ((isgod != TRUE) && ((ntn[nation].dstatus[country] == ALLIED) ||
+                              (ntn[nation].dstatus[country] == JIHAD) ||
+                              (ntn[nation].dstatus[country] == UNMET) ||
+                              (ntn[nation].dstatus[country] == TREATY))) {
+        errormsg("Sorry, you cannot bribe them");
+        return;
       }
       if (isgod == TRUE) {
-	bribecost = 0;
+        bribecost = 0;
       } else if (ntn[nation].tmil > 1000) {
-	bribecost = BRIBE * ntn[nation].tmil / 1000;
+        bribecost = BRIBE * ntn[nation].tmil / 1000;
       } else
-	bribecost = BRIBE;
-      mvprintw(LINES - 3, 0, "This will cost %ld gold talons. continue (y or n)", bribecost);
+        bribecost = BRIBE;
+      mvprintw(LINES - 3, 0,
+               "This will cost %ld gold talons. continue (y or n)", bribecost);
       refresh();
 
       if (getch() != 'y')
-	return;
+        return;
       if (curntn->tgold <= bribecost) {
-	errormsg("Sorry Not Enough Gold");
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        errormsg("Sorry Not Enough Gold");
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
       curntn->tgold -= bribecost;
 
 #ifdef ENCODE_EXECS
-      sprintf(name, "%s >> %s.%03d", ENCODE, exefile, nation);
 #ifdef DEBUG
-fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, nation);
+      fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile, nation);
 #endif
+      sprintf(name, "%s >> %s.%03d", ENCODE, exefile, nation);
       if ((fm = popen(name, "w")) == NULL) {
+        printf("error opening nation file\n");
+        exit(FAIL);
+      }
 #else
       sprintf(name, "%s.%03d", exefile, nation);
       if ((fm = fopen(name, "a+")) == NULL) {
-#endif
-	printf("error opening nation file\n");
-	exit(FAIL);
+        printf("error opening nation file\n");
+        exit(FAIL);
       }
+#endif
+
       BRIBENATION;
 
       ntn[nation].dstatus[country]--;
-      if (isgod == TRUE) reset_god();
+      if (isgod == TRUE)
+        reset_god();
 
 #ifdef ENCODE_EXECS
 #ifdef DEBUG
-fprintf(stderr, "Closing encode pipe to %s.%03d\n", exefile,
-nation);
+      fprintf(stderr, "Closing encode pipe to %s.%03d\n", exefile, nation);
 #endif
-  pclose(fm);
+      pclose(fm);
 #else
-  fclose(fm);
+      fclose(fm);
 #endif
       return;
     }
@@ -374,33 +374,33 @@ nation);
     refresh();
     nation = get_country();
     /* can't change with nomads... */
-    if ((nation <= 0) || (nation > NTOTAL) || (!isntnorp(ntn[nation].active))
-        || (((curntn->dstatus[nation]== UNMET)
-            || (ntn[nation].dstatus[country]== UNMET))
-          && (isgod == FALSE))) {
+    if ((nation <= 0) || (nation > NTOTAL) || (!isntnorp(ntn[nation].active)) ||
+        (((curntn->dstatus[nation] == UNMET) ||
+          (ntn[nation].dstatus[country] == UNMET)) && (isgod == FALSE))) {
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     }
-    if ((isgod == FALSE)
-	&& (curntn->tgold < BREAKJIHAD)
-	&& (((curntn->dstatus[nation] == TREATY)
-	     && (ntn[nation].dstatus[country] < WAR))
-	    || (curntn->dstatus[nation] == JIHAD))) {
+    if ((isgod == FALSE) && (curntn->tgold < BREAKJIHAD) &&
+        (((curntn->dstatus[nation] == TREATY) &&
+          (ntn[nation].dstatus[country] < WAR)) ||
+         (curntn->dstatus[nation] == JIHAD))) {
 
-      mvprintw(LINES - 1, 0, "Sorry, need %d talons to change status with ntn %s", BREAKJIHAD, ntn[nation].name);
+      mvprintw(LINES - 1, 0,
+               "Sorry, need %d talons to change status with ntn %s", BREAKJIHAD,
+               ntn[nation].name);
       clrtoeol();
       mvaddstr(LINES - 1, 60, "PRESS ANY KEY");
       refresh();
       getch();
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
-    } else if (isgod == FALSE && curntn->dstatus[nation] == UNMET
-	       && ntn[nation].dstatus[country] == UNMET) {
+    } else if (isgod == FALSE && curntn->dstatus[nation] == UNMET &&
+               ntn[nation].dstatus[country] == UNMET) {
       errormsg("Sorry, you have not met that nation yet.");
       if (isgod == TRUE)
-	reset_god();
+        reset_god();
       return;
     } else {
       clear();
@@ -415,125 +415,128 @@ nation);
       mvprintw(j++, 0, "7) JIHAD (%d talons to break):", BREAKJIHAD);
       j++;
       for (i = 1; i < NTOTAL; i++)
-	if ((isntnorp(ntn[i].active)) && (ntn[nation].dstatus[i] == TREATY))
-	  mvprintw(j++, 10, "%s has treaty with %s", ntn[nation].name, ntn[i].name);
+        if ((isntnorp(ntn[i].active)) && (ntn[nation].dstatus[i] == TREATY))
+          mvprintw(j++, 10, "%s has treaty with %s", ntn[nation].name,
+                   ntn[i].name);
 
       j++;
       mvaddstr(j++, 0, "INPUT:");
       refresh();
       temp = get_number();
       if (temp < 0) {
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
-      if ((temp <= UNMET) || (temp > JIHAD)
-	  || ((isgod == FALSE) && (temp == UNMET))) {
-	errormsg("SORRY, Invalid inputs -- hit return");
-	if (isgod == TRUE)
-	  reset_god();
-	return;
+      if ((temp <= UNMET) || (temp > JIHAD) ||
+          ((isgod == FALSE) && (temp == UNMET))) {
+        errormsg("SORRY, Invalid inputs -- hit return");
+        if (isgod == TRUE)
+          reset_god();
+        return;
       }
-      if(isgod == FALSE) {
-      if ((curntn->dstatus[nation] != JIHAD) &&
-          (curntn->dstatus[nation] != TREATY)) {
-        if (curntn->dstatus[nation] != NEUTRAL) {
-          if (((temp < (curntn->dstatus[nation]- 2)) ||
-               (temp > (curntn->dstatus[nation]+ 2))) &&
-              (isgod == FALSE)) {
-            errormsg("HEY!  That's not nice... I won't let you do that!");
-            if (isgod == TRUE) reset_god();
-            return;
-          }
-        } else {
-          if (((temp < (curntn->dstatus[nation]- 1)) ||
-               (temp > (curntn->dstatus[nation]+ 1))) &&
-              (isgod == FALSE)) {
-            errormsg("Shouldn't you declare your intentions first?");
-            if (isgod == TRUE) reset_god();
-            return;
+      if (isgod == FALSE) {
+        if ((curntn->dstatus[nation] != JIHAD) &&
+            (curntn->dstatus[nation] != TREATY)) {
+          if (curntn->dstatus[nation] != NEUTRAL) {
+            if (((temp < (curntn->dstatus[nation] - 2)) ||
+                 (temp > (curntn->dstatus[nation] + 2))) && (isgod == FALSE)) {
+              errormsg("HEY!  That's not nice... I won't let you do that!");
+              if (isgod == TRUE)
+                reset_god();
+              return;
+            }
+          } else {
+            if (((temp < (curntn->dstatus[nation] - 1)) ||
+                 (temp > (curntn->dstatus[nation] + 1))) && (isgod == FALSE)) {
+              errormsg("Shouldn't you declare your intentions first?");
+              if (isgod == TRUE)
+                reset_god();
+              return;
+            }
           }
         }
       }
-      }
       if ((curntn->dstatus[nation] == JIHAD) && (temp != JIHAD))
-	curntn->tgold -= BREAKJIHAD;
+        curntn->tgold -= BREAKJIHAD;
       else if ((curntn->dstatus[nation] == TREATY) && (temp != TREATY)) {
-	if (ntn[nation].dstatus[country] != TREATY) {
-	  errormsg("Non-binding Treaty broken... fee waived.");
-	} else {
-	  curntn->tgold -= BREAKJIHAD;
-	}
+        if (ntn[nation].dstatus[country] != TREATY) {
+          errormsg("Non-binding Treaty broken... fee waived.");
+        } else {
+          curntn->tgold -= BREAKJIHAD;
+        }
       }
       curntn->dstatus[nation] = temp;
       EADJDIP(country, nation);
 
-      if ((temp > HOSTILE)
-	  && (ispc(ntn[nation].active))
-	  && (ntn[nation].dstatus[country] < WAR)) {
-	if (mailopen(nation) != (-1)) {
-	  fprintf(fm, "Message to %s from CONQUER\n", ntn[nation].name);
-	  fprintf(fm, "    In %s of Year %d,\n", PMONTH(TURN), YEAR(TURN));
-	  fprintf(fm, "      %s declared war on you\n", curntn->name);
-	  mailclose(nation);
-	}
+      if ((temp > HOSTILE) && (ispc(ntn[nation].active)) &&
+          (ntn[nation].dstatus[country] < WAR)) {
+        if (mailopen(nation) != (-1)) {
+          fprintf(fm, "Message to %s from CONQUER\n", ntn[nation].name);
+          fprintf(fm, "    In %s of Year %d,\n", PMONTH(TURN), YEAR(TURN));
+          fprintf(fm, "      %s declared war on you\n", curntn->name);
+          mailclose(nation);
+        }
       }
       /* prevent ron from being sneaky */
-      if ((temp > HOSTILE)
-	  && (isactive(ntn[nation].active))
-	  && (ntn[nation].dstatus[country] < WAR)) {
-	ntn[nation].dstatus[country] = WAR;
-	EADJDIP(nation, country);
-	for (i = 1; i < NTOTAL; i++)
-	  if (ntn[i].dstatus[nation] == TREATY) {
-	    ntn[i].dstatus[country] = WAR;
-	    EADJDIP(i, country);
-	    if (mailopen(country) == (-1)) {
-	      fprintf(fm, "Message to %s from %s\n", ntn[country].name, ntn[i].name);
-	      switch (rand() % 4) {
-	       case 0:
-		fprintf(fm, "You just attacked my friend %s - your loss!!!\n", ntn[nation].name);
-		break;
-	       case 1:
-		fprintf(fm, "Our imperial forces will assist %s!!!\n", ntn[nation].name);
-		fprintf(fm, "in repulsing your toy armies!!!\n");
-		break;
-	       case 2:
-		fprintf(fm, "Sucker - your aggression against %s is your doom!!!\n", ntn[nation].name);
-		break;
-	       case 3:
-		fprintf(fm, "We deplore your aggression against %s and are taking\n", ntn[nation].name);
-		fprintf(fm, "appropriate counter measures!!! DIE!!!\n");
-		break;
-	      }
-	    }
-	    mailclose(country);
-	  }
+      if ((temp > HOSTILE) && (isactive(ntn[nation].active)) &&
+          (ntn[nation].dstatus[country] < WAR)) {
+        ntn[nation].dstatus[country] = WAR;
+        EADJDIP(nation, country);
+        for (i = 1; i < NTOTAL; i++)
+          if (ntn[i].dstatus[nation] == TREATY) {
+            ntn[i].dstatus[country] = WAR;
+            EADJDIP(i, country);
+            if (mailopen(country) == (-1)) {
+              fprintf(fm, "Message to %s from %s\n", ntn[country].name,
+                      ntn[i].name);
+              switch (rand() % 4) {
+                case 0:
+                  fprintf(fm, "You just attacked my friend %s - your loss!!!\n",
+                          ntn[nation].name);
+                  break;
+                case 1:
+                  fprintf(fm, "Our imperial forces will assist %s!!!\n",
+                          ntn[nation].name);
+                  fprintf(fm, "in repulsing your toy armies!!!\n");
+                  break;
+                case 2:
+                  fprintf(
+                      fm,
+                      "Sucker - your aggression against %s is your doom!!!\n",
+                      ntn[nation].name);
+                  break;
+                case 3:
+                  fprintf(
+                      fm,
+                      "We deplore your aggression against %s and are taking\n",
+                      ntn[nation].name);
+                  fprintf(fm, "appropriate counter measures!!! DIE!!!\n");
+                  break;
+              }
+            }
+            mailclose(country);
+          }
       }
     }
   }
 }
 
-int             terror_adj = 0;
-void
-change()
-{
-  float           temp;
-  char            string[LINELTH],
-                  command[BIGLTH];
-  int             i,
-                  intval;
-  long            cost,
-                  men;
-  short           armynum;
-  char            passwd[PASSLTH + 1];
-  short           isgod = FALSE;
+int terror_adj = 0;
+void change(void) {
+  float temp;
+  char string[LINELTH], command[BIGLTH];
+  int i, intval;
+  long cost, men;
+  short armynum;
+  char passwd[PASSLTH + 1];
+  short isgod = FALSE;
 
 #ifdef OGOD
-  FILE           *ftmp;
+  FILE *ftmp;
 
-#endif	/* OGOD */
-  char            filename[FILELTH];
+#endif /* OGOD */
+  char filename[FILELTH];
 
   if (country == 0) {
     isgod = TRUE;
@@ -554,18 +557,19 @@ change()
       mvprintw(5, 0, "active is %d", curntn->active);
     mvprintw(6, 0, "tax_rate...... %2d%%", curntn->tax_rate);
     mvprintw(7, 0, "inflation..... %2d%%", curntn->inflation);
-    i = (int) 10   *curntn->tax_rate - curntn->popularity - curntn->terror - 3 * curntn->charity;
+    i = (int) 10 * curntn->tax_rate - curntn->popularity - curntn->terror -
+        3 * curntn->charity;
 
     if (i < 0)
       i = 0;
     mvprintw(8, 0, "peasant revolt %2d%%", (i * PREVOLT) / 100);
-    i = (int) 5    *curntn->tax_rate - curntn->prestige;
+    i = (int) 5 * curntn->tax_rate - curntn->prestige;
 
     if (i < 0)
       i = 0;
     mvprintw(9, 0, "other revolt.. %2d%%", (i * PREVOLT) / 100);
     standend();
-    if(isgod == FALSE) {
+    if (isgod == FALSE) {
       mvprintw(10, 0, "capitol loc: x is %d", rel_x(curntn->capx));
       mvprintw(11, 0, "             y is %d", rel_y(curntn->capy));
     } else {
@@ -582,8 +586,8 @@ change()
     mvprintw(14, 0, "nations mark is...%c ", curntn->mark);
     for (i = 1; i < 8; i++)
       if (curntn->race == *(races + i)[0]) {
-	mvprintw(15, 0, "nation race is....%s  ", *(races + i));
-	break;
+        mvprintw(15, 0, "nation race is....%s  ", *(races + i));
+        break;
       }
     mvprintw(3, COLS / 2 - 12, "terror........ %3d", curntn->terror);
     mvprintw(4, COLS / 2 - 12, "popularity.... %3d", curntn->popularity);
@@ -632,350 +636,372 @@ change()
     mvprintw(16, COLS - 30, "spell points.........%5d", curntn->spellpts);
 
     standout();
-    mvaddstr(LINES - 6, COLS / 2 - 26, "HIT 'B' FOR BUDGET SCREEN, 'P' FOR PRODUCTION SCREEN");
-    mvaddstr(LINES - 5, COLS / 2 - 25, "1) NAME 2) PASSWD 3) TAX RATE 4) CHARITY 5) TERROR");
+    mvaddstr(LINES - 6, COLS / 2 - 26,
+             "HIT 'B' FOR BUDGET SCREEN, 'P' FOR PRODUCTION SCREEN");
+    mvaddstr(LINES - 5, COLS / 2 - 25,
+             "1) NAME 2) PASSWD 3) TAX RATE 4) CHARITY 5) TERROR");
     if (magic(country, VAMPIRE) != 1 || isgod == TRUE)
       mvaddstr(LINES - 4, COLS / 2 - 21, "6) ADJUST TO COMBAT BONUS");
     else
       mvaddstr(LINES - 4, COLS / 2 - 22, "CANT ADD TO COMBAT BONUS");
     addstr(" 7) TOGGLE PC <-> NPC");
 
+    if (isgod == TRUE) {
 #ifdef OGOD
-    if (isgod == TRUE) {
-      mvaddstr(LINES - 3, COLS / 2 - 33, "HIT 8 TO DESTROY, 9 TO CHANGE COMMODITY OR '0' TO CHANGE DEMI-GOD");
-      mvaddstr(LINES - 2, COLS / 2 - 33, "L) CHANGE LEADER NAME  M) CHANGE NATIONAL MARK  U) CHANGE USER-ID");
-#else	/* OGOD */
-    if (isgod == TRUE) {
-      mvaddstr(LINES - 3, COLS / 2 - 24, "HIT 8 TO DESTROY NATION, OR '0' TO CHANGE DEMI-GOD");
-      mvaddstr(LINES - 2, COLS / 2 - 33, "L) CHANGE LEADER NAME  M) CHANGE NATIONAL MARK  U) CHANGE USER-ID");
-#endif	/* OGOD */
-
+      mvaddstr(
+          LINES - 3, COLS / 2 - 33,
+          "HIT 8 TO DESTROY, 9 TO CHANGE COMMODITY OR '0' TO CHANGE DEMI-GOD");
+      mvaddstr(
+          LINES - 2, COLS / 2 - 33,
+          "L) CHANGE LEADER NAME  M) CHANGE NATIONAL MARK  U) CHANGE USER-ID");
+#else /* OGOD */
+      mvaddstr(LINES - 3, COLS / 2 - 24,
+               "HIT 8 TO DESTROY NATION, OR '0' TO CHANGE DEMI-GOD");
+      mvaddstr(
+          LINES - 2, COLS / 2 - 33,
+          "L) CHANGE LEADER NAME  M) CHANGE NATIONAL MARK  U) CHANGE USER-ID");
+#endif /* OGOD */
     } else {
       mvaddstr(LINES - 3, COLS / 2 - 10, "HIT 8 TO KILL YOURSELF");
-      mvaddstr(LINES - 2, COLS / 2 - 23, "L) CHANGE LEADER NAME  M) CHANGE NATIONAL MARK");
+      mvaddstr(LINES - 2, COLS / 2 - 23,
+               "L) CHANGE LEADER NAME  M) CHANGE NATIONAL MARK");
     }
     standend();
     refresh();
     switch (getch()) {
-     case '1':			/* get name */
-      clear();
-      mvaddstr(0, 0, "What name would you like:");
-      clrtoeol();
-      refresh();
-      get_nname(string);
-      if ((strlen(string) <= 1) || (strlen(string) > NAMELTH)) {
-	errormsg("Invalid name length");
-	break;
-      }
-      /* check if already used */
-      else
-        for(i= 0; i< strlen(string); i++) if(isspace(string[i])) string[i]='_';
-	for (i = 1; i < NTOTAL; i++) {
-	  if (isactive(ntn[i].active)) {
-	    if ((strcmp(ntn[i].name, string) == 0) && (i != country)) {
-	      errormsg("Name already used");
-	      break;
-	    }
-	  }
-	}
-      errormsg("New name can be used following next update");
-      strcpy(curntn->name, string);
-      ECHGNAME;
-      break;
-     case '2':			/* change password */
-      clear();
-      /* minimum password length setting */
-      if (country != 0)
-	intval = 2;
-      else
-	intval = 4;
-      if (isgod != TRUE) {
-	mvaddstr(0, 0, "What is your current password:");
-	refresh();
-	(void) get_pass(command);
-	strncpy(passwd, crypt(command, SALT), PASSLTH + 1);
-	if ((strncmp(passwd, ntn[0].passwd, PASSLTH) != 0)
-	    && (strncmp(passwd, curntn->passwd, PASSLTH) != 0)) {
-	  break;
-	}
-      }
-      mvaddstr(2, 0, "What is your new password:");
-      refresh();
-      i = get_pass(command);
-      if (i < intval) {
-	errormsg("Password too short");
-	break;
-      } if (i > PASSLTH) {
-	errormsg("Password too long");
-	break;
-      }
-      strncpy(passwd, command, PASSLTH);
-      mvaddstr(4, 0, "Reenter your new password:");
-      refresh();
-      (void) get_pass(command);
-      if (strncmp(passwd, command, PASSLTH) != 0) {
-	errormsg("Invalid password match; Password unchanged");
-	break;
-      }
-      errormsg("New password can be used following next update");
-      strncpy(curntn->passwd, crypt(command, SALT), PASSLTH);
-      ECHGPAS;
-      break;
-     case '3':			/* change tax rate */
-      standout();
-      mvaddstr(LINES - 1, 0, "WHAT TAX RATE DO YOU WISH:");
-      standend();
-      refresh();
-      intval = get_number();
-      if (intval < 0)
-	break;
-      else if (intval > 20)
-	errormsg("NO WAY! the peasants will revolt!!!");
-      else if (intval > 10 && (curntn->tsctrs < 20 || curntn->score < 20))
-	errormsg("Sorry, you may not go above 10% yet");
-      else {
-	curntn->tax_rate = (unsigned char) intval;
-	NADJNTN;
-      }
-      break;
-     case '4':			/* charity */
-      standout();
-      mvaddstr(LINES - 1, 0, "GIVE WHAT PERCENT OF YOUR INCOME TO THE POOR:");
-      standend();
-      refresh();
-      intval = get_number();
-      if (intval < 0) {
-	break;
-      } else if (intval > 100) {
-	errormsg("ERROR - invalid charity rate");
-      } else if (intval > 25) {
-	errormsg("You are kidding, right?");
-	/* this will protect from both underflow and overflow */
-      } else if (intval > curntn->charity) {
-	if (2 * (intval - (int) curntn->charity) + (int) curntn->popularity > 100) {
-	  errormsg("ERROR - you may not increase charity that much");
-	} else {
-	  curntn->popularity += (unsigned char) 2 *(intval - (int) curntn->charity);
+      case '1': /* get name */
+        clear();
+        mvaddstr(0, 0, "What name would you like:");
+        clrtoeol();
+        refresh();
+        get_nname(string);
+        if ((strlen(string) <= 1) || (strlen(string) > NAMELTH)) {
+          errormsg("Invalid name length");
+          break;
+        } /* check if already used */
+            else
+          for (i = 0; i < strlen(string); i++)
+            if (isspace(string[i]))
+              string[i] = '_';
+        for (i = 1; i < NTOTAL; i++) {
+          if (isactive(ntn[i].active)) {
+            if ((strcmp(ntn[i].name, string) == 0) && (i != country)) {
+              errormsg("Name already used");
+              break;
+            }
+          }
+        }
+        errormsg("New name can be used following next update");
+        strcpy(curntn->name, string);
+        ECHGNAME;
+        break;
+      case '2': /* change password */
+        clear();
+        /* minimum password length setting */
+        if (country != 0)
+          intval = 2;
+        else
+          intval = 4;
+        if (isgod != TRUE) {
+          mvaddstr(0, 0, "What is your current password:");
+          refresh();
+          (void) get_pass(command);
+          strncpy(passwd, crypt(command, SALT), PASSLTH + 1);
+          if ((strncmp(passwd, ntn[0].passwd, PASSLTH) != 0) &&
+              (strncmp(passwd, curntn->passwd, PASSLTH) != 0)) {
+            break;
+          }
+        }
+        mvaddstr(2, 0, "What is your new password:");
+        refresh();
+        i = get_pass(command);
+        if (i < intval) {
+          errormsg("Password too short");
+          break;
+        }
+        if (i > PASSLTH) {
+          errormsg("Password too long");
+          break;
+        }
+        strncpy(passwd, command, PASSLTH);
+        mvaddstr(4, 0, "Reenter your new password:");
+        refresh();
+        (void) get_pass(command);
+        if (strncmp(passwd, command, PASSLTH) != 0) {
+          errormsg("Invalid password match; Password unchanged");
+          break;
+        }
+        errormsg("New password can be used following next update");
+        strncpy(curntn->passwd, crypt(command, SALT), PASSLTH);
+        ECHGPAS;
+        break;
+      case '3': /* change tax rate */
+        standout();
+        mvaddstr(LINES - 1, 0, "WHAT TAX RATE DO YOU WISH:");
+        standend();
+        refresh();
+        intval = get_number();
+        if (intval < 0)
+          break;
+        else if (intval > 20)
+          errormsg("NO WAY! the peasants will revolt!!!");
+        else if (intval > 10 && (curntn->tsctrs < 20 || curntn->score < 20))
+          errormsg("Sorry, you may not go above 10% yet");
+        else {
+          curntn->tax_rate = (unsigned char) intval;
+          NADJNTN;
+        }
+        break;
+      case '4': /* charity */
+        standout();
+        mvaddstr(LINES - 1, 0, "GIVE WHAT PERCENT OF YOUR INCOME TO THE POOR:");
+        standend();
+        refresh();
+        intval = get_number();
+        if (intval < 0) {
+          break;
+        } else if (intval > 100) {
+          errormsg("ERROR - invalid charity rate");
+        } else if (intval > 25) {
+          errormsg("You are kidding, right?");
+          /* this will protect from both underflow and overflow */
+        } else if (intval > curntn->charity) {
+          if (2 * (intval - (int) curntn->charity) + (int)
+                  curntn->popularity > 100) {
+            errormsg("ERROR - you may not increase charity that much");
+          } else {
+            curntn->popularity +=
+                (unsigned char) 2 * (intval - (int) curntn->charity);
 
-	  curntn->charity = intval;
-	  NADJNTN;
-	  NADJNTN2;
-	}
-      } else {
-	if (2 * (intval - (int) curntn->charity) < -(int) curntn->popularity) {
-	  errormsg("ERROR - you may not decrease charity that much");
-	} else {
-	  curntn->popularity += (unsigned char) 2 *(intval - (int) curntn->charity);
+            curntn->charity = intval;
+            NADJNTN;
+            NADJNTN2;
+          }
+        } else {
+          if (2 * (intval - (int) curntn->charity) < -(int)
+              curntn->popularity) {
+            errormsg("ERROR - you may not decrease charity that much");
+          } else {
+            curntn->popularity +=
+                (unsigned char) 2 * (intval - (int) curntn->charity);
 
-	  curntn->charity = intval;
-	  NADJNTN;
-	  NADJNTN2;
-	}
-      }
-      break;
-     case '5':			/* terror */
-      mvaddstr(LINES - 2, 0, "YOU CAN TERRORIZE YOUR PEOPLE AN ADDITONAL 1-5%:");
-      standout();
-      mvaddstr(LINES - 1, 0, "HOW MUCH MORE TO TERRORIZE THEM: ");
-      standend();
-      refresh();
-      intval = get_number();
-      if (intval < 0)
-	break;
-      else if (intval + curntn->terror > 100)
-	errormsg("Cant go over 100 terror!!!");
-      else if ((intval > curntn->popularity)
-	       || (intval > curntn->reputation))
-	errormsg("Sorry - this would cause underflow");
-      else if (intval > 5) {
-	errormsg("That is over the allowed 5%");
-      } else if (terror_adj > 0) {
-	errormsg("Terror may only be adjusted once per turn");
-      } else if (intval > 0) {
-	terror_adj++;
-	curntn->terror += (unsigned char) intval;
-	curntn->popularity -= (unsigned char) intval;
-	curntn->reputation -= (unsigned char) (intval + 1) / 2;
-	NADJNTN2;
-      }
-      break;
-     case '6':			/* combat bonus */
+            curntn->charity = intval;
+            NADJNTN;
+            NADJNTN2;
+          }
+        }
+        break;
+      case '5': /* terror */
+        mvaddstr(LINES - 2, 0,
+                 "YOU CAN TERRORIZE YOUR PEOPLE AN ADDITONAL 1-5%:");
+        standout();
+        mvaddstr(LINES - 1, 0, "HOW MUCH MORE TO TERRORIZE THEM: ");
+        standend();
+        refresh();
+        intval = get_number();
+        if (intval < 0)
+          break;
+        else if (intval + curntn->terror > 100)
+          errormsg("Cant go over 100 terror!!!");
+        else if ((intval > curntn->popularity) || (intval > curntn->reputation))
+          errormsg("Sorry - this would cause underflow");
+        else if (intval > 5) {
+          errormsg("That is over the allowed 5%");
+        } else if (terror_adj > 0) {
+          errormsg("Terror may only be adjusted once per turn");
+        } else if (intval > 0) {
+          terror_adj++;
+          curntn->terror += (unsigned char) intval;
+          curntn->popularity -= (unsigned char) intval;
+          curntn->reputation -= (unsigned char)(intval + 1) / 2;
+          NADJNTN2;
+        }
+        break;
+      case '6': /* combat bonus */
 
 #ifdef OGOD
-      if (isgod == TRUE) {
-	mvaddstr(LINES - 2, 0, "SUPER-USER: Change (A)ttack or (D)efense Bonus? ");
-	refresh();
-	if ((intval = getch()) == 'A' || intval == 'a') {
-	  mvaddstr(LINES - 1, 0, "Enter new value for Attack Bonus: ");
-	  refresh();
-	  curntn->aplus = get_number();
-	  if (curntn->aplus < 0)
-	    curntn->aplus = 0;
-	} else if (intval == 'd' || intval == 'D') {
-	  mvaddstr(LINES - 1, 0, "Enter new value for Defense Bonus: ");
-	  refresh();
-	  curntn->dplus = get_number();
-	  if (curntn->dplus < 0)
-	    curntn->dplus = 0;
-	}
-	break;
-      }
-#endif				/* OGOD */
+        if (isgod == TRUE) {
+          mvaddstr(LINES - 2, 0,
+                   "SUPER-USER: Change (A)ttack or (D)efense Bonus? ");
+          refresh();
+          if ((intval = getch()) == 'A' || intval == 'a') {
+            mvaddstr(LINES - 1, 0, "Enter new value for Attack Bonus: ");
+            refresh();
+            curntn->aplus = get_number();
+            if (curntn->aplus < 0)
+              curntn->aplus = 0;
+          } else if (intval == 'd' || intval == 'D') {
+            mvaddstr(LINES - 1, 0, "Enter new value for Defense Bonus: ");
+            refresh();
+            curntn->dplus = get_number();
+            if (curntn->dplus < 0)
+              curntn->dplus = 0;
+          }
+          break;
+        }
+#endif /* OGOD */
 
-      if (magic(country, VAMPIRE) == 1) {
-	errormsg("VAMPIRES CAN'T ADD TO COMBAT BONUS");
-	break;
-      }
-      if (magic(country, WARLORD) == 1)
-	intval = 30;
-      else if (magic(country, CAPTAIN) == 1)
-	intval = 20;
-      else if (magic(country, WARRIOR) == 1)
-	intval = 10;
-      else
-	intval = 0;
-      men = 0;
-      for (armynum = 0; armynum < MAXARM; armynum++)
-	if ((P_ASOLD > 0) && (P_ATYPE < MINLEADER))
-	  men += P_ASOLD;
-      men = max(men, 1500);
-      armynum = max(curntn->aplus - intval, 10) / 10;
-      cost = METALORE * men * armynum * armynum;
-      if (curntn->race == ORC)
-	cost *= 3;
-      mvprintw(LINES - 1, 0, "Do You Wish Spend %ld Metal On Attack (enter y or n):", cost);
-      refresh();
-      if (getch() == 'y') {
-	if (curntn->metals > cost) {
-	  curntn->aplus += 1;
-	  I_APLUS;
-	  curntn->metals -= cost;
-	} else {
-	  errormsg("SORRY");
-	}
-      }
-      armynum = max(curntn->dplus - intval, 10) / 10;
-      cost = METALORE * men * armynum * armynum;
-      if (curntn->race == ORC)
-	cost *= 3;
-      mvprintw(LINES - 1, 0, "Do You Wish Spend %ld Metal On Defense (enter y or n):", cost);
-      refresh();
-      if (getch() == 'y') {
-	if (curntn->metals > cost) {
-	  curntn->dplus += 1;
-	  I_DPLUS;
-	  curntn->metals -= cost;
-	} else {
-	  errormsg("SORRY");
-	}
-      }
-      break;
-     case '7':
-      if (ispc(curntn->active)) {
-        unsigned char tmp;
-	errormsg("Note: you get no mail while playing as an NPC!");
-	/* curntn->active *= 4; */
-        tmp = curntn->active;
-        curntn->active = curntn->strategy;
-        curntn->strategy = tmp;
-      } else if (isnpc(curntn->active)) {
-        unsigned char tmp;
-	errormsg("Okay.... you have now come back to reality.");
-	/* curntn->active /= 4; */
-        tmp = curntn->active;
-        curntn->active = curntn->strategy;
-        curntn->strategy = tmp;
-      }
-      /* killself = 1; */
-      NADJNTN;
-      break;
-     case '8':
-/*
-if (isgod == TRUE) {
+        if (magic(country, VAMPIRE) == 1) {
+          errormsg("VAMPIRES CAN'T ADD TO COMBAT BONUS");
+          break;
+        }
+        if (magic(country, WARLORD) == 1)
+          intval = 30;
+        else if (magic(country, CAPTAIN) == 1)
+          intval = 20;
+        else if (magic(country, WARRIOR) == 1)
+          intval = 10;
+        else
+          intval = 0;
+        men = 0;
+        for (armynum = 0; armynum < MAXARM; armynum++)
+          if ((P_ASOLD > 0) && (P_ATYPE < MINLEADER))
+            men += P_ASOLD;
+        men = max(men, 1500);
+        armynum = max(curntn->aplus - intval, 10) / 10;
+        cost = METALORE * men * armynum * armynum;
+        if (curntn->race == ORC)
+          cost *= 3;
+        mvprintw(LINES - 1, 0,
+                 "Do You Wish Spend %ld Metal On Attack (enter y or n):", cost);
+        refresh();
+        if (getch() == 'y') {
+          if (curntn->metals > cost) {
+            curntn->aplus += 1;
+            I_APLUS;
+            curntn->metals -= cost;
+          } else {
+            errormsg("SORRY");
+          }
+        }
+        armynum = max(curntn->dplus - intval, 10) / 10;
+        cost = METALORE * men * armynum * armynum;
+        if (curntn->race == ORC)
+          cost *= 3;
+        mvprintw(LINES - 1, 0,
+                 "Do You Wish Spend %ld Metal On Defense (enter y or n):",
+                 cost);
+        refresh();
+        if (getch() == 'y') {
+          if (curntn->metals > cost) {
+            curntn->dplus += 1;
+            I_DPLUS;
+            curntn->metals -= cost;
+          } else {
+            errormsg("SORRY");
+          }
+        }
+        break;
+      case '7':
+        if (ispc(curntn->active)) {
+          unsigned char tmp;
+          errormsg("Note: you get no mail while playing as an NPC!");
+          /* curntn->active *= 4; */
+          tmp = curntn->active;
+          curntn->active = curntn->strategy;
+          curntn->strategy = tmp;
+        } else if (isnpc(curntn->active)) {
+          unsigned char tmp;
+          errormsg("Okay.... you have now come back to reality.");
+          /* curntn->active /= 4; */
+          tmp = curntn->active;
+          curntn->active = curntn->strategy;
+          curntn->strategy = tmp;
+        }
+        /* killself = 1; */
+        NADJNTN;
+        break;
+      case '8':
+        /*
+        if (isgod == TRUE) {
+        */
+        if (deathok() || isgod) {
+          standout();
+          mvaddstr(LINES - 1, 0, "DO YOU WANT TO DIE? (y or n)");
+          standend();
+          refresh();
+
+          if (getch() == 'y') {
+            /* save to last turns news file */
+            sprintf(filename, "%s%d", newsfile, TURN - 1);
+            if ((fnews = fopen(filename, "a+")) == NULL) {
+              printf("error opening news file\n");
+              exit(FAIL);
+            }
+            destroy(country);
+            killself = 1;
+            fclose(fnews);
+            sprintf(command, "%s/%s", EXEDIR, sortname);
+            sprintf(command, "%s %s %s", command, filename, filename);
+            system(command);
+          }
+        }
+        break;
+
+#ifdef OGOD
+      case '9':
+        if (isgod == TRUE) {
+          /* open the target country's files */
+          /*
+          #ifdef ENCODE_EXECS
+          	sprintf(filename, "%s >> %s.%03d", ENCODE, exefile, country);
+          #ifdef DEBUG
+          fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile,
+          country");
+          #endif
+          	if ((ftmp = popen(filename, "w")) == NULL) {
+          #else
+          	sprintf(filename, "%s.%03d", exefile, country);
+          	if ((ftmp = fopen(filename, "a")) == NULL) {
+          #endif
+          	  beep();
+          	  errormsg("error opening country's file");
+          	  reset_god();
+          	  return;
+          	}
+          */ /* adjust commodities
 */
-      if (deathok()||isgod) {
-	standout();
-	mvaddstr(LINES - 1, 0, "DO YOU WANT TO DIE? (y or n)");
-	standend();
-	refresh();
-
-	if (getch() == 'y') {
-	  /* save to last turns news file */
-	  sprintf(filename, "%s%d", newsfile, TURN - 1);
-	  if ((fnews = fopen(filename, "a+")) == NULL) {
-	    printf("error opening news file\n");
-	    exit(FAIL);
-	  }
-	  destroy(country);
-	  killself = 1;
-	  fclose(fnews);
-	  sprintf(command, "%s/%s", EXEDIR, sortname);
-	  sprintf(command, "%s %s %s", command, filename, filename);
-	  system(command);
-	}
-      }
-      break;
-
-#ifdef OGOD
-     case '9':
-      if (isgod == TRUE) {
-	/* open the target country's files */
-/*
-#ifdef ENCODE_EXECS
-	sprintf(filename, "%s >> %s.%03d", ENCODE, exefile, country);
-#ifdef DEBUG
-fprintf(stderr, "Opening pipe to encode %s.%03d\n", exefile,
-country");
-#endif
-	if ((ftmp = popen(filename, "w")) == NULL) {
-#else
-	sprintf(filename, "%s.%03d", exefile, country);
-	if ((ftmp = fopen(filename, "a")) == NULL) {
-#endif
-	  beep();
-	  errormsg("error opening country's file");
-	  reset_god();
-	  return;
-	}
-*/	/* adjust commodities */
-	mvaddstr(LINES - 2, 0, "CHANGE: 1) Gold 2) Jewels 3) Iron 4) Food ?");
-	clrtoeol();
-	refresh();
-	switch (getch()) {
-	 case '1':
-	  mvaddstr(LINES - 1, 0, "WHAT IS NEW VALUE FOR TREASURY? ");
-	  refresh();
-	  curntn->tgold = (long) get_number();
-/*	  if (curntn->tgold < 0L)
-	    curntn->tgold = 0L;
-	  fprintf(ftmp, "L_NGOLD\t%d \t%d \t%ld \t0 \t0 \t%s\n", XNAGOLD, country, curntn->tgold, "null");
-*/	  break;
-	 case '2':
-	  mvaddstr(LINES - 1, 0, "WHAT IS NEW AMOUNT OF JEWELS? ");
-	  refresh();
-	  curntn->jewels = (long) get_number();
-/*	  if (curntn->jewels < 0L)
-	    curntn->jewels = 0L;
-	  fprintf(ftmp, "L_NJWLS\t%d \t%d \t%ld \t0 \t0 \t%s\n", XNARGOLD, country, curntn->jewels, "null");
-*/	  break;
-	 case '3':
-	  mvaddstr(LINES - 1, 0, "WHAT IS NEW AMOUNT OF METAL? ");
-	  refresh();
-	  curntn->metals = (long) get_number();
-/*	  if (curntn->metals < 0L)
-	    curntn->metals = 0L;
-	  fprintf(ftmp, "L_NMETAL\t%d \t%d \t%ld \t0 \t0 \t%s\n", XNAMETAL, country, curntn->metals, "null");
-*/	  break;
-	 case '4':
-	  mvaddstr(LINES - 1, 0, "WHAT IS NEW AMOUNT OF FOOD? ");
-	  refresh();
-	  curntn->tfood = (long) get_number();
-	  if (curntn->tfood < 0L)
-	    curntn->tfood = 0L;
-	  break;
-	 default:
-	  break;
-	}
+          mvaddstr(LINES - 2, 0, "CHANGE: 1) Gold 2) Jewels 3) Iron 4) Food ?");
+          clrtoeol();
+          refresh();
+          switch (getch()) {
+            case '1':
+              mvaddstr(LINES - 1, 0, "WHAT IS NEW VALUE FOR TREASURY? ");
+              refresh();
+              curntn->tgold = (long) get_number();
+              /*	  if (curntn->tgold < 0L)
+              	    curntn->tgold = 0L;
+              	  fprintf(ftmp, "L_NGOLD\t%d \t%d \t%ld \t0 \t0 \t%s\n", XNAGOLD,
+              country, curntn->tgold, "null");
+              */ break;
+            case '2':
+              mvaddstr(LINES - 1, 0, "WHAT IS NEW AMOUNT OF JEWELS? ");
+              refresh();
+              curntn->jewels = (long) get_number();
+              /*	  if (curntn->jewels < 0L)
+              	    curntn->jewels = 0L;
+              	  fprintf(ftmp, "L_NJWLS\t%d \t%d \t%ld \t0 \t0 \t%s\n",
+              XNARGOLD, country, curntn->jewels, "null");
+              */ break;
+            case '3':
+              mvaddstr(LINES - 1, 0, "WHAT IS NEW AMOUNT OF METAL? ");
+              refresh();
+              curntn->metals = (long) get_number();
+              /*	  if (curntn->metals < 0L)
+              	    curntn->metals = 0L;
+              	  fprintf(ftmp, "L_NMETAL\t%d \t%d \t%ld \t0 \t0 \t%s\n",
+              XNAMETAL, country, curntn->metals, "null");
+              */ break;
+            case '4':
+              mvaddstr(LINES - 1, 0, "WHAT IS NEW AMOUNT OF FOOD? ");
+              refresh();
+              curntn->tfood = (long) get_number();
+              if (curntn->tfood < 0L)
+                curntn->tfood = 0L;
+              break;
+            default:
+              break;
+          }
 /*
 #ifdef ENCODE_EXECS
 #ifdef DEBUG
@@ -987,128 +1013,122 @@ country");
 	fclose(ftmp);
 #endif
 */     }
-      break;
-#endif	/* OGOD */
+        break;
+#endif /* OGOD */
 
-     case '0':
-      if (isgod == TRUE) {
-	mvaddstr(LINES - 2, 0, "ENTER CONQUER SUPER-USER PASSWORD:");
-	refresh();
-	(void) get_pass(string);
-	strcpy(passwd, crypt(string, SALT));
-	if (strncmp(passwd, ntn[0].passwd, PASSLTH) != 0)
-	  break;
-	mvaddstr(LINES - 1, 0, "PROMOTE WHAT USER TO DEMI-GOD? ");
-	refresh();
-	get_nname(string);
-	if (strlen(string) != 0 && getpwnam(string) != NULL) {
-	  strncpy(ntn[0].leader, string, LEADERLTH);
-	}
-      }
-      break;
-     case 'u':
-     case 'U':
-      if(isgod == TRUE) {
+      case '0':
+        if (isgod == TRUE) {
+          mvaddstr(LINES - 2, 0, "ENTER CONQUER SUPER-USER PASSWORD:");
+          refresh();
+          (void) get_pass(string);
+          strcpy(passwd, crypt(string, SALT));
+          if (strncmp(passwd, ntn[0].passwd, PASSLTH) != 0)
+            break;
+          mvaddstr(LINES - 1, 0, "PROMOTE WHAT USER TO DEMI-GOD? ");
+          refresh();
+          get_nname(string);
+          if (strlen(string) != 0 && getpwnam(string) != NULL) {
+            strncpy(ntn[0].leader, string, LEADERLTH);
+          }
+        }
+        break;
+      case 'u':
+      case 'U':
+        if (isgod == TRUE) {
+          clear();
+          mvaddstr(0, 0, "What user-id shall own this land? ");
+          clrtoeol();
+          refresh();
+          get_nname(string);
+          if ((hackpwd = getpwnam(string))) {
+            curntn->owner = hackpwd->pw_uid;
+            killself = 1;
+          } else {
+            errormsg("I've never met any such user");
+          }
+        }
+        break;
+      case 'l':
+      case 'L':
         clear();
-        mvaddstr(0, 0, "What user-id shall own this land? ");
+        mvaddstr(0, 0, "What name would you like:");
         clrtoeol();
         refresh();
         get_nname(string);
-        if(hackpwd = getpwnam(string)) {
-          curntn->owner = hackpwd->pw_uid;
-          killself = 1;
-        } else {
-	  errormsg("I've never met any such user");
+        if ((strlen(string) <= 1) || (strlen(string) > LEADERLTH)) {
+          errormsg("Invalid name length");
+          break;
         }
-      }
-      break;
-     case 'l':
-     case 'L':
-      clear();
-      mvaddstr(0, 0, "What name would you like:");
-      clrtoeol();
-      refresh();
-      get_nname(string);
-      if ((strlen(string) <= 1) || (strlen(string) > LEADERLTH)) {
-	errormsg("Invalid name length");
-	break;
-      }
-      strncpy(curntn->leader, string, LEADERLTH);
-      ECHGLDR;
-      break;
-     case 'm':
-     case 'M':
-      clear();
-      while (TRUE) {                                        
-       int temp;
-       char tempc[256];
+        strncpy(curntn->leader, string, LEADERLTH);
+        ECHGLDR;
+        break;
+      case 'm':
+      case 'M':
+        clear();
+        while (TRUE) {
+          int temp;
+          char tempc[256];
 
-       temp = 30;                                          
-       mvaddstr(6, 0, "This can be any of the following:");
-       for (tempc[0] = '!'; tempc[0] <= '~'; tempc[0]++) { 
-         if (markok(tempc[0], FALSE)) {                    
-           temp += 2;                                      
-           if (temp > COLS - 20) {                         
-             printw("\n    ");                             
-             temp = 8;                                     
-           }                                               
-           printw(" %c", tempc[0]);                        
-         } else if (marknearok(tempc[0], FALSE)) {         
-           temp += 2;
-           if (temp > COLS - 20) { 
-             printw("\n    ");     
-             temp = 8;             
-           }                       
-           printw(" ");            
-           standout();             
-           printw("%c", tempc[0]); 
-           standend();
+          temp = 30;
+          mvaddstr(6, 0, "This can be any of the following:");
+          for (tempc[0] = '!'; tempc[0] <= '~'; tempc[0]++) {
+            if (markok(tempc[0], FALSE)) {
+              temp += 2;
+              if (temp > COLS - 20) {
+                printw("\n    ");
+                temp = 8;
+              }
+              printw(" %c", tempc[0]);
+            } else if (marknearok(tempc[0], FALSE)) {
+              temp += 2;
+              if (temp > COLS - 20) {
+                printw("\n    ");
+                temp = 8;
+              }
+              printw(" ");
+              standout();
+              printw("%c", tempc[0]);
+              standend();
+            }
+          }
+          mvaddstr(5, 0, "Enter National Mark (for maps): ");
+          clrtoeol();
+          refresh();
+          tempc[0] = getch();
+          if (marknearok(tempc[0], TRUE)) {
+            curntn->mark = (*tempc);
+            break;
+          }
         }
-      }
-      mvaddstr(5, 0, "Enter National Mark (for maps): ");
-      clrtoeol();                                        
-      refresh();                                         
-      tempc[0] = getch();                                
-      if (marknearok(tempc[0], TRUE)) {                  
-        curntn->mark = (*tempc);                         
-        break;                                           
-      }
-      }
-      ECHGMARK;
-      if(isgod == TRUE) reset_god();
-      return;
-     case 'p':
-     case 'P':
-      produce();
-      if (isgod == TRUE)
-	reset_god();
-      return;
-     case 'b':
-     case 'B':
-      budget();
-      if (isgod == TRUE)
-	reset_god();
-      return;
-     default:
-      if (isgod == TRUE)
-	reset_god();
-      return;
+        ECHGMARK;
+        if (isgod == TRUE)
+          reset_god();
+        return;
+      case 'p':
+      case 'P':
+        produce();
+        if (isgod == TRUE)
+          reset_god();
+        return;
+      case 'b':
+      case 'B':
+        budget();
+        if (isgod == TRUE)
+          reset_god();
+        return;
+      default:
+        if (isgod == TRUE)
+          reset_god();
+        return;
     }
-  }				/* end of continuous loop */
+  } /* end of continuous loop */
 }
 
-void
-help()
-{
-  int             lineno;
-  FILE           *fp,
-                 *fopen();
-  int             i,
-                  xcnt,
-                  ycnt,
-                  done = FALSE;
-  char            line[LINELTH],
-                  fname[FILELTH];
+void help(void) {
+  int lineno;
+  FILE *fp, *fopen();
+  int i, xcnt, ycnt, done = FALSE;
+  char line[LINELTH], fname[FILELTH];
 
   /* find out which helpfile to read in */
   clear_bottom(0);
@@ -1133,22 +1153,28 @@ help()
     makebottom();
     return;
   }
-  /* open help file */
+/* open help file */
 #ifdef USE_COMPRESS
-  sprintf(fname, "%s < %s/%s%d.%s", ZCAT, RONLY_DIR, helpfile, i, ZEXT);
 #ifdef DEBUG
-fprintf(stderr, "Opening pipe to helpfile %d\n", i);
+  fprintf(stderr, "Opening pipe to helpfile %d\n", i);
 #endif
-  if (((fp = popen(fname, "r")) == NULL) || feof(fp)){
-#else
-  sprintf(fname, "%s/%s%d", RONLY_DIR, helpfile, i);
-  if ((fp = fopen(fname, "r")) == NULL) {
-#endif
+  sprintf(fname, "%s < %s/%s%d.%s", ZCAT, RONLY_DIR, helpfile, i, ZEXT);
+  if (((fp = popen(fname, "r")) == NULL) || feof(fp)) {
     mvprintw(0, 0, "\nerror on read of %s\n", fname);
     refresh();
     getch();
     return;
   }
+#else
+  sprintf(fname, "%s/%s%d", RONLY_DIR, helpfile, i);
+  if ((fp = fopen(fname, "r")) == NULL) {
+    mvprintw(0, 0, "\nerror on read of %s\n", fname);
+    refresh();
+    getch();
+    return;
+  }
+#endif
+
   while (done == FALSE) {
     /* read in screen (until DONE statement) */
     fgets(line, 80, fp);
@@ -1158,22 +1184,23 @@ fprintf(stderr, "Opening pipe to helpfile %d\n", i);
       clear();
       lineno = 0;
       while (strncmp(line, "END", 3) != 0) {
-	if (lineno == 0) {
-	  /* highlight topic line */
-	  for (i = 0; line[i] == ' '; i++);
-	  i--;			/* back up 1 */
-	  standout();
-	  mvaddstr(lineno, i, line + i);
-	  /* add a blank space on the end */
-	  mvaddch(lineno, strlen(line) - 1, ' ');
-	  standend();
-	} else
-	  mvaddstr(lineno, 0, line);
-	lineno++;
-	if (lineno > LINES - 3)
-	  strcpy(line, "END");
-	else
-	  fgets(line, 80, fp);
+        if (lineno == 0) {
+          /* highlight topic line */
+          for (i = 0; line[i] == ' '; i++)
+            ;
+          i--; /* back up 1 */
+          standout();
+          mvaddstr(lineno, i, line + i);
+          /* add a blank space on the end */
+          mvaddch(lineno, strlen(line) - 1, ' ');
+          standend();
+        } else
+          mvaddstr(lineno, 0, line);
+        lineno++;
+        if (lineno > LINES - 3)
+          strcpy(line, "END");
+        else
+          fgets(line, 80, fp);
       }
       standout();
       /* help screen 80 col format; constants needed */
@@ -1182,12 +1209,12 @@ fprintf(stderr, "Opening pipe to helpfile %d\n", i);
       standend();
       refresh();
       if (getch() == ' ')
-	done = TRUE;
+        done = TRUE;
     }
   }
 #ifdef USE_COMPRESS
 #ifdef DEBUG
-fprintf(stderr, "Closing helpfile %d\n", i);
+  fprintf(stderr, "Closing helpfile %d\n", i);
 #endif
   pclose(fp);
 #else
@@ -1197,20 +1224,16 @@ fprintf(stderr, "Closing helpfile %d\n", i);
 
 /* routine to highlight a line for news display */
 /* if country name is mentioned.  By T. Kivinen */
-mvaddstrnahil(li, col, p, hi)
-  int             li;
-  int             col;
-  char           *p;
-  int		  hi;
+void mvaddstrnahil(int li, int col, char *p, int hi)
 {
-  int             i,
-                  j;
+  int i, j;
 
   move(li, col);
   for (i = 0; p[i]; i++) {
-    for (j = 0; p[i + j] == ntn[country].name[j]; j++);
+    for (j = 0; p[i + j] == ntn[country].name[j]; j++)
+      ;
     if (ntn[country].name[j] == 0 && p[i + j] != '-') {
-      if(hi) {
+      if (hi) {
         standout();
         addstr(ntn[country].name);
         standend();
@@ -1222,24 +1245,15 @@ mvaddstrnahil(li, col, p, hi)
   }
 }
 
-void
-newspaper()
-{
-  int             lineno;
-  FILE           *fp,
-                 *fopen();
-  int             newpage,
-                  choice,
-                  done;
-  short           pagenum,
-                  subpage;
-  int             i,
-                  ydist,
-                  xdist;
-  char            line[LINELTH],
-                  name[FILELTH];
-  int             readold;
-  int             c;
+void newspaper(void) {
+  int lineno;
+  FILE *fp, *fopen();
+  int newpage, choice, done;
+  short pagenum, subpage;
+  int i, ydist, xdist;
+  char line[LINELTH], name[FILELTH];
+  int readold;
+  int c;
 
   /* check to make sure that there are newspapers */
   if (TURN == 0) {
@@ -1251,15 +1265,14 @@ newspaper()
   }
   /* set to 1 if news already read and redraw is needed */
   readold = 0;
-readoldp:			/* label to jump if reading old pages */
+readoldp : /* label to jump if reading old pages */
   clear_bottom(0);
   ydist = LINES - 3;
   xdist = 0;
 
   /* check for all newspapers up until the current turn */
   for (i = TURN - 1; i >= 0 && i >= TURN - MAXNEWS; i--) {
-    sprintf(line, "   %d) %s of Year %d", TURN - i,
-	    PMONTH(i), YEAR(i));
+    sprintf(line, "   %d) %s of Year %d", TURN - i, PMONTH(i), YEAR(i));
     /* align all strings */
     mvprintw(ydist, xdist, "%s", line);
     xdist += strlen(line);
@@ -1284,7 +1297,7 @@ readoldp:			/* label to jump if reading old pages */
   }
   /* select page to read */
   pagenum = 1;
-backpage:			/* label for reading previous pages. pagenum
+backpage : /* label for reading previous pages. pagenum
 				 * set to page */
   sprintf(name, "%s%d", newsfile, TURN - choice);
   if ((fp = fopen(name, "r")) == NULL) {
@@ -1297,8 +1310,8 @@ backpage:			/* label for reading previous pages. pagenum
     makebottom();
     return;
   }
-  /* open and read one page */
-forpage:			/* label for reading forward pages. pagenum
+/* open and read one page */
+forpage : /* label for reading forward pages. pagenum
 				 * set to page */
   subpage = 1;
   newpage = FALSE;
@@ -1327,109 +1340,113 @@ forpage:			/* label for reading forward pages. pagenum
       newpage = TRUE;
       standout();
       mvprintw(0, 21, "CONQUER NEWS REPORT  Page %d.%d", pagenum, subpage++);
-      mvprintw(1, 28, "%s of Year %d", PMONTH(TURN - choice), YEAR(TURN - choice));
+      mvprintw(1, 28, "%s of Year %d", PMONTH(TURN - choice),
+               YEAR(TURN - choice));
       mvprintw(3, 37 - strlen(name) / 2, "%s", name + 2);
       standend();
       /* display any pending non-blank lines */
       if (strcmp(line, name) != 0 && strlen(line) > 2) {
-	  mvaddstrnahil(lineno++, 0, line + 2, Gaudy);
+        mvaddstrnahil(lineno++, 0, line + 2, Gaudy);
       }
     } else if (fgets(line, 80, fp) == NULL)
       done = TRUE;
     else {
       if (line[1] != '.' && line[1] != ':') {
-	strcpy(name, line);
-	newpage = FALSE;
-	pagenum = todigit(line[0]);
-	subpage = 1;
+        strcpy(name, line);
+        newpage = FALSE;
+        pagenum = todigit(line[0]);
+        subpage = 1;
       } else {
-	if (todigit(line[0]) != pagenum) {
-	  newpage = FALSE;
-	  pagenum = todigit(line[0]);
-	  subpage = 1;
-	} else if (lineno > LINES - 4)
-	  newpage = FALSE;
-	else if (strlen(line) > 2) {
-	    mvaddstrnahil(lineno++, 0, line + 2, Gaudy);
-	}
+        if (todigit(line[0]) != pagenum) {
+          newpage = FALSE;
+          pagenum = todigit(line[0]);
+          subpage = 1;
+        } else if (lineno > LINES - 4)
+          newpage = FALSE;
+        else if (strlen(line) > 2) {
+          mvaddstrnahil(lineno++, 0, line + 2, Gaudy);
+        }
       }
     }
     if (newpage == FALSE || done == TRUE) {
       standout();
       /* constants since news is 80 col format */
-      mvaddstr(LINES - 2, 4, "N=next page, P=previous page, 1-5=jump to page, O=Read other news");
-      mvaddstr(LINES - 1, 12, "ANY OTHER KEY TO ADVANCE -- TO END NEWS HIT SPACE");
+      mvaddstr(
+          LINES - 2, 4,
+          "N=next page, P=previous page, 1-5=jump to page, O=Read other news");
+      mvaddstr(LINES - 1, 12,
+               "ANY OTHER KEY TO ADVANCE -- TO END NEWS HIT SPACE");
       standend();
       refresh();
-  stayhere:
+    stayhere:
       c = getch();
       switch (c) {
-       case 'N':
-       case 'n':
-	/* go forward a page */
-	if (subpage != 1 && done != TRUE) {
-	  pagenum++;
-	  if (pagenum > 5)
-	    pagenum = 5;
-	  goto forpage;
-	} else if (done == TRUE) {
-	  goto stayhere;
-	}
-	break;
-       case 'P':
-       case 'p':
-	/* go backward a page */
-	if (subpage == 1)
-	  pagenum--;
-	pagenum--;
-	if (pagenum < 1)
-	  pagenum = 1;
-	fclose(fp);
-	goto backpage;
-	break;
-       case '1':
-       case '2':
-       case '3':
-       case '4':
-       case '5':
-	/* goto a specific page */
-	i = todigit(c);
-	if (i <= pagenum) {
-	  pagenum = i;
-	  fclose(fp);
-	  goto backpage;
-	} else {
-	  pagenum = i;
-	  goto forpage;
-	}
-	break;
-       case ' ':
-	done = TRUE;
-	break;
-       case 'O':
-       case 'o':
-	readold = 1;
-	fclose(fp);
-	goto readoldp;
-	break;
+        case 'N':
+        case 'n':
+          /* go forward a page */
+          if (subpage != 1 && done != TRUE) {
+            pagenum++;
+            if (pagenum > 5)
+              pagenum = 5;
+            goto forpage;
+          } else if (done == TRUE) {
+            goto stayhere;
+          }
+          break;
+        case 'P':
+        case 'p':
+          /* go backward a page */
+          if (subpage == 1)
+            pagenum--;
+          pagenum--;
+          if (pagenum < 1)
+            pagenum = 1;
+          fclose(fp);
+          goto backpage;
+          break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+          /* goto a specific page */
+          i = todigit(c);
+          if (i <= pagenum) {
+            pagenum = i;
+            fclose(fp);
+            goto backpage;
+          } else {
+            pagenum = i;
+            goto forpage;
+          }
+          break;
+        case ' ':
+          done = TRUE;
+          break;
+        case 'O':
+        case 'o':
+          readold = 1;
+          fclose(fp);
+          goto readoldp;
+          break;
       }
     }
   } while (done == FALSE);
   fclose(fp);
 }
 
-int
-deathok()
-{
+int deathok(void) {
   char uid_path[256];
   char time_check_value[27];
   time_t mytime;
   int hour, minute;
   FILE *fp;
 
-  if((TURN%12)!= 11) return 0; /* Die only in Decembre... before winter */
+  if ((TURN % 12) != 11)
+    return 0; /* Die only in Decembre... before winter */
   sprintf(uid_path, "%s/killed.%d", DEFAULTDIR, owneruid);
-  if(!access(uid_path, 0)) return 0; /* already killed self once today */
+  if (!access(uid_path, 0))
+    return 0; /* already killed self once today */
   /* time(&mytime);
   strcpy(time_check_value, ctime(&mytime));
   time_check_value[13]= time_check_value[16]= '\0';
@@ -1437,6 +1454,8 @@ deathok()
   minute= atoi(&time_check_value[14]);
   return((hour == 17)&&(minute <= 5));
   */
-  fp= fopen(uid_path, "w");
-  if(fp) fclose(fp);
+  fp = fopen(uid_path, "w");
+  if (fp)
+    fclose(fp);
+  return 1;
 }

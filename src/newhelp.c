@@ -31,12 +31,8 @@
 #include "data.h"
 #include "patchlevel.h"
 
-void
-main()
-{
-  FILE           *fp,
-                 *fp2,
-                 *fopen();
+int main(void) {
+  FILE *fp, *fp2, *fopen();
 
   if ((fp = fopen("sed.1", "w")) == NULL) {
     printf("cant open sed.1 file\n");
@@ -63,9 +59,9 @@ main()
   fprintf(fp, "s/XBREAKJIHAD/%ld/g\n", MINJIHADCOST);
   fprintf(fp, "s/XCONQENV/%s/g\n", ENVIRON_OPTS);
   fprintf(fp, "s/XNCITYCOST/%d/g\n", N_CITYCOST);
-  fprintf(fp, "s/XREBUILDCOST/%d/g\n", REBUILDCOST);
+  fprintf(fp, "s/XREBUILDCOST/%ld/g\n", REBUILDCOST);
 
-  /* check all the defined options */
+/* check all the defined options */
 
 #ifdef OGOD
   fprintf(fp, "s/XOGOD/(True )/g\n");
@@ -195,9 +191,9 @@ main()
   fprintf(fp, "s/ZGRANARY/GRANARY   (%c)/g\n", DGRANARY);
   fprintf(fp, "s/ZCHURCH/CHURCH    (%c)/g\n", DCHURCH);
   fprintf(fp, "s/ZSTOCKADE/STOCKADE  (%c)/g\n", DSTOCKADE);
-  fprintf(fp, "s/ZSTOCKCOST/%d/g\n", STOCKCOST);
+  fprintf(fp, "s/ZSTOCKCOST/%ld/g\n", STOCKCOST);
 
-  /* other defines */
+/* other defines */
 
 #ifdef RANEVENT
   fprintf(fp, "s/XNORANDEVENTS/%d/g\n", RANEVENT);
@@ -220,26 +216,26 @@ main()
   fprintf(fp, "s/XWARSHPCOST/%ld/g\n", WARSHPCOST);
   fprintf(fp, "s/XMERSHPCOST/%ld/g\n", MERSHPCOST);
   fprintf(fp, "s/XGALSHPCOST/%ld/g\n", GALSHPCOST);
-  fprintf(fp, "s/XSHIPCREW/%ld/g\n", SHIPCREW);
-  fprintf(fp, "s/XSHIPHOLD/%d/g\n", SHIPHOLD);
+  fprintf(fp, "s/XSHIPCREW/%d/g\n", SHIPCREW);
+  fprintf(fp, "s/XSHIPHOLD/%ld/g\n", SHIPHOLD);
   fprintf(fp, "s/XWARSPD/%d/g\n", N_WSPD);
   fprintf(fp, "s/XGALSPD/%d/g\n", N_GSPD);
   fprintf(fp, "s/XMERSPD/%d/g\n", N_MSPD);
   fprintf(fp, "s/XSIZESPD/%d/g\n", N_SIZESPD);
   fprintf(fp, "s/XNMASK/%d/g\n", (int) N_MASK);
-  fprintf(fp, "s/XCITYLIMIT/%d/g\n", CITYLIMIT);
-  fprintf(fp, "s/XMILRATIO/%d/g\n", MILRATIO);
-  fprintf(fp, "s/XMILINCAP/%d/g\n", MILINCAP);
+  fprintf(fp, "s/XCITYLIMIT/%ld/g\n", CITYLIMIT);
+  fprintf(fp, "s/XMILRATIO/%ld/g\n", MILRATIO);
+  fprintf(fp, "s/XMILINCAP/%ld/g\n", MILINCAP);
   fprintf(fp, "s/XBRIBE/%ld/g\n", BRIBE);
   fprintf(fp, "s/XDESFOOD/%d/g\n", DESFOOD);
-  fprintf(fp, "s/XTOMUCHMINED/%d/g\n", TOMUCHMINED);
-  fprintf(fp, "s/XTOMANYPEOPLE/%d/g\n", TOMANYPEOPLE);
-  fprintf(fp, "s/XABSMAXPEOPLE/%d/g\n", ABSMAXPEOPLE);
+  fprintf(fp, "s/XTOMUCHMINED/%ld/g\n", TOMUCHMINED);
+  fprintf(fp, "s/XTOMANYPEOPLE/%ld/g\n", TOMANYPEOPLE);
+  fprintf(fp, "s/XABSMAXPEOPLE/%ld/g\n", ABSMAXPEOPLE);
   fprintf(fp, "s/XFINDPERCENT/%d/g\n", FINDPERCENT);
 
 #ifdef ORCTAKE
-  fprintf(fp, "s/XTAKEPRICE/%d/g\n", ORCTAKE);
-#endif	/* ORCTAKE */
+  fprintf(fp, "s/XTAKEPRICE/%ld/g\n", ORCTAKE);
+#endif /* ORCTAKE */
 
   fprintf(fp, "s/XTGATTR/%d/g\n", TGATTR);
   fprintf(fp, "s/XOTHRATTR/%d/g\n", OTHRATTR);
@@ -290,7 +286,7 @@ main()
   fprintf(fp2, "s/XHFOREATTR/%3d/g\n", HFOREATTR);
   fprintf(fp2, "s/XHWOODATTR/%3d/g\n", HWOODATTR);
 
-  /* magical power costs for races */
+/* magical power costs for races */
 
 #ifdef ELFMAGIC
   fprintf(fp2, "s/XEMMAG/%3ldK/g\n", ELFMAGIC / 1000L);
@@ -316,7 +312,7 @@ main()
   fprintf(fp2, "s/XOMMAG/%3ldK/g\n", BASEMAGIC / 1000L);
 #endif
 
-  /* civilian power costs for races */
+/* civilian power costs for races */
 
 #ifdef ELFCIVIL
   fprintf(fp2, "s/XECMAG/%3ldK/g\n", ELFCIVIL / 1000L);
@@ -342,7 +338,7 @@ main()
   fprintf(fp2, "s/XOCMAG/%3ldK/g\n", BASEMAGIC / 1000L);
 #endif
 
-  /* military power costs for races */
+/* military power costs for races */
 
 #ifdef ELFMILIT
   fprintf(fp2, "s/XEWMAG/%3ldK/g\n", ELFMILIT / 1000L);

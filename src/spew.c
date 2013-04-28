@@ -18,7 +18,7 @@
  */
 
 #ifndef lint
-static char    *cpr[] = {
+static char *cpr[] = {
   "  Copyright 1987 Greg Smith",
   "  Permission is granted to freely use and distribute this software",
   "provided this notice is left attached and no monetary gain is made."
@@ -37,32 +37,22 @@ static char    *cpr[] = {
 
 #ifdef SPEW
 #include <stdio.h>
+#include <string.h> /* strlen(), strcmp() */
 #include <ctype.h>
 
-extern char    *malloc();
-extern int      atoi();
-char           *my_alloc();
-char           *save();
+char *my_alloc();
+char *save();
 
-#ifdef BSD
-extern char    *index();	/* This may be strchr	 */
-extern char    *rindex();	/* This may be strrchr	 */
-
-#else
-#define index(s,c)	strchr(s,c)
-#define rindex(s,c)	strrchr(s,c)
-extern char    *strchr();	/* This may be index	 */
-extern char    *strrchr();	/* This may be rindex	 */
-
-#endif
+#define index(s, c) strchr((s),(c))
+#define rindex(s, c) strrchr((s),(c))
 
 /*--------------- system configuration ------------------*/
 
 /* define some parameters */
 
-#define MAXCLASS 300		/* max # of classes */
-#define MAXLINE 256		/* max size of input line */
-#define MAXDEF 1000		/* max # bytes in a definition */
+#define MAXCLASS 300 /* max # of classes */
+#define MAXLINE 256  /* max size of input line */
+#define MAXDEF 1000  /* max # bytes in a definition */
 
 /* Define the default rulesfile */
 
@@ -72,21 +62,21 @@ extern char    *strrchr();	/* This may be rindex	 */
 
 /* Define the random number generator */
 
-extern long     getpid();
+extern long getpid();
 
- /* ROLL(n) returns integer 0..n-1 */
-#define ROLL(n) ((((long)rand()&0x7ffffff)>>5)%(n))
+/* ROLL(n) returns integer 0..n-1 */
+#define ROLL(n) ((((long) rand() & 0x7ffffff) >> 5) % (n))
 
 /*---------------------------------------------------*/
 
-FILE           *InFile;
+FILE *InFile;
 
 typedef struct def_struct {
-  int             cumul;	/* cumulative weights */
-  char           *string;	/* string which defines it */
-  struct def_struct *next;	/* link to next */
-}               defn;
-defn           *process();
+  int cumul;               /* cumulative weights */
+  char *string;            /* string which defines it */
+  struct def_struct *next; /* link to next */
+} defn;
+defn *process();
 
 /*
  * within a definition, names of subdefinitions are bracketed in BSLASH
@@ -94,32 +84,46 @@ defn           *process();
  * The SLASH character is always follwed by a variant tag - default is ' '.
  */
 #define BSLASH '\\'
-#define SLASH  '/'
-#define VBAR	 '|'
+#define SLASH '/'
+#define VBAR '|'
 
 typedef struct {
-  int             weight;	/* total weight of definitions in class */
-  defn           *list;		/* list of them */
-  char           *name;		/* name of this class */
-  char           *tags;		/* pointer to list of tags */
-}               classrec;
+  int weight; /* total weight of definitions in class */
+  defn *list; /* list of them */
+  char *name; /* name of this class */
+  char *tags; /* pointer to list of tags */
+} classrec;
 
-classrec       *Classptr;	/* pointer to array of class records */
-char           *NullTags = " ";	/* default tags ( shared ) */
-int             Classes;	/* number of them */
-int             HowMany = 1;
-int             CompIn = FALSE;	/* is input file in compressed format? */
-int             CompMain;	/* class # of MAIN class when compressed */
+classrec *Classptr;   /* pointer to array of class records */
+char *NullTags = " "; /* default tags ( shared ) */
+int Classes;          /* number of them */
+int HowMany = 1;
+int CompIn = FALSE; /* is input file in compressed format? */
+int CompMain;       /* class # of MAIN class when compressed */
 
-char            InLine[MAXLINE];
+char InLine[MAXLINE];
 
-makemess(n, fp)
-  int             n;
-  FILE           *fp;
+void init(void);
+void readtext(void);
+void display(char *s, int deftag, FILE *fp);
+classrec *lookup(char *str);
+int namecomp(register char *a, register char *b);
+void readline(void);
+int clcomp(const void *a, const void *b);
+char *save(char *str);
+void setup(register classrec *cp);
+defn *process(void);
+char *my_alloc(unsigned n);
+void compdef(register defn *dp);
+void readcclass(register classrec *cp);
+void instring(register char *where, register int how_many);
+void badfile(void);
+
+void makemess(int n, FILE *fp)
 {
-  char            fname[BIGLTH];
-  char            main_class[20];
-  int             i;
+  char fname[BIGLTH];
+  char main_class[20];
+  int i;
 
   HowMany = n;
 
@@ -139,19 +143,17 @@ makemess(n, fp)
     display(main_class, ' ', fp);
 }
 
-init()
-{
+void init(void) {
   readtext();
 }
 
-readtext()
+void readtext(void)
 {
   register classrec *cp;
-  register defn  *dp;
-  defn          **update;
-  int             clcomp();
+  register defn *dp;
+  defn **update;
 
-  Classptr = (classrec *) my_alloc((unsigned) (MAXCLASS * sizeof(classrec)));
+  Classptr = (classrec *)my_alloc((unsigned)(MAXCLASS * sizeof(classrec)));
   Classes = 0;
 
   cp = Classptr;
@@ -165,25 +167,25 @@ readtext()
       fprintf(stderr, "Too many classes -- max = %d\n", MAXCLASS);
       exit(1);
     }
-    setup(cp);			/* set up the class struct */
+    setup(cp); /* set up the class struct */
     readline();
     if (InLine[0] == '%') {
       fprintf(stderr, "Expected class instance at: %s\n", InLine);
       exit(1);
     }
-    update = &(cp->list);	/* update pointer */
+    update = &(cp->list); /* update pointer */
     do {
       dp = process();
       *update = dp;
-      cp->weight += dp->cumul;	/* add new stuff */
-      dp->cumul = cp->weight;	/* set breakpoint */
+      cp->weight += dp->cumul; /* add new stuff */
+      dp->cumul = cp->weight;  /* set breakpoint */
       update = &(dp->next);
     } while (readline(), InLine[0] != '%');
-    ++Classes;			/* count them */
+    ++Classes; /* count them */
     ++cp;
     *update = NULL;
   }
-  qsort((char *) Classptr, Classes, sizeof(classrec), clcomp);
+  qsort((char *)Classptr, Classes, sizeof(classrec), clcomp);
 }
 
 /*
@@ -195,111 +197,101 @@ readtext()
  * variants. If that variant tag is '&', the tag 'deftag' is used, which
  * is the active variant of the containing activation.
  */
-display(s, deftag, fp)
-  char           *s;
-  int             deftag;
-  FILE           *fp;
+void display(char *s, int deftag, FILE *fp)
 {
   register classrec *cp;
-  register defn  *dp;
-  register char  *p;
-  classrec       *lookup();
-  int             i,
-                  variant,
-                  incurly;
-  register int    c,
-                  writing;
+  register defn *dp;
+  register char *p;
+  classrec *lookup();
+  int i, variant, incurly;
+  register int c, writing;
 
-  if (CompIn) {			/* input is compressed */
-    cp = &Classptr[atoi(s)];	/* explicit class # */
+  if (CompIn) {              /* input is compressed */
+    cp = &Classptr[atoi(s)]; /* explicit class # */
   } else {
     cp = lookup(s);
-    if (cp == NULL) {		/* none found */
+    if (cp == NULL) { /* none found */
       fprintf(fp, "???");
       while (*s != SLASH)
-	putc(*s++, fp);
+        putc(*s++, fp);
       fprintf(fp, "???");
       return;
     }
   }
-  c = index(s, SLASH)[1];	/* get variant tag */
+  c = index(s, SLASH)[1]; /* get variant tag */
   if (c != '&')
-    deftag = c;			/* use given tag */
-  p = index(cp->tags, deftag);	/* look it up */
+    deftag = c;                /* use given tag */
+  p = index(cp->tags, deftag); /* look it up */
   if (p == NULL) {
     variant = 0;
-    fprintf(fp, "??/%c??", deftag);
-    deftag = ' ';		/* for passing as deftag */
+    fprintf(fp, "?\?/%c??", deftag); /* \? is replaced with ? */
+    deftag = ' '; /* for passing as deftag */
   } else
     variant = p - cp->tags;
 
   i = ROLL(cp->weight);
   dp = cp->list;
-  while (dp->cumul <= i) {	/* pick one based on cumul. weights */
+  while (dp->cumul <= i) { /* pick one based on cumul. weights */
     dp = dp->next;
   }
 
-  incurly = 0;			/* not in curlies */
-  writing = 1;			/* writing */
-  p = dp->string;		/* this is the string */
+  incurly = 0;    /* not in curlies */
+  writing = 1;    /* writing */
+  p = dp->string; /* this is the string */
   for (;;)
     switch (c = *p++) {
-     case '\0':
-      return;
-     case BSLASH:
-      if ((c = *p++) == '\0')
-	return;			/* ?? */
-      else if (c == '!') {
-	if (writing)
-	  putc('\n', fp);	/* \! = newline */
-      } else if (isalnum(c)) {	/* reference */
-	if (writing)
-	  display(p - 1, deftag, fp);	/* recurse */
-	while (*p != SLASH)
-	  ++p;
-	p += 2;			/* skip variant tag */
-      } else {
-	if (writing)
-	  putc(c, fp);
-      }
-      break;
-     case '{':
-      if (!incurly) {
-	incurly = 1;
-	writing = (variant == 0);
-      } else {
-	if (writing)
-	  putc('{', fp);
-      }
-      break;
-     case VBAR:
-      if (incurly) {
-	writing = (variant == incurly++);
-      } else {
-	putc(VBAR, fp);
-      }
-      break;
-     case '}':
-      if (incurly) {
-	writing = 1;
-	incurly = 0;
-      } else
-	putc('}', fp);
-      break;
-     default:
-      if (writing)
-	putc(c, fp);
+      case '\0':
+        return;
+      case BSLASH:
+        if ((c = *p++) == '\0')
+          return; /* ?? */
+        else if (c == '!') {
+          if (writing)
+            putc('\n', fp);      /* \! = newline */
+        } else if (isalnum(c)) { /* reference */
+          if (writing)
+            display(p - 1, deftag, fp); /* recurse */
+          while (*p != SLASH)
+            ++p;
+          p += 2; /* skip variant tag */
+        } else {
+          if (writing)
+            putc(c, fp);
+        }
+        break;
+      case '{':
+        if (!incurly) {
+          incurly = 1;
+          writing = (variant == 0);
+        } else {
+          if (writing)
+            putc('{', fp);
+        }
+        break;
+      case VBAR:
+        if (incurly) {
+          writing = (variant == incurly++);
+        } else {
+          putc(VBAR, fp);
+        }
+        break;
+      case '}':
+        if (incurly) {
+          writing = 1;
+          incurly = 0;
+        } else
+          putc('}', fp);
+        break;
+      default:
+        if (writing)
+          putc(c, fp);
     }
 }
-classrec       *
-lookup(str)			/* delimited by SLASH, not '\0' */
-  char           *str;
+
+classrec *lookup(char *str) /* delimited by SLASH, not '\0' */
 {
-  int             first,
-                  last,
-                  try,
-                  comp;
-  int             namecomp();
+  int first, last, try, comp;
+  int namecomp();
 
   first = 0;
   last = Classes - 1;
@@ -315,12 +307,10 @@ lookup(str)			/* delimited by SLASH, not '\0' */
   }
   return NULL;
 }
-int 
-namecomp(a, b)			/* 'a' is delim. by SLASH, 'b' by NULL */
-  register char  *a,
-                 *b;
+
+int namecomp(register char *a, register char *b) /* 'a' is delim. by SLASH, 'b' by NULL */
 {
-  register int    ac;
+  register int ac;
 
   for (;;) {
     ac = *a++;
@@ -335,57 +325,51 @@ namecomp(a, b)			/* 'a' is delim. by SLASH, 'b' by NULL */
   }
 }
 
-readline()
+void readline(void)
 {
-  register char  *p;
+  register char *p;
 
   do {
     if (fgets(InLine, MAXLINE, InFile) == NULL) {
       InLine[0] = InLine[1] = '%';
-      InLine[2] = '\0';		/* create EOF */
+      InLine[2] = '\0'; /* create EOF */
     } else if ((p = rindex(InLine, '\n')) != NULL)
       *p = '\0';
     p = InLine;
     while ((p = index(p, BSLASH)) != NULL) {
       if (p[1] == '*') {
-	*p = 0;			/* kill comment */
-	break;
+        *p = 0; /* kill comment */
+        break;
       } else
-	++p;
+        ++p;
     }
   } while (InLine[0] == '\0');
 }
 
-int 
-clcomp(a, b)
-  register classrec *a,
-                 *b;
+int clcomp(register const void *a, register const void *b)
 {
-  if (a == b)
+  if (a == b || !a || !b)
     return 0;
-  return strcmp(a->name, b->name);
+  return strcmp(((classrec*)a)->name, ((classrec*)b)->name);
 }
-char           *
-save(str)
-  char           *str;
-{
-  register char  *p;
 
-  p = (char *) my_alloc((unsigned) ((strlen(str) + 1) * sizeof(char)));
+char *save(char *str)
+{
+  register char *p;
+
+  p = (char *)my_alloc((unsigned)((strlen(str) + 1) * sizeof(char)));
   return strcpy(p, str);
 }
 
 /*
  * setup a class record. The 'class' line is in InLine.
  */
-setup(cp)
-  register classrec *cp;
+void setup(register classrec *cp)
 {
-  char            temp[100];
-  register char  *p,
-                 *p2;
+  char temp[100];
+  register char *p, *p2;
 
-  p = &InLine[1];		/* point after the % */
+  p = &InLine[1]; /* point after the % */
   while (*p == ' ')
     ++p;
   if (!isalnum(*p))
@@ -395,32 +379,32 @@ setup(cp)
     *p2++ = *p++;
   while (isalnum(*p));
   *p2 = '\0';
-  cp->weight = 0;		/* save the name of it */
+  cp->weight = 0; /* save the name of it */
   cp->name = save(temp);
   cp->list = NULL;
-  cp->tags = NullTags;		/* by default */
+  cp->tags = NullTags; /* by default */
   for (;;)
     switch (*p++) {
-     case '\0':
-      return;			/* all done; */
-     case ' ':
-      break;			/* allowed those */
-     case '{':			/* tags list */
-      if (cp->tags != NullTags)
-	goto baddec;		/* already */
-      p2 = temp;
-      *p2++ = ' ';		/* provide null tag */
-      while (*p != '}') {
-	if (!isalnum(*p))
-	  goto baddec;
-	*p2++ = *p++;
-      }
-      ++p;			/* junk rh brace */
-      *p2 = 0;
-      cp->tags = save(temp);
-      break;
-     default:
-      goto baddec;
+      case '\0':
+        return; /* all done; */
+      case ' ':
+        break;  /* allowed those */
+      case '{': /* tags list */
+        if (cp->tags != NullTags)
+          goto baddec; /* already */
+        p2 = temp;
+        *p2++ = ' '; /* provide null tag */
+        while (*p != '}') {
+          if (!isalnum(*p))
+            goto baddec;
+          *p2++ = *p++;
+        }
+        ++p; /* junk rh brace */
+        *p2 = 0;
+        cp->tags = save(temp);
+        break;
+      default:
+        goto baddec;
     }
 baddec:
   fprintf(stderr, "Bad class header: %s\n", InLine);
@@ -432,21 +416,19 @@ baddec:
  * the definition. The 'cumul' field is temporarily used to hold the
  * assigned weight of the line.
  */
-defn           *
-process()
-{
-  static char     stuff[MAXDEF];
-  register char  *p,
-                 *pout;
-  register defn  *dp;
-  register int    c;
+defn *process(void) {
+  static char stuff[MAXDEF];
+  register char *p, *pout;
+  register defn *dp;
+  register int c;
 
-  dp = (defn *) my_alloc((unsigned) sizeof(defn));
+  dp = (defn *)my_alloc((unsigned) sizeof(defn));
 
   p = InLine;
   pout = stuff;
-  if (*p == '(') {		/* get a weight */
-    while (*++p == ' ');	/* scan */
+  if (*p == '(') { /* get a weight */
+    while (*++p == ' ')
+      ; /* scan */
     if (!isdigit(*p))
       goto badweight;
     c = *p - '0';
@@ -459,38 +441,38 @@ process()
     ++p;
     dp->cumul = c;
   } else {
-    dp->cumul = 1;		/* default weight */
+    dp->cumul = 1; /* default weight */
   }
   while ((c = *p++) != '\0')
     switch (c) {
-     case BSLASH:
-      *pout++ = BSLASH;
-      if (isalnum(*p)) {	/* is a ref */
-	do {
-	  *pout++ = *p++;
-	} while (isalnum(*p));
-	*pout++ = SLASH;	/* delimit */
-	if (*p == SLASH) {	/* get variant char */
-	  ++p;
-	  if (!isalnum(*p) && *p != ' ' && *p != '&') {
-	    *pout++ = ' ';
-	  } else
-	    *pout++ = *p++;
-	} else
-	  *pout++ = ' ';
-      } else {
-	*pout++ = *p;
-	if (*p != '\0') {
-	  ++p;
-	} else {
-	  --pout;		/* delete spurious '\' */
-	  readline();		/* get new line */
-	  p = InLine;		/* point to it */
-	}
-      }
-      break;
-     default:
-      *pout++ = c;
+      case BSLASH:
+        *pout++ = BSLASH;
+        if (isalnum(*p)) { /* is a ref */
+          do {
+            *pout++ = *p++;
+          } while (isalnum(*p));
+          *pout++ = SLASH;   /* delimit */
+          if (*p == SLASH) { /* get variant char */
+            ++p;
+            if (!isalnum(*p) && *p != ' ' && *p != '&') {
+              *pout++ = ' ';
+            } else
+              *pout++ = *p++;
+          } else
+            *pout++ = ' ';
+        } else {
+          *pout++ = *p;
+          if (*p != '\0') {
+            ++p;
+          } else {
+            --pout;     /* delete spurious '\' */
+            readline(); /* get new line */
+            p = InLine; /* point to it */
+          }
+        }
+        break;
+      default:
+        *pout++ = c;
     }
   *pout = '\0';
   dp->string = save(stuff);
@@ -502,13 +484,11 @@ badweight:
   /* NOTREACHED */
 }
 
-char           *
-my_alloc(n)
-  unsigned        n;
+char *my_alloc(unsigned n)
 {
-  register char  *p;
+  register char *p;
 
-  p = (char *) malloc(n);
+  p = (char *)malloc(n);
   if (p == NULL) {
     fprintf(stderr, "Out Of Memory\n");
     exit(1);
@@ -516,35 +496,33 @@ my_alloc(n)
   return p;
 }
 
-
-compdef(dp)
-  register defn  *dp;
+void compdef(register defn *dp)
 {
-  register char  *p;
-  register int    c;
+  register char *p;
+  register int c;
 
-  putw(dp->cumul, stdout);	/* write its cumul weight */
+  putw(dp->cumul, stdout); /* write its cumul weight */
   p = dp->string;
   while ((c = *p++) != '\0') {
     if (c == BSLASH) {
-      if (!CompIn && isalnum(*p)) {	/* a ref */
-	classrec       *cp;
+      if (!CompIn && isalnum(*p)) { /* a ref */
+        classrec *cp;
 
-	cp = lookup(p);		/* find it */
-	if (cp == NULL) {
-	  fprintf(stderr, "Undefined class: ");
-	  while (*p != SLASH)
-	    fputc(*p++, stderr);
-	  fputc('\n', stderr);
-	  exit(1);
-	} else {
-	  printf("%c%d", BSLASH, cp - Classptr);
-	  while (*p != SLASH)
-	    ++p;
-	}
-      } else {			/* is escape seq */
-	putchar(BSLASH);
-	putchar(*p++);
+        cp = lookup(p); /* find it */
+        if (cp == NULL) {
+          fprintf(stderr, "Undefined class: ");
+          while (*p != SLASH)
+            fputc(*p++, stderr);
+          fputc('\n', stderr);
+          exit(1);
+        } else {
+          printf("%c%ld", BSLASH, cp - Classptr);
+          while (*p != SLASH)
+            ++p;
+        }
+      } else { /* is escape seq */
+        putchar(BSLASH);
+        putchar(*p++);
       }
     } else {
       putchar(c);
@@ -553,14 +531,13 @@ compdef(dp)
   putchar(0);
 }
 
-readcclass(cp)
-  register classrec *cp;
+void readcclass(register classrec *cp)
 {
-  register int    n;
-  register defn  *dp;
-  defn          **dput;
+  register int n;
+  register defn *dp;
+  defn **dput;
 
-  char            store[MAXDEF];/* for tags */
+  char store[MAXDEF]; /* for tags */
 
   cp->weight = getw(InFile);
   instring(store, MAXDEF);
@@ -568,23 +545,21 @@ readcclass(cp)
   n = getw(InFile);
   if (n <= 0)
     badfile();
-  dput = &(cp->list);		/* link on here */
+  dput = &(cp->list); /* link on here */
   while (n--) {
-    dp = (defn *) my_alloc((unsigned) sizeof(defn));
+    dp = (defn *)my_alloc((unsigned) sizeof(defn));
     *dput = dp;
     dp->cumul = getw(InFile);
     instring(store, MAXDEF);
     dp->string = save(store);
     dput = &(dp->next);
   }
-  *dput = NULL;			/* last one */
+  *dput = NULL; /* last one */
 }
 
-instring(where, how_many)
-  register char  *where;
-  register int    how_many;
+void instring(register char *where, register int how_many)
 {
-  register int    c;
+  register int c;
 
   do {
     c = getc(InFile);
@@ -597,10 +572,10 @@ instring(where, how_many)
   badfile();
 }
 
-badfile()
+void badfile(void)
 {
   fprintf(stderr, "Bad file format\n");
   exit(1);
 }
 
-#endif	/* SPEW */
+#endif /* SPEW */
