@@ -1307,7 +1307,15 @@ void wmessage(void) {
               curntn->name, PMONTH(TURN), YEAR(TURN));
   } else {
     char ugh[NAMELTH + 2];
-    memchr(ugh, '-', NAMELTH + 1);
+    /*
+     * I'm pretty sure this memchr() is really supposed to be memset().
+     * Either the function has changed over the years, or it was a typo
+     * that went undetected, and somehow didn't crash very often.
+     *
+     * memchr(ugh, '-', NAMELTH + 1);
+     */
+
+    memset(ugh, '-', NAMELTH + 1);
     fprintf(fm, "5.%s\n", ugh);
   }
   strcpy(line, "");

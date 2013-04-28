@@ -17,6 +17,7 @@
  * SPEW.C
  */
 
+/*
 #ifndef lint
 static char *cpr[] = {
   "  Copyright 1987 Greg Smith",
@@ -25,6 +26,7 @@ static char *cpr[] = {
 };
 
 #endif
+*/
 
 /* This file has been adapted from the "spew" program by Paul Davison,
    pd@cs.qmc.ac.uk, on 1st March 1989. It is part of the conquer game

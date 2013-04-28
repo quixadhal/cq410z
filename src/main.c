@@ -38,7 +38,7 @@
  *
  */
 
-static char *rcsid = "$Id: main.c,v 2.3 1991/10/14 02:33:17 cclub Exp cclub $";
+/* static char *rcsid = "$Id: main.c,v 2.3 1991/10/14 02:33:17 cclub Exp cclub $"; */
     /* RCS auto ident string. */
 
 /*conquer : Copyright (c) 1988 by Ed Barlow.
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 
   char defaultdir[BIGLTH], tmppass[PASSLTH + 1];
   char cq_opts[BIGLTH];
-  struct passwd *getpwnam(), *getpwuid(), *ownerpwent, *pwent;
+  struct passwd *getpwnam(), *getpwuid(), /* *ownerpwent, */ *pwent;
 
   owneruid = getuid();
   srand((unsigned) time((long *)0));
@@ -723,6 +723,7 @@ int main(int argc, char **argv)
             curntn->jewels, "null");
   }
   bye(TRUE); /* done so quit */
+  return SUCCESS; /* This will never be called, but perhaps the compiler will be happy */
 }
 
 /************************************************************************/

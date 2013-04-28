@@ -103,7 +103,7 @@ void zeroworld(void) {
 
 void makeworld(int rflag /* TRUE if you wish to read in a map from mapfiles */)
 {
-  char passwd[PASSLTH + 1], pwd2[PASSLTH + 1], *getpass();
+  char passwd[PASSLTH + 1], /* pwd2[PASSLTH + 1] , */ *getpass();
   char newstring[BIGLTH], tempc[BIGLTH];
   FILE *fopen();
   struct passwd *getpwnam();

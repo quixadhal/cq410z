@@ -367,7 +367,7 @@ void do_savage(void) {
 }
 
 void do_pirate(void) {
-  short nvynum, shipsize;
+  short nvynum /*, shipsize */;
   int x, y, campx, campy;
 
   printf("updating pirate (nation %d)\n", country);

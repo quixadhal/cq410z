@@ -533,7 +533,7 @@ void change(void) {
   short isgod = FALSE;
 
 #ifdef OGOD
-  FILE *ftmp;
+/*  FILE *ftmp; */
 
 #endif /* OGOD */
   char filename[FILELTH];
@@ -1437,9 +1437,11 @@ forpage : /* label for reading forward pages. pagenum
 
 int deathok(void) {
   char uid_path[256];
+  /*
   char time_check_value[27];
   time_t mytime;
   int hour, minute;
+  */
   FILE *fp;
 
   if ((TURN % 12) != 11)

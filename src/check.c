@@ -244,7 +244,7 @@ int check_lock(char *filename, int keeplock)
 
 #ifdef FILELOCK
   int fd;
-  struct stat fst;
+  /* struct stat fst; */
 
   if ((fd = open(filename, O_WRONLY | O_CREAT, FCMASK)) != (-1)) {
     if (do_lock(fd) == (-1)) {

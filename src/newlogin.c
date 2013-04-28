@@ -428,7 +428,7 @@ void newlogin(void) {
   long x;
   char tempc[LINELTH];
   char passwd[PASSLTH + 1];
-  char pwd2[PASSLTH + 1];
+  /* char pwd2[PASSLTH + 1]; */
   register int i;
   uid_t suid;
   struct passwd *spasswd;
