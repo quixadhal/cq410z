@@ -107,6 +107,7 @@ void erupt(void);
 void blowup(register int i, register int j);
 void reduce(int x, int y, int percent);
 struct s_sector *rand_sector(void);
+void weather(void);
 
 /* finds unused nation and sets it up partially */
 int findnew(void) {
@@ -1262,6 +1263,8 @@ struct s_sector *rand_sector(void) {
   return (NULL); /* stop lint from complaining */
 }
 
-void weather() {}
+void weather(void) {
+
+}
 
 #endif /* RANEVENT */

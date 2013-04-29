@@ -664,7 +664,7 @@ extern long     lrand48();
 
 #define	SALT "aa"		/* seed for crypt() encryption	 */
 
-/* extern all subroutine calls	*/
+/* extern subroutine calls */
 extern void peasant_revolt(int *newnation);
 extern int rel_x(int absx);
 extern int rel_y(int absy);
@@ -677,66 +677,9 @@ extern void updmove(int race, char cntry);
 extern void highlight(int x, int y, short hmode);
 extern int oldmarkok(char mark, int prtflag, int dupflag);
 extern int avian(unsigned char typ);
+extern char **m2alloc(int nrows, int ncols, int entrysize);
+extern void hangup(int sig);
 
-extern long     getmagic(), getmagic(), getmgkcost(), score_one();
-extern long     get_number(), solds_in_sector(), defaultunit();
-
-extern int      move_file(), land_2reachp(), land_reachp(), canbeseen();
-extern int      water_reachp(), is_habitable(), parse();
-extern int      units_in_sector(), num_powers(), tofood(), mailopen();
-extern int      get_god(), flightcost(), todigit(), getclass(), startcost();
-extern int      water_2reachp(), tg_ok(), readmap();
-extern int      cbonus(), armymove(), takeover(), getnewname();
-extern int      getleader(), execute(), other_revolt();
-extern int      aretheyon(), armygoto(), navygoto(), getselunit();
-extern int      unitvalid(), access(), orctake(), fort_val();
-extern int      addgships(), addmships(), addwships(), fltships();
-extern int      fltghold(), fltwhold(), fltmhold(), flthold(), compass();
-extern int      get_country(), check_lock(), get_pass();
-extern unsigned short fltspeed();
-extern void     do_pirate(), do_nomad(), do_savage(), do_lizard();
-extern void     getjewel(), getmetal(), loadfleet(), removemgk(), exenewmgk();
-extern struct s_sector *rand_sector();
-extern void     subgships(), submships(), subwships(), getspace(), sackem();
-/* extern void     sleep(); */
-extern void	whatcansee(), reset_god(), get_nname(), camp_info();
-extern void     makebottom(), makeside(), check_mail(), centermap();
-extern void     checkout(), copyscreen(), bye(), credits(), init_hasseen();
-extern void     combinearmies(), change_status(), reducearmy(), splitarmy();
-extern void     errormsg(), clear_bottom(), addgroup(), ext_cmd();
-extern void     randomevent(), wdisaster(), weather(), deplete();
-/* extern void     verify_ntn(), verify_sct(); */
-extern void	verifydata(), prep();
-extern void     errorbar(), newbye(), newreset(), newmsg(), newerror();
-extern void     newinit(), jump_to();
-extern void     destroy(), spreadsheet(), mailclose();
-extern void     updexecs(), updcapture(), updsectors();
-extern void     updmil(), updcomodities(), updleader();
-extern void     nationrun(), n_atpeace(), n_trespass(), n_people();
-extern void     n_toofar(), n_unowned(), pceattr(), checkout();
-extern void     fdxyretreat(), retreat(), rawmaterials(), createworld();
-extern void     att_setup(), att_base(), att_bonus();
-extern void     adjarm(), armyrpt(), atkattr(), blowup();
-extern void     budget(), change(), cheat(), coffmap(), combat(), construct();
-extern void     defattr(), diploscrn(), domagic(), draft(), erupt();
-extern void     fight();
-extern void     fill_edge(), flee(), fleetrpt(), hangup(), help();
-extern void     makemap(), makeside();
-extern void     makeworld(), monster(), moveciv();
-extern void     mymove(), navalcbt(), newdip(), newdisplay(), newlogin();
-extern void     newspaper(), npcredes(), offmap(), place(), populate();
-extern void     printele(), printnat(), printscore(), printveg();
-extern void     pr_ntns(), pr_desg(), produce();
-extern void     readdata(), redesignate(), redomil(), reduce(), rmessage(), score();
-extern void     see(), showscore(), update();
-extern void     wmessage(), writedata(), getdstatus(), exit();
-extern void     wizardry();
-extern char    *crypt(), **m2alloc();
-
-#ifdef TRADE
-void            trade(), uptrade(), checktrade();
-
-#endif	/* TRADE */
 
 #define	HI_OWN		0	/* hilight modes	 */
 #define	HI_ARMY		1
