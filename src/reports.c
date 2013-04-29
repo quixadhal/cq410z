@@ -51,9 +51,14 @@ extern short redraw;
 #define BUF_COLS 15
 #define MAXINROW ((COLS - BUF_COLS) / RPT_COLS)
 #define MAXINSCR (((LINES - BUF_LINES) / RPT_LINES) * MAXINROW)
-/*report on armies and allow changes*/
-void armyrpt(repnum) int repnum;
 
+void armyrpt(int repnum);
+void budget(void);
+void produce(void);
+void fleetrpt(void);
+
+/*report on armies and allow changes*/
+void armyrpt(int repnum)
 /* 0 is for full report 'a' and 1 is for group report 'g' */
 {
   int i, j;
@@ -395,7 +400,7 @@ void armyrpt(repnum) int repnum;
     reset_god();
 }
 
-void budget() {
+void budget(void) {
   short armynum, nvynum;
   long numship = 0L, costsold = 0L, numsold = 0L;
   long nummonst = 0L, costmonst = 0L, money, chty, infmoney;
@@ -504,7 +509,7 @@ void budget() {
     reset_god();
 }
 
-void produce() {
+void produce(void) {
   FILE *fp;
   short armynum;
   long military = 0;
@@ -612,7 +617,7 @@ void produce() {
 char *fltstr[] = { "Light", "Medium", "Heavy" };
 
 /*report on ships and allow changes */
-void fleetrpt() {
+void fleetrpt(void) {
   short navy, armynum;
   short newx, newy, newnavy;
   short done = FALSE;
