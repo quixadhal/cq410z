@@ -38,7 +38,17 @@ extern short selector;
 extern short country;
 extern short xcurs, ycurs, xoffset, yoffset;
 
-void ext_cmd(armie) int armie;
+void ext_cmd(int armie);
+int nocomb_stat(unsigned char astat);
+void combinearmies(int armynum, int army2);
+void change_status(int armynum, int new_stat);
+void reducearmy(int armynum, int men);
+void splitarmy(int armynum);
+void errormsg(char *str);
+void clear_bottom(int i);
+void addgroup(int armynum);
+
+void ext_cmd(int armie)
 {
   int stat = 0, armynum, army2, men;
 
@@ -114,7 +124,7 @@ void ext_cmd(armie) int armie;
 }
 
 /* returns TRUE if uncombinable FALSE if combinable */
-int nocomb_stat(astat) unsigned char astat;
+int nocomb_stat(unsigned char astat)
 {
   int hold;
 
@@ -138,10 +148,8 @@ int nocomb_stat(astat) unsigned char astat;
   return (hold);
 }
 
-void combinearmies(armynum, army2) int armynum, army2;
+void combinearmies(int armynum, int army2)
 {
-  int nocomb_stat();
-
   if (armynum < 0 || armynum >= MAXARM || army2 < 0 || army2 >= MAXARM ||
       P_ASOLD == 0 || curntn->arm[army2].sold == 0) {
     errormsg("Selected unit doesn't exist");
@@ -179,7 +187,7 @@ void combinearmies(armynum, army2) int armynum, army2;
   AADJMEN;
 }
 
-void change_status(armynum, new_stat) int armynum, new_stat;
+void change_status(int armynum, int new_stat)
 {
   int i;
 
@@ -271,7 +279,7 @@ void change_status(armynum, new_stat) int armynum, new_stat;
   AADJMOV;
 }
 
-void reducearmy(armynum, men) int armynum, men;
+void reducearmy(int armynum, int men)
 {
   int army2;
   int oldx, oldy, army;
@@ -331,7 +339,7 @@ void reducearmy(armynum, men) int armynum, men;
   }
 }
 
-void splitarmy(armynum) int armynum;
+void splitarmy(int armynum)
 {
   int men;
 
@@ -345,7 +353,7 @@ void splitarmy(armynum) int armynum;
   reducearmy(armynum, men);
 }
 
-void errormsg(str) char * str;
+void errormsg(char *str)
 {
   mvaddstr(LINES - 1, 0, str);
   clrtoeol();
@@ -355,7 +363,7 @@ void errormsg(str) char * str;
   getch();
 }
 
-void clear_bottom(i) int i;
+void clear_bottom(int i)
 {
   if (i == 0)
     i = 4;
@@ -366,7 +374,7 @@ void clear_bottom(i) int i;
 }
 
 /* add army to a group */
-void addgroup(armynum) int armynum;
+void addgroup(int armynum)
 {
   int moverate, group;
 

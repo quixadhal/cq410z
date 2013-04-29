@@ -41,7 +41,11 @@ extern FILE *fnews;
 /*do nothing if that player has that power or it is not permitted*/
 /*getmagic() returns the value of the power gained, and stores it in power*/
 
-long getmagic(type) int type;
+long getmagic(int type);
+void exenewmgk(long newpower);
+void removemgk(long oldpower);
+
+long getmagic(int type)
 {
   long newpower;
   int start, end;
@@ -209,8 +213,11 @@ long getmagic(type) int type;
 }
 
 #ifdef CONQUER
+void domagic(void);
+int unitvalid(int type);
+
 /*form to interactively get a magic power*/
-void domagic() {
+void domagic(void) {
   int county, countx, done = FALSE, loop = 0, i, type;
   long price, x;
 
@@ -336,12 +343,134 @@ void domagic() {
     reset_god();
 }
 
+/**********************************************************************/
+/* unitvalid() returns TRUE if nation has powers needed to draft unit */
+/**********************************************************************/
+int unitvalid(int type)
+{
+  int valid = FALSE;
+
+  switch (type) {
+    case A_INFANTRY: /* not everyone gets infantry now */
+      if (defaultunit(country) == A_INFANTRY)
+        valid = TRUE;
+      break;
+    case GARGOYLE:
+    case A_GOBLIN:
+    case A_ORC:
+      if (magic(country, MI_MONST) == TRUE)
+        valid = TRUE;
+      break;
+    case A_MARINES:
+      if (magic(country, SAILOR) == TRUE)
+        valid = TRUE;
+      break;
+    case A_ARCHER:
+      if (magic(country, ARCHER) == TRUE)
+        valid = TRUE;
+      break;
+    case A_URUK:
+      if (magic(country, AV_MONST) == TRUE)
+        valid = TRUE;
+      break;
+    case A_NINJA:
+      if (magic(country, NINJA) == TRUE)
+        valid = TRUE;
+      break;
+    case A_PHALANX:
+      if (magic(country, CAPTAIN) == TRUE)
+        valid = TRUE;
+      break;
+    case A_OLOG:
+      if ((magic(country, BREEDER) == TRUE) &&
+          (magic(country, AV_MONST) == TRUE))
+        valid = TRUE;
+      break;
+    case A_ELEPHANT:
+      if (magic(country, DERVISH) == TRUE)
+        valid = TRUE;
+      break;
+    case SUPERHERO:
+    case A_LEGION:
+      if (magic(country, WARLORD) == TRUE)
+        valid = TRUE;
+      break;
+    case A_TROLL:
+      if (magic(country, MA_MONST) == TRUE)
+        valid = TRUE;
+      break;
+    case A_ELITE:
+      if (magic(country, ARMOR) == TRUE)
+        valid = TRUE;
+      break;
+    case CENTAUR:
+    case A_LT_CAV:
+    case A_CAVALRY:
+      if (magic(country, CAVALRY) == TRUE)
+        valid = TRUE;
+      break;
+    case A_KNIGHT:
+      if ((magic(country, ARMOR) == TRUE) && (magic(country, CAVALRY) == TRUE))
+        valid = TRUE;
+      break;
+    case A_ROC:
+    case A_GRIFFON:
+      if (magic(country, AVIAN) == TRUE)
+        valid = TRUE;
+      break;
+    case ASSASSIN:
+      if (magic(country, NINJA) == TRUE)
+        valid = TRUE;
+      break;
+    case DJINNI:
+      if (magic(country, DERVISH) == TRUE)
+        valid = TRUE;
+      break;
+    case HERO:
+      if (magic(country, WARRIOR) == TRUE)
+        valid = TRUE;
+      break;
+    case ELEMENTAL:
+      if (magic(country, SORCERER) == TRUE)
+        valid = TRUE;
+      break;
+    case A_ZOMBIE:
+    case WRAITH:
+    case MUMMY:
+      if (magic(country, VAMPIRE) == TRUE)
+        valid = TRUE;
+      break;
+    case MINOTAUR:
+    case DEMON:
+      if (magic(country, DESTROYER) == TRUE)
+        valid = TRUE;
+      break;
+    case BALROG:
+      if ((magic(country, WYZARD) == TRUE) && (magic(country, VAMPIRE) == TRUE))
+        valid = TRUE;
+      break;
+    case DRAGON:
+      if ((magic(country, MA_MONST) == TRUE) &&
+          (magic(country, WYZARD) == TRUE))
+        valid = TRUE;
+      break;
+    case A_SPY:
+    case A_SCOUT:
+      break; /* handled elsewhere */
+    default:
+      valid = TRUE; /* for all unrestricted types */
+  }
+  return (valid);
+}
+
 #endif /* CONQUER */
 
 #ifdef ORCTAKE
 /*do magic for both npcs and pcs in update*/
 /*if target is 0 then it is update and target will be picked randomly*/
-int takeover(percent, target) int percent, target;
+int takeover(int percent, int target);
+
+int takeover(int percent, int target)
 {
   int loop = 1, y, save, isupdate = 0;
 
@@ -396,7 +525,7 @@ int takeover(percent, target) int percent, target;
 #endif /* ORCTAKE */
 
 /*execute new magic*/
-void exenewmgk(newpower) long newpower;
+void exenewmgk(long newpower)
 {
   short x, armynum;
 
@@ -544,8 +673,10 @@ void exenewmgk(newpower) long newpower;
 }
 
 #ifdef CONQUER
+void dosummon(void);
+
 /* returns 0 if summon occurred, 1 else */
-void dosummon() {
+void dosummon(void) {
   int x, count, i, armynum;
   long e_cost;
   int newtype, s_cost;
@@ -636,8 +767,10 @@ void dosummon() {
 }
 
 #ifdef ORCTAKE
+int orctake(int *count);
+
 /* orc takeover routine... returns 0 if run, 1 if not */
-int orctake(count) int *count;
+int orctake(int *count)
 {
   int chance = 0, done = TRUE, i, s_cost;
 
@@ -722,131 +855,8 @@ int orctake(count) int *count;
 
 #endif /* CONQUER */
 
-#ifdef CONQUER
-/**********************************************************************/
-/* unitvalid() returns TRUE if nation has powers needed to draft unit */
-/**********************************************************************/
-int unitvalid(type) int type;
-{
-  int valid = FALSE;
-
-  switch (type) {
-    case A_INFANTRY: /* not everyone gets infantry now */
-      if (defaultunit(country) == A_INFANTRY)
-        valid = TRUE;
-      break;
-    case GARGOYLE:
-    case A_GOBLIN:
-    case A_ORC:
-      if (magic(country, MI_MONST) == TRUE)
-        valid = TRUE;
-      break;
-    case A_MARINES:
-      if (magic(country, SAILOR) == TRUE)
-        valid = TRUE;
-      break;
-    case A_ARCHER:
-      if (magic(country, ARCHER) == TRUE)
-        valid = TRUE;
-      break;
-    case A_URUK:
-      if (magic(country, AV_MONST) == TRUE)
-        valid = TRUE;
-      break;
-    case A_NINJA:
-      if (magic(country, NINJA) == TRUE)
-        valid = TRUE;
-      break;
-    case A_PHALANX:
-      if (magic(country, CAPTAIN) == TRUE)
-        valid = TRUE;
-      break;
-    case A_OLOG:
-      if ((magic(country, BREEDER) == TRUE) &&
-          (magic(country, AV_MONST) == TRUE))
-        valid = TRUE;
-      break;
-    case A_ELEPHANT:
-      if (magic(country, DERVISH) == TRUE)
-        valid = TRUE;
-      break;
-    case SUPERHERO:
-    case A_LEGION:
-      if (magic(country, WARLORD) == TRUE)
-        valid = TRUE;
-      break;
-    case A_TROLL:
-      if (magic(country, MA_MONST) == TRUE)
-        valid = TRUE;
-      break;
-    case A_ELITE:
-      if (magic(country, ARMOR) == TRUE)
-        valid = TRUE;
-      break;
-    case CENTAUR:
-    case A_LT_CAV:
-    case A_CAVALRY:
-      if (magic(country, CAVALRY) == TRUE)
-        valid = TRUE;
-      break;
-    case A_KNIGHT:
-      if ((magic(country, ARMOR) == TRUE) && (magic(country, CAVALRY) == TRUE))
-        valid = TRUE;
-      break;
-    case A_ROC:
-    case A_GRIFFON:
-      if (magic(country, AVIAN) == TRUE)
-        valid = TRUE;
-      break;
-    case ASSASSIN:
-      if (magic(country, NINJA) == TRUE)
-        valid = TRUE;
-      break;
-    case DJINNI:
-      if (magic(country, DERVISH) == TRUE)
-        valid = TRUE;
-      break;
-    case HERO:
-      if (magic(country, WARRIOR) == TRUE)
-        valid = TRUE;
-      break;
-    case ELEMENTAL:
-      if (magic(country, SORCERER) == TRUE)
-        valid = TRUE;
-      break;
-    case A_ZOMBIE:
-    case WRAITH:
-    case MUMMY:
-      if (magic(country, VAMPIRE) == TRUE)
-        valid = TRUE;
-      break;
-    case MINOTAUR:
-    case DEMON:
-      if (magic(country, DESTROYER) == TRUE)
-        valid = TRUE;
-      break;
-    case BALROG:
-      if ((magic(country, WYZARD) == TRUE) && (magic(country, VAMPIRE) == TRUE))
-        valid = TRUE;
-      break;
-    case DRAGON:
-      if ((magic(country, MA_MONST) == TRUE) &&
-          (magic(country, WYZARD) == TRUE))
-        valid = TRUE;
-      break;
-    case A_SPY:
-    case A_SCOUT:
-      break; /* handled elsewhere */
-    default:
-      valid = TRUE; /* for all unrestricted types */
-  }
-  return (valid);
-}
-
-#endif /* CONQUER */
-
 /*remove properties of magic power; must first remove power */
-void removemgk(oldpower) long oldpower;
+void removemgk(long oldpower)
 {
   short x, y, armynum;
 
@@ -947,10 +957,13 @@ void removemgk(oldpower) long oldpower;
 }
 
 #ifdef CONQUER
+void wizardry(void);
 
 #ifdef OGOD
+void god_magk(void);
+
 /* godmagk() -- routine to allow god to selectively add or remove magic */
-void god_magk() {
+void god_magk(void) {
   int county, countx, choice;
   int remove, i, done = FALSE;
 
@@ -1052,7 +1065,7 @@ int magicstat[NUMSPELLS] = { DEFEND, FLIGHT, MAGATT, MAGDEF };
 int magiccost[NUMSPELLS] = { 0, 100, 300, 300 };
 
 /* routine to perform spells */
-void wizardry() {
+void wizardry(void) {
   int i, xspt, yspt, choice, armynum, s_cost;
   char line[LINELTH + 1];
   void dosummon();
