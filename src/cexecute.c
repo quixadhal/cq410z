@@ -373,9 +373,7 @@ curntn->name);
 }
 
 #ifdef CONQUER
-void hangup(void);
-
-void hangup(void) {
+void hangup(int sig) {
   char line[LINELTH];
 
 /* I think I can just remove these calls to sigblock(), since the signal will

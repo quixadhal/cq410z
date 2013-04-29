@@ -52,6 +52,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <time.h>
+#include <unistd.h> /* crypt() */
 
 extern FILE *fexe, *fnews;
 extern short country, redraw;

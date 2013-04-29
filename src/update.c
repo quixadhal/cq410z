@@ -104,6 +104,10 @@ void updcomodities(void);
 void updleader(void);
 void move_people(void);
 
+#ifdef CHEAT
+void cheat(void);
+#endif
+
 long dtol(double d)
 {
   char tempstr[BIGLTH];
@@ -673,7 +677,6 @@ isn\'t important\n");
 }
 
 #ifdef CHEAT
-void cheat(void);
 
 /****************************************************************/
 /*	CHEAT() 						*/
